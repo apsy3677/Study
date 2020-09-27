@@ -11,7 +11,7 @@ class DemonstrationNonReentrantLock {
 
         // Second locking results in a self deadlock
         System.out.println("Trying to acquire second lock");
-        // for acquiring 2nd lock, first unlock the lock
+        // for acquiring 2nd lock, first unlock the lockc
         //nreLock.unlock();
         nreLock.lock();
         System.out.println("Acquired second lock");

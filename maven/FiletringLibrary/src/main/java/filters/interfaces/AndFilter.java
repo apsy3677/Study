@@ -2,13 +2,14 @@ package filters.interfaces;
 
 import product.Container;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class AndFilter implements Strategy {
-    private Strategy [] strategies;
+    private List<Strategy> strategies;
 
     public AndFilter(Strategy... strategies) {
-        this.strategies = strategies;
+        this.strategies = Arrays.asList(strategies);
     }
 
     @Override

@@ -1,0 +1,106 @@
+Java Language Specific Questions
+
+Garbage Collection
+
+	Heap
+		Young Gen Eden+ Survivor1 +Survivor 2
+		Old Gen
+
+	https://www.youtube.com/watch?v=UnaNQgzw4zY&t=249s
+
+	Mark
+	Delete/sweep
+	Compact
+
+	Minor GC
+	Major GC
+
+	Types of GC
+	serial
+	concurrent
+	parallel
+
+HashMap Working
+	HashMap is not thread safe
+	HasTable is thread safe, have syncronized key on public methods
+ implemented on Map interface
+	Hashing
+	public int hasCode() // return hash value for object
+
+	table of 16 buckets in start
+
+	Node<K,V> [] table 
+
+	Node{
+		key,
+		value
+		Node next
+	}
+
+	get(Object key){
+		hash(key);
+		index = hash & (n-1);
+	}
+	hasmap.put(key, value){
+		hash(key);
+		index = hash & (n-1) // n=16 at start
+	}
+
+	remove(key){
+
+	}
+
+	If a key is mapped to same index, they are stored in linked list
+	Linked list is converted to Balanced Search trees.
+
+Immutable Classes
+
+	immutatble object whose content cannot be changed
+
+	immutable classes e.g. String, Integer, Long, Float (Wrapper Classes)
+	https://www.youtube.com/watch?v=qbNMAJvv7qI
+	
+	all data fields must be private and final.
+	can't be any setter methods.
+	no getter method returns editable objects/ members
+	methods sudnt be overidden by subclasses.
+	Make class final
+	Make all fields final and private
+	initialize all classes in a constructor
+
+
+	Immutable Class
+	public final Class C1{
+		private final int x;
+
+		public C1(int x){
+		this.x = x;
+		}
+		public int getX(){
+			return this.x;
+		}
+	}
+
+String Class
+https://www.youtube.com/watch?v=6pLEwJP1Afk
+
+MultiThreading and ThreadPool
+https://www.youtube.com/watch?v=Dma_NmOrp1c
+
+WorkQueue
+CorePoolSize
+MaxPoolSize
+
+ExecutorService
+Executor.FixedSizeTP(int l)
+
+Callable<> and Future<>
+
+
+Collections
+implements Collection interface
+Set<E>
+List<E> add(), remove() support insertion order
+Queue<E> peek(), poll(), remove()
+
+Map<K,V> interface doesn't implement COllection

@@ -1,0 +1,124 @@
+/*Algo Q1
+Given a string str and an integer K, the task is to find the length of the longest substring S such that every character in S appears at least K times.
+INPUT1 = str = aabbba , K = 3
+OUTPUT1 = 6
+
+INPUT2 = str = ababacb, K = 3
+OUTPUT2 = 0
+
+aaaaaaa K = 4
+
+OUTPUT = 7
+*/
+
+bool check(int k, int charMap[26]){
+    
+    for(int i=0;i<26;i++){
+        if(charMap[i] > 0 ){
+            if(charMap[i]<k){
+                return false;
+            } 
+        }
+                  
+    }
+    return true;
+
+}
+
+int longestSubstring( string str, int k){
+    
+    if(str.size() ==0 || k> str.size()){
+        return 0;
+    }
+    
+    int charmap[26] ={0};
+    int ans =0;
+    
+    for(int i=0;i<str.size();i++){
+       memset(charmap, 0 , sizeof(charmap));
+       
+       for(int j = i; j<str.size();j++){
+           chaMap[ str[j]- 'a'] ++;
+           
+           if((j-i+1)>=k && check(k, charMap)){
+               ans = max(ans, j-i+1);
+           }
+       }
+        
+    }
+    return ans;
+    
+}
+
+/* Algo 2
+Given a binary tree, we need to find maximum value we can get by subtracting value of node B from value of node A, where A and B are two nodes of the binary tree and A is an ancestor of B
+           8
+          / \
+         3   10
+        /\   /\
+       1  2    5
+
+*/
+
+
+int ans = INT_MIN;
+
+int maximumDiffNodeAndAnsector(node * root){
+    
+    if(!root){
+        return INT_MAX;
+    }
+    
+    if(root->left ==null && root->right == null){
+        reutn root->val;
+    }
+    
+    
+    
+    int leftMin= maximumDiffNodeAndAnsector(root->left);
+    int rightMin = maximumDiffNodeAndAnsector(root->right);
+    
+    ans = max(ans, max(root->val - leftMin, root->val - rightMin);
+    
+    return min( min(leftMin,rightMin), val);
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,135 @@
+requirement:
+offers ticket booking for multiple cities and multiple cinema halls
+user can selcet city and user should see movies in that city
+show user timing available shows
+user can select cinmea and book tickets
+can select seats 
+payment
+Search movies 
+
+APIs :
+
+
+SelectMovie(movieid) from list of movies
+list<movies> SearchMovies() // city, postal code
+BookTickets(movieid, showTime, cinmeaHall, seats)
+josnResponse SelectSeats(movieid, showid, seats[] )
+
+LLD
+
+PVR, Cineplex, Inox
+
+City{
+    cityId
+    name
+    state
+    zipcode
+}
+
+Movie{
+    movieid
+    Description
+    genre
+}
+
+show{
+    showId
+    date
+    starttime, endtime
+    Cinemahall
+    movieid
+}
+
+Cinmea{
+    cinmeaid
+    name
+    totalcinemas
+    city
+}
+
+cinmeaHall{
+    cinmeaHalId;
+    name
+    totalseats
+    cinemaId
+}
+
+cinemaSeat{
+    cinemaSeatid
+    seatNumber
+}
+Booking{
+    bookingId
+    noofseats
+    userid
+    showId
+    makePayment()
+    cancel()
+    assignSeats()
+}
+
+payment{
+    paymentid
+    account
+    timstamp
+}
+
+Flow of booking ticket
+
+user selcts city, 
+search for movies
+select movie
+show cinemahalls with their show timings
+user selects a show time,
+selct seats
+payment
+once payment is confirmed get booked ticket
+
+interface Search{
+    searchByTitle()
+    SearchBylanguage()
+    SearchByCity()
+    //etc
+}
+
+BookingTicketService // book the tickets
+{
+    searchMovies()
+    selectMovie()
+    SelcetSeats()
+    selectShowTimes()
+    makePayment()
+    main() {
+        
+    }
+    
+}
+
+MovieService{
+
+    searchMovies(city)
+    
+    MovieShowsInCinemaHall(){}
+    
+}
+
+cinemahallService{
+
+    showSeats()
+    
+    selectSeats()
+    
+    showTimes()
+    
+}
+
+Reservation{
+    
+    reserveTicket(showId, cinmeaHall, city)
+    
+    cancelTicket()
+}
+
+
+
+

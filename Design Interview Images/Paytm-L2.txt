@@ -1,0 +1,48 @@
+Paytm-L2
+CAP Theorem:
+can we acheive consistency and Availability together ?
+Hash Indexing:
+Tree Based indexing:
+Database related questions:
+TCP vs UDP:
+HTTP vs HTTPS:
+
+
+
+{
+  "arrayOne": [-1, 5, 10, 20, 28, 3],
+  "arrayTwo": [26, 134, 135, 15, 17]
+}
+
+-1, 3, 5, 10, 20, 28
+15, 17, 26, 134, 135
+
+Min = 16
+
+int[] smallestDiff( int [] arr, int [] brr, int m, int n){
+
+Arrays.sort(arr);
+Arrays.sort(brr);
+
+Int i =0, j=0;
+Int ans[] = new int [2];
+Ans[0] = Interger.Max;
+Ans[1] = Integer.Max;
+Int minDiff = Integer.Max;
+for(;i<m && j<n;){
+if(Math.abs(arr[i] - brr[j] )< minDiff){
+minDiff =  Math.abs(arr[i] - brr[j] );
+Ans[0] = arr[i];
+Ans[1] = brr[j];
+
+}
+if(arr[i] < brr[j]){
+i++;
+}else{
+j++;
+}
+
+}
+Return ans;
+
+}

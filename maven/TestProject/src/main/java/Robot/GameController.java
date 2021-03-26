@@ -11,7 +11,7 @@ public class GameController {
         int n = 3;
         GameController gameController = new GameController(n);
         Robot robot = new Robot(new Position(0,0), 0, n);
-        String commands[] = new String[] {"Left", "Right", "Move"};
+        String commands[] = new String[] {"Left", "Move", "Right", "Move"};
 
         for(String command : commands){
             robot.move(command);

@@ -33,7 +33,7 @@ public class Robot {
                 this.position.setX(xx);
                 this.position.setY(yy);
             }else{
-                System.out.println("Invalid Command ");
+                System.out.println("Invalid Command: Position not reachable x y "+ xx +" "+ yy);
             }
         }
     }

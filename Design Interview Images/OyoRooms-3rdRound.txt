@@ -1,0 +1,84 @@
+GET
+posts/{id}
+
+Social media posts page 
+
+
+Post
+	C1
+		R1
+		R2
+			R21
+			R22
+				R221
+					R2211
+
+	C2
+	C3
+	C4
+
+JSON response
+
+Enitites 
+
+Classes 
+
+Relationship between entities 
+
+Features :
+
+JSONResponse getPost(postid)
+PostItem(userid, Msg)
+
+Comment(userid, user, postid)
+reply(commentid, postid)
+
+
+JSONResponse{
+Postid: “”
+Postdata :{
+postMsg :””
+postTime:””
+Commments:[]
+Likes:””
+}
+}
+
+Comment :{
+Id
+Msg
+Reply :[] {
+comment}
+}
+
+
+Post{
+Id,
+Userid,
+Timestamp,
+Comment []
+}
+
+Comment{
+Postid
+isReply
+comment
+}
+
+Parent_child_comment{
+Parentid
+childid
+}
+
+
+---
+
+Multithreading / concurrency / Parallelisation
+
+For i 1 to 10
+printf(“1”)
+
+4 machines 64 gb
+Production change
+2 mins start off time 
+

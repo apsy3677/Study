@@ -1,0 +1,203 @@
+// 10 10 2  0 20 4
+//  1  0 0 30  2 5
+//  0 10 4  0  2 0
+//  1  0 2 20  0 4
+  
+//   ==> 20,30,4,20 => 74 76??
+  
+//   i,j
+  
+//   i+1,j-1; i+1, j; i+1, j+1
+
+
+//     i,j
+//     from (i-1), j-1, j, j+1
+    
+// /*
+//  * Click `Run` to execute the snippet below!
+//  */
+
+// import java.io.*;
+// import java.util.*;
+
+// /*
+//  * To execute Java, please define "static void main" on a class
+//  * named Solution.
+//  *
+//  * If you need more classes, simply define them inline.
+ 
+ 
+// 1   2   3    4
+// 12  13  14   5
+// 11  16  15   6
+// 10  9   8    7
+//  */
+
+
+
+// class Solution {
+  
+//   private classB objB;
+//   private classC objC;
+  
+//   public Solution (classB objB, classC objC){
+//     this.ObjB= objB;
+    
+//   }
+  
+//   public static int[][] printSpiral(int n){
+    
+//     if(n<=0){
+//       // throw exception
+//       System.out.println("Invalid input ");
+//     }
+    
+//     int[][] mat = new int [n][n];
+    
+//     int low = 0,high =n-1, left =0, right = n-1;
+    
+//     int spiral = 1;
+//     // O(n/2)
+//     for(int i=0;i<=n/2;i++){
+      
+//       // 4*n 
+//       for(int j=left;j<= right;j++){
+//         mat[low][j] = spiral++;
+//       }
+//       low++;
+//       for(int j= low;j<=high;j++){
+//         mat[j][right] = spiral++;
+//       }
+//       right--;
+//       for(int j=right;j>=left;j--){
+//         mat[high][j] = spiral++;
+//       }
+//       high--;
+//       for(int j= high; j>=low;j--){
+//         mat[j][left] = spiral++;
+//       }
+//       left++;
+//     }
+    
+//     for(int i=0;i<n;i++){
+//       for(int j=0;j<n;j++){
+//         System.out.print(mat[i][j] + " ");
+//       }
+//       System.out.println();
+//     }
+//     // Time Complexity : n*n O(n*n)
+//     // Sapce COmplexity : n*n O(n*n)
+//     return mat;
+    
+//   }
+  
+//   obj1 = 
+//   obj2 =
+    
+    
+//     Stack memory
+//     10 obj1  = 0x11267
+//     20 obj2  = 0x11222
+  
+//   Memory Heap
+//   //12345 new Solution()
+//   //0x11267 new Solution()
+//   func(Solution obj1){
+//     // obj1 func
+//     // obj1 = obj2 = 0x11222
+//     obj1  = new Solution(); // obj1 = 0x11267
+//     // initiz
+//     return  obj1;
+//   }
+//     // obj 4bytes
+//   public static void main(String[] args) {
+// //     ArrayList<String> strings = new ArrayList<String>();
+// //     strings.add("Hello, World!");
+// //     strings.add("Welcome to CoderPad.");
+// //     strings.add("This pad is running Java " + Runtime.version().feature());
+    
+//     int[][] mat = printSpiral(1);
+//     mat = printSpiral(5);
+//     mat = printSpiral(7);
+//     mat = printSpiral(4);
+    
+//     Solution obj; // obj  =null
+//     Solution obj2 = new Soilution(); // obj2  = 0x11222
+//     func(obj);// craete and initialize
+//     // for (String string : strings) {
+//     //   System.out.println(string);
+//     // }
+//   }
+// }
+    
+    
+    /*
+ * Click `Run` to execute the snippet below!
+ */
+
+import java.io.*;
+import java.util.*;
+
+/*
+ * To execute Java, please define "static void main" on a class
+ * named Solution.
+ *
+ * If you need more classes, simply define them inline.
+ */
+
+
+// all numbers a re positive
+// 10 10 2  0 20 4
+//  1  0 0 30  2 5
+//  0 10 4  0  2 0
+//  1  0 2 20  0 4
+// ==> 20,30,4,20 => 74
+class Solution {
+  
+  public static int maxSum(int [][] mat){
+    int ans  =0;
+    if(mat == null){
+      return ans;
+    }
+    int n = mat.length, m;
+    if(n==0 ){
+      return ans;
+    }
+    m = mat[0].length;
+    
+    for(int i=0;i<m;i++){
+      ans = Math.max(ans, mat[0][i]);
+    }
+    
+    for(int i=1;i<n;i++){
+      for(int j=0;j<m;j++){
+        if(j>0 && j<m-1){
+          mat[i][j] += Math.max(mat[i-1][j], Math.max(mat[i-1][j-1], mat[i-1][j+1]));
+        }
+        else if(j>0){
+          mat[i][j] += Math.max(mat[i-1][j-1], mat[i-1][j]);
+        }
+        else if(j<m-1){
+          mat[i][j] += Math.max(mat[i-1][j+1], mat[i-1][j]);
+        }
+        
+        ans = Math.max(ans, mat[i][j]);
+      }
+    }
+    
+    return ans;
+  }
+
+  public static void main(String[] args) {
+    
+    int[][] mat = {
+      {10, 10, 2, 0, 20, 4},
+      {1, 0, 0, 30, 2, 5},
+      {0, 10, 4 , 0, 2 , 0},
+      {1, 0, 2, 20, 0, 4},
+    };
+    
+    System.out.println(maxSum(mat));
+  }
+  
+}

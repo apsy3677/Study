@@ -1,0 +1,224 @@
+Q1) Which are legal declarations:
+
+a) static var x = 99;
+b) private var y = "Hello";
+c) var t = LocalDate.now();
+d) var q;
+e) var s = "Long String";
+
+Q2) Given:
+     class X {
+        static int MAX_VAL = 100;
+        int value = 99;
+        public void setVal(int x) {
+            if (x <= MAX_VAL) value = x;
+        }
+    }
+and:
+        X a = new X();
+        X b = new X();
+        a.setVal(120);
+        System.out.print(a.value + ", ");
+        b.MAX_VAL = 150; // LEGAL!!! (is this a design bug)
+        a.setVal(140); 
+        System.out.println(a.value);
+
+What is the result?
+    A) 99, 99
+    B) 120, 140
+    C) 99, 140
+    D) Compilation failure
+    E) Exception at runtime
+
+Q3) Given:
+class X {
+  int x;
+  X(int x) {
+// COMPILER ADDS
+    super();
+   
+    this.x = x;
+  }
+}
+and:
+class Y extends X {
+  Y(int x) {
+    // COMPILER ADDS
+    super(); // NOWHERE TO GO!!!
+  }
+}
+and:
+  X x = new Y(3); // line 1
+  System.out.println(x.x);
+  What is the result?
+A) 3
+B) 0
+C) Compilation fails at line 1
+D) Compilation fails for class Y
+E) Runtime exception
+
+Q4) Given
+    class Y {
+        static String sayHi() { return "Y-Hello"; }
+        String sayHi2() { return "Y-Hello2"; }
+    }
+
+     class Z extends Y {
+        static String sayHi() { return "Z-Hello"; }
+        String sayHi2() { return "Z-Hello2"; }
+    }
+
+Y y = new Z();
+System.out.println(y.sayHi() + ", " + y.sayHi2());
+
+What is the result?
+    A) Y-Hello, Y-Hello2
+    B) Y-Hello, Z-Hello2
+    C) Z-Hello, Z-Hello2
+    D) Z-Hello, Y-Hello2
+    E) Compilation fails
+
+Q5) Given:
+    class Base {
+        void doBaseStuff() {
+            System.out.println("doBaseStuff");
+        }
+    }
+    class Sub extends Base {
+        void doBaseStuff() {
+            System.out.println("doSubStuff");
+        }
+        void doOtherStuff() {
+            System.out.println("doOtherStuff");
+        }
+    }
+and:
+    Base b = new Sub();
+    b.doOtherStuff();
+
+    What is the result?
+    A) doSubStuff
+    B) doOtherStuff
+    C) doBaseStuff
+    D) Exception at runtime
+    E) Compilation failure
+ 
+Q6) 
+Base b = new Sub();
+((StringBuilder)b).concat("x");
+
+    What is the result?
+    A) doSubStuff
+    B) doOtherStuff
+    C) doBaseStuff
+    D) Exception at runtime
+    E) Compilation failure
+
+Q7) Given:
+    class Base {
+        void doBaseStuff() {
+            System.out.println("doBaseStuff");
+        }
+    }
+    class Sub extends Base {
+        void doBaseStuff() {
+            System.out.println("doSubStuff");
+        }
+        void doOtherStuff() {
+            System.out.println("doOtherStuff");
+        }
+    }
+Which are true?
+A) doBaseStuff in Sub may be marked public without causing error
+B) doBaseStuff in Sub may be marked private without causing error
+C) doBaseStuff in Base may be marked public without causing error
+D) doBaseStuff in Base may be marked private without causing error
+
+Q8) Given:
+    class Base {
+        CharSequence doBaseStuff() {
+            return "doBaseStuff";
+        }
+	long getValue() { return 1; }
+    }
+    class Sub extends Base {
+        CharSequence doBaseStuff() {
+            return "doSubStuff";
+        }
+	long getValue() { return 1; }
+    }
+Which are valid?
+A) doBaseStuff in Sub may become String doBaseStuff() {...}
+B) doBaseStuff in Sub may become Object doBaseStuff() {...}
+C) doBaseStuff in Base may become String doBaseStuff() {...}
+D) doBaseStuff in Base may become Object doBaseStuff() {...}
+E) getValue in Sub may become int getValue() {...}
+
+Q9)     Given:
+
+        StringBuilder sb1 = new StringBuilder("Hello");
+        StringBuilder sb2 = sb1;
+        sb1 = null;
+
+Which is true?
+    A) sb1 is unreferenced and eligible for GC
+    B) sb1 and sb2 are unreferenced and eligible for GC
+    C) No objects are eligible for GC
+
+Q10) Given:
+        StringBuilder sb1 = new StringBuilder("Hello");
+        StringBuilder sb2 = new StringBuilder("World");
+        sb1 = null;
+        sb2 = sb1;
+
+    Which is true?
+    A) Object containing "Hello" is unreferenced and eligible for GC
+    B) Object containing "World" is unreferenced and eligible for GC
+    C) Object containing "Hello", and "World" are both unreferenced and eligible for GC
+    D) No objects are eligible for GC
+
+Q11) Given:
+    class Base2 {
+        void doBaseStuff() {
+            System.out.println("doBaseStuff");
+        }
+    }
+
+    class Sub2 extends Base2 {
+        void doBaseStuff(int x) {
+            System.out.println("doSubStuff");
+        }
+    }
+
+Which are true:
+In the Base2 and Sub2 classes, which are true in isolation?
+    A) doBaseStuff in Base2 can be marked public without causing errors
+    B) doBaseStuff in Base2 can be marked private without causing errors
+    C) doBaseStuff in Sub2 can be marked public without causing errors
+    D) doBaseStuff in Sub2 can be marked protected without causing errors
+    E) doBaseStuff in Sub2 can be marked private without causing errors
+
+Q12)Given:
+     class Base {
+        void doBaseStuff() {
+            System.out.println("doBaseStuff");
+        }
+    }
+
+    class Sub extends Base {
+        void doBaseStuff() {
+            System.out.println("doSubStuff");
+        }
+        void doOtherStuff() {
+            System.out.println("doOtherStuff");
+        }
+    }
+
+In the Base and Sub classes, which are true in isolation?
+    A) doBaseStuff in Base can be marked throws Exception without causing errors
+    B) doBaseStuff in Base can be marked throws RuntimeException without causing errors
+    C) doBaseStuff in Sub can be marked throws Exception without causing errors
+    D) doBaseStuff in Sub can be marked throws RuntimeException without causing errors
+    E) if doBaseStuff in Base were marked throws Exception,
+       then doBaseStuff in Sub can be marked throws IOException without causing errors
+

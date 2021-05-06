@@ -1,0 +1,36 @@
+Topics, Courses, Lessons
+
+Topics
+
+GET /topics get all topic
+GET /topics/id get the topic
+
+POST /topics vreate new topic
+post body will contain info about nerw topic
+
+PUT /topics/id updates the topic
+
+DELETE /topics/id deletes the topic
+
+Craete another service for getting topics
+
+Spring Data Teir or JPA
+CRUD Operations
+
+Spring Data JPA
+
+JPA Java Persistence API
+ORM - Object Relational mapping for sql Database 
+java Application interacts with DB 
+Require (JDBC then run query, get resukts and convert into objects )
+
+ORM lets you map Entity classes into Sql Tables
+When we connect to DB, so dont hv to do mapping and table
+Classes <-> Tables ()
+
+JPA is a way to use ORM
+
+Spring Data JPA 
+framework handles a lot of work.
+
+Course API DB Dependencies

@@ -1,0 +1,103 @@
+
+class Animal{
+
+    string name;
+    public:
+
+    virtual void eat(){
+        //
+    }
+
+    Animal (const Animal &other){
+        //
+        // copy properties of other to our own object
+        name = other.name;
+    }
+};
+
+class Dog : public Animal{
+
+    public:
+    void eat(){
+        // 
+    }
+}
+
+class Cat : Animal{
+
+    public:
+    void eat(){
+        // 
+    }
+}
+int main(){
+    Dog d = Dog();
+    d.eat();
+
+    Animal a = Dog();
+    a.eat();
+
+    Animal a = Cat();
+    a.eat();
+
+    Animal an = Animal();
+
+    Animal ab = Animal(ab);
+}
+Minimum operations required to balance a parenthesis string. We can either insert a paranthesis or replace an existing one with another. Each operation costs 1 unit.
+
+ 
+
+Example: "))(((" , "(()(("
+
+ ((( : ()()
+ )) right char not valid
+
+ )) 1 : Insert left brackets for unbalanced ()
+ ))) 2 
+ ((( 2 
+ )))((( == 
+ ()(())  == 4
+
+
+
+"min =6";
+minOperations = 2 + 1 = 3
+()()()
+
+))(((
+inst : 1 + 1 
+replace:
+stack : (((()
+
+))(((
+left =3
+right =0
+
+st : (((
+ans = 2;
+
+(((()
+
+int makeValidParanthesis(string s){
+    int left =0, right=0;
+    stack<char> st;
+
+    for(int i=0;i<s.size();i++){
+        if(s[i] == '('){
+            st.push('(');
+        }
+        else{
+            if(!st.empty()){
+                char ch = st.top(); st.pop();
+                // found a left bracket for )
+            }
+            else{
+                right++;
+            }
+        }
+    }
+    left = st.size();
+    int ans = (left + 1)/2 + (right + 1)/2;
+    return ans;
+}

@@ -1,8 +1,8 @@
 Introduction:
 
 I am Anuj Pratap Singh Yadav. I belong to shivpuri Madhya Pradesh. I did my B.Tech in Computer Science from NIT Bhopal and graduated in 2015.
-Currently I am working in Microsoft and before that I use to work in Adobe.
-I have experience on various domians like Desktop Applications, Distributed Systems, Microsservices.
+Currently I am working in Microsoft for almost 2 years and before that I worked in Adobe for 6 years.
+I have experience on various domians and technologies like Desktop Applications, Distributed Systems, Microsservices.
 Tech Stacks that I have worked with are : 
 Java, C++, C# for backend
 ReactJs, Javascript, TypeScript : front end development
@@ -13,7 +13,7 @@ Before that I have worked in Office Video team which aims to integrate Videos in
 
 Experience in Adobe: 
 Experience with working with AEM (Adobe Experience Manager), worked in a team which is providing solutions to customers for DITA content.
-On on Web Editor for xml(DITA) files.
+Worked on Web Editor for xml(DITA) files.
 Worked with ELements Team, Light versions of Photoshop(Photo Editing and Premiere(Video Editing). Worked on colorpop features, migrating elements from RIBS to Hyperdrive.
 
-Let me know if I should go deeper in the projects.
+Please Let me know if I should go deeper in the projects.

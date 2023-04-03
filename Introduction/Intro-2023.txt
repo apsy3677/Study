@@ -6,7 +6,6 @@ I have experience on various domians and technologies like Desktop Applications,
 Tech Stacks that I have worked with are : 
 Java, C++, C# for backend
 ReactJs, Javascript, TypeScript : front end development
-I have worked heavily on backend though.
 Currently I work in ODSP (OneDrive SharePoint) Quota management team, which is responsible for handling Consumer Quota available on OneDrive. Here I worked on Catalog Filtering for Upgradeable Plans in Onedrive and also handling Purchase-Commerce Microservice.
 
 Before that I have worked in Office Video team which aims to integrate Videos in all Office Apps( WXP- Word, PPT, Excel). I have worked on 3 key deliverables there including Explainer Vidoes in Powerpoint, Cameo in Recording Studio and Stream 2.0 integration with Office Apps.

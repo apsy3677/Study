@@ -1,0 +1,79 @@
+
+arr[] = {5,6,7,6,5,4,5,6,7,8,7,6,7,8,9,10}
+n = 100;
+k <= INT_MAX;
+k=8
+index 0+3 (k-currIndex)
+6 : (8-6)
+int searchLeftMostIndex(vector<int> &arr, int k){
+    int curr = 0;
+    int n = arr.size();
+    if(n == 0) return -1;
+    while(curr < n){
+
+        if(arr[curr] == k){
+            return curr;
+        }
+        else {
+            curr = curr + abs(k-arr[curr]);
+        } 
+    }
+    return -1;
+}
+
+Binary Search Tree
+Given inorder and preorder, construct the Tree
+
+Node{
+    int data;
+    Node * left;
+    Node * right;
+
+    Node(Node *l, Node *r){
+        left = l;
+        right =r;
+    }
+}
+
+int idx =0;
+Node * buildBST(vector<int> &inorder, vector<int> &preorder, int start, int end){
+
+    if(start > end) return NULL;
+
+    Node * node = newNode(preorder[idx]); idx++;
+
+    if(start == end) return node;
+
+    int index = findIndexInorder(inorder, start, end, node->data);
+
+    node->left = buildBST(inorder, preorder, start, index-1);
+    node->right = buildBST(inorder, preorder, index+1, right);
+
+    return node;
+
+}
+
+int findIndexInorder(vector<int> &inorder, int low, int high, int val){
+    int mid, ans =-1;
+    if(low > high) return ans;
+
+    while(low <= high){
+        mid = low + (high -low)/2;
+        if(inorder[mid] == val)
+            return mid;
+        else if(inorder[mid] > val){
+            high = mid-1;
+        }
+        else{
+            low = mid+1;
+        }
+    }
+    return ans;
+}
+
+Node * createBST(vector<int> &inorder, vector<int> &preorder){
+    
+    int n = inorder.size();
+
+    return buildBST(inorder, preorder, 0, n-1);
+}

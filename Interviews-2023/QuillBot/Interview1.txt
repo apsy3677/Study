@@ -1,0 +1,33 @@
+Genric class Box: 
+Any type of object
+get()
+set()
+
+constructor : set to null
+
+
+Box<Integer> 
+
+public class Box<T> {
+    private T data;
+
+    Box(){
+        this.data = null;
+    }
+    Box(T data){
+        this.data = data;
+    }
+    get(){
+        return data;
+    }
+    set( T data){
+        this.data = data;
+    }
+
+}
+
+x -> x * 2
+Box<>
+box.map()
+
+

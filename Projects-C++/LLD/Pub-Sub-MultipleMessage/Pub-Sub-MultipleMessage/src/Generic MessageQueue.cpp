@@ -120,12 +120,12 @@ int main()
    std::shared_ptr<Subscriber<std::string>> stringSub = std::make_shared<StringSubscriber>();
 
    pub.subscribe( stringSub );
-   pub.subscribe( intSub );
+   // pub.subscribe( intSub );
 
    pub.send( "Hello, world!" );
    pub.send( 42 );
 
-   pub.unsubscribe( stringSub );
+   // pub.unsubscribe( stringSub );
    pub.send( "This message should only be received by the int subscriber" );
 
    return 0;

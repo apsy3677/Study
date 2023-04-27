@@ -93,9 +93,14 @@ int main()
    // Publisher publisher( queue );
 
    unique_ptr<IPublisher> publisher = make_unique<Publisher>( queue );
-
+   
    unique_ptr<ISubscriber> sub1 = make_unique<Subscriber>( queue );
    unique_ptr<ISubscriber> sub2 = make_unique<Subscriber>( queue );
+
+   // IPublisher* publisher = new Publisher( queue );
+   //
+   // ISubscriber* sub1 = new Subscriber( queue );
+   // ISubscriber* sub2 = new Subscriber( queue );
 
    thread sub1_thread( [&]()
    {

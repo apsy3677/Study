@@ -1,0 +1,34 @@
+Design In-Memory FileSystem with following APIs
+
+1. string addFile(string filePath, int size) : 
+Add file to filesystem if not present already and return "created"
+If file exist already change the size of file and save it and return "overwritten"
+Add such that versioning can be handled
+
+2. string getFileSize(string filepath)
+if file exist return size of latest version of this file in string form
+if it does not exist return empty string
+
+3. string moveFile(string filePath1,  string filePath2)
+move only if filePath1 exists and filePath2 does not exists and return "true"
+else return "false"
+
+4. string getNLargest(string prefix, int n)
+It should return a string representing the names of the top n largest files that have names starting with prefix in the following format: "<name1>(<size1>), ... <namen>(<sizen>). Returned files should be sorted by size in descending order, or in case of a tie, sorted in lexicographical order of names.
+If no such files, return empty string. If the number of such files is less than n, all of them should be return in specified format.
+All sizes of file should be of latest version
+
+Level 3: Implement support for versioning.
+
+Overwriting a file should increment its version by 1, starting from 1 .
+Just as in Level 1, ADD_FILE should still add a file to storage. If a file with the same name already exists at name , should be overwritten and the operation should return "overwritten" , or return "created" otherwise. When 
+:,verwriting existing files, the previous versions of the file should be kept. The same guarantees to the input applied. 
+Similarly, MOVE_FILE should do nothing when nameTo already exists or when nameFrom does not exist (and shoul ·eturn "false" but it should move all versions o􀀙the file otherwise (and return "true" ). The same guarantees to  the input applied.
+
+GET FILE_SIZE_AT_VERSION <name> <version> - should return a string representing the size of the specifiE version of the specified file. If the file name does not exist, or if the specified version is greater than the latest version, return an empty string.
+GET_FILE_SIZE and GET_N_LARGEST should reference the latest version of each file. 
+
+DELETE_ VERSION <name> <version> - should delete the specified version of the file. If the file name or the file version does not exist, returns "false" , otherwise returns "true" . Note that after deleting the specified
+version, all higher versions of the file should decrease their version number by one. If the only version of the file deleted, the file is permanently removed.
+
+Code In Golang

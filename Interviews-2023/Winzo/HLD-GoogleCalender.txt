@@ -1,0 +1,107 @@
+Google Calendar
+You’re going to design the backend for Google Calendar. 
+
+Functional Requirement:
+1. A user should be able to create, update, and delete events
+	a. Events can be One time or Recurring
+	b. An event would typically consist of {start, end, location, Owner, user-list, title}.
+	c. An event once created, can be either accepted or rejected by the constituent users - if neither it should be in accepted state.
+2. User should be able to view their calendar. 
+3. They should also be able to invite guests to their events. 
+4. The guest should be able to accept or reject an invitation ( Some or all of the events if recurring events).
+5. For a given set of users[U1, U2,....Un] identity a common free slot of time.
+6. Handle different Timezones
+
+
+Non Functional Requirement:
+	- Handle multiple events on the same time on same day (any one of them is accepted by user)
+	- Handle scale 
+
+View DATA
+GET v1/events/
+Userid, timestamp
+
+GET v1/users/{userid}
+
+GET v1/users/{userid}/events
+{timestamp
+Days: 7
+}
+
+Create Event/ Update (CRUD)
+POST v1/users/{userid}/events
+{
+startTime
+endTime
+‘Users’ [id1]
+Title
+Subject
+Recur : false
+
+ daily, weekly{}, monthly
+}
+
+The guest should be able to accept or reject an invitation ( Some or all of the events if recurring events).
+
+Eventid
+Meeting request
+
+v1/users/{userid}/events/eventid
+accept/reject
+
+
+6. Handle different Timezones 
+Keeping all the time related data in UTC format
+
+For a given set of users[U1, U2,....Un] identity a common free slot of time.
+
+Get event details for each user
+Find common time free time for owner & users in event
+
+findFree
+Userlist 
+Timewindow
+
+v1/users/{userid}/findFreeSlot
+{
+Userlist
+Starttime, endTime
+}
+
+
+Data Schema
+
+Events
+{
+Id
+Title
+Description
+startTime
+endTime
+Title
+Subject
+Recur : false 
+
+}
+
+Recurring_events
+{
+	Id
+	Title
+	Event_id
+	
+}
+
+User mapping with events
+UserEvents
+{
+Userid,
+eventId,
+// recurring
+}
+
+// users : 10 millions users
+// events : 2*10 millions events per day
+// year : 2*10 * 365 millions ~ 6 Billions
+// storage 6*10^9 *KB ~ 6*10^3 GBs = 6 TB
+// 5 storage = 30 TB

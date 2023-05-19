@@ -1,0 +1,102 @@
+SQL
+
+ACID 
+Atomicity: Transactions atomic operation, operation will completle fully or in case of failure no steps will be performed 
+Consistency: Write & read should be in sync, same data is visible 
+Isolation: Transactions sud not get affected by other transactions, Definition
+Durability: Data Loss nahi hoga
+Structred Data
+
+NOSQL
+
+BASE : Basic Avalability, Soft State, Eventual Consistency
+Unstructed Data: 
+
+
+BookTicket
+
+userId, cityid, MovieId, Th
+
+SelectCity()
+getAllMoviesForCity(cityId)
+getAllMoviesForCity(cityId, thetareId)
+
+getMovieSlots(movieid, cityId )
+
+bookTicket(userId, cityId, movieId, thetareId, timeSlot, seats)
+
+Users
+DAU
+Queries Per Second
+
+
+HLD: 
+Sequence Wise Operations
+Users -> LoadBalancer -> Application servers -> Database
+
+SearchMovie()
+
+MoviesinCity
+cityId, MovieId
+
+MoviesInTheatre
+
+cityId, thetareId, -> movies
+
+
+sql 
+find all rows with cityId = "Hyd"
+select * from MoviesinCity where cityId = "HYD"
+
+select * from Theatre where thetareId = "TID"
+
+
+City
+name, id, 
+TheatreIds
+
+Theatre
+name, id, city, 
+Screen
+Movies
+
+Show
+timing, thetareId, movieId
+
+cityId="HYD" & thetareId = "TID" 
+
+Movies 
+id, genre Actors
+
+getdataForMovies(movieIds)
+
+Cache
+Redis: Distributed cache, Third party Tool for In-Memory Caching
+Elastic Search/ Solar : Searching Tools
+
+city, movie, thetare, time
+
+Services:
+
+VendorService
+
+MovieService
+
+PricingService
+
+Booking Service
+
+Authentication Service
+
+Payment Service
+
+Avalability
+
+Entities : 
+vendor will fill entities
+
+Pricing, Availability, Booking, 
+
+Payment against Booking
+
+Shipping

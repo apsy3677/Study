@@ -1,0 +1,14 @@
+domain name forewarding let godaddy domain owners automatically redirect their site visitors to a different site url. sometime the visitors
+have to go through multiple redirect before ending up on the correct site
+using dns manager,godady customers can view redirect in a simple visual format. one handy feacture is the ability to group the domains by the final
+websites they redirect to. your task is to implement this feature
+function signature is vector<vector<string>>solution(vector<vector<string>> redirect)
+find connected domains which maps to search url
+
+Input: 
+
+[
+ ["a-b.c","a.c"],
+ ["aa-b.c","a-b.c"],
+ ["bb-b.c","a-b.c"]
+]

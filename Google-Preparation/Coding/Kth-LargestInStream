@@ -1,0 +1,36 @@
+// Find the kth largest element in a number stream
+
+// Problem Statement: Design a class to efficiently find the Kth largest element in a stream of numbers. The class should have the following two things:​
+
+// The constructor of the class should accept an integer array containing initial numbers from the stream and an integer ‘K’.
+
+// The class should expose a function add(int num) which will store the given number and return the Kth largest number.
+
+class KthLargestNumber{
+private:
+    // TC O(K)
+    priority_queue<int, vector<int>, greater<int>()> pq;
+    int capacity;
+public:
+    // O(inittialize )
+    KthLargestNumber(vector<int> & arr, int K){
+        this->capacity = K;
+
+        for(int i=0;i<arr.size();i++){
+            add(arr[i]);
+            // pq.push(arr[i]);
+            // if(pq.size() > capacity){
+            //     pq.pop(); // remove smallest element
+            // }
+        }
+    }
+    // O(Log(N))
+    int add(int num){
+        pq.push(num); 
+        // important to insert element first as we want to keep track of all the elements of the stream
+        if(pq.size() > capacity){
+            pq.pop();
+        }
+        return pq.top(); // return the kth Largest Element
+    }
+};

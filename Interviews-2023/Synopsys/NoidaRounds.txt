@@ -1,0 +1,33 @@
+
+
+class design
+
+int data
+char * str
+
+Copy Constructor, assignment operator constructor
+
+=, constctrtor 
+
+Deep Copy 
+
+DS Algo :
+
+Puzzle : 
+
+14 Red ball, 13 Blue ball 
+
+Balls of 3 colors
+3 Box
+R 
+B 
+R+B 
+
+
+Fibannaci Series 
+diff of diff se 
+
+BitWise Opeartors Questions
+
+AND, XOR, OR
+find 2 numbers, sum of 2 numbers and Xor 

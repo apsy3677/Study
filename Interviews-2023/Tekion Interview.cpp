@@ -9,6 +9,11 @@
 
 // Find the floor in BST
 
+struct Node{
+    int val;
+    Node *left, *right;
+} 
+
 Node * findLowerNumber(Node * root, int n){
 
     if(!root) return NULL;

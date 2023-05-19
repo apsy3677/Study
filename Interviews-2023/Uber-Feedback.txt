@@ -4,10 +4,13 @@ Area's :
 Functional Requirment : 
 Non-Functional Requirement : Missed Non-Functional 
 Duplicate Payment System : 
+Doesn't looked Optimal
 
 Majority :
 
+
 Exceed the bar in Some Interviews.
+
 
 Don't Miss Edge cases:
 Focus on Non-Functional Requirements as well

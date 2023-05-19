@@ -1,0 +1,40 @@
+EDA
+C++ concepts : 
+Stack, Queue, Tree : 
+C++ : 
+Tools varalog and VHDL : 
+
+C++ version specific questions:  
+
+C++, Managerial Greatest : 
+Puzzles : 
+
+Coding 1hr
+System Design
+Hiring trade Offs Team size, Drive 
+
+Practice : 
+
+Swetha 
+
+L5-A 
+more proficiency, modular
+Follow Up Questions
+
+Intro : 
+Prob Statement
+Coding Statement 
+Best Approach 
+edge cases/ 
+no assumptions
+time complexity
+
+Debugging Skills
+Dry 
+Depth in specialization, Concurrency LLD focused.
+Design Principal 
+
+yadavaps77@gmail.com
+yadav.anuj.singh@gmail.com
+
+

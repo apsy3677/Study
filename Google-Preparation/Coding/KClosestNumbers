@@ -1,0 +1,53 @@
+// Find k closest numbers
+// Given a sorted number array and two integers ‘K’ and ‘X’, find ‘K’ closest numbers to ‘X’ in the array. Return the numbers in the sorted order. ‘X’ is not necessarily present in the array.
+
+// Input: arr = [1,2,3,4,5], k = 4, x = 3
+// Output: [1,2,3,4]
+
+// Input: [2, 4, 5, 6, 9], k = 3, x = 6
+// Output: [4, 5, 6]
+
+vector<int> findClosestElements(vector<int>& arr, int k, int x){
+
+    int n = arr.size();
+    int idx = lower_bound(arr.begin(), arr.end(), x) - arr.begin();
+    int closestInd = idx;
+    if(idx == n){
+        closestInd = idx-1;
+    }
+    else{
+        if(arr[closestInd] != x && closestInd >0){
+            if(abs(x- arr[closestInd-1]) <= abs(x- arr[closestInd])){
+                closestInd = closestInd -1;
+            }
+        }
+    }
+    int left = closestInd-1;
+    int right = closestInd +1;
+
+    vector<int> ans;
+    ans.push_back(arr[closestInd]);
+    k--; // need to find k-1 elements more
+    while(k--){
+        if(left>=0 && right <n){
+            if(abs(arr[left] - x) <= abs(arr[right] - x)){
+                ans.push_back(arr[left]);
+                left--;
+            }
+            else{
+                ans.push_back(arr[right++]);
+            }
+        }
+        else if(left >=0){
+            ans.push_back(arr[left]);
+            left--;
+        }
+        else if(right <n){
+            ans.push_back(arr[right]);
+            right++;
+        }
+    }
+
+    sort(ans.begin() , ans.end());
+    return ans;
+}

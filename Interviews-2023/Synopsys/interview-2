@@ -44,9 +44,10 @@ int main(){
 
     Animal ab = Animal(ab);
 }
+
+
 Minimum operations required to balance a parenthesis string. We can either insert a paranthesis or replace an existing one with another. Each operation costs 1 unit.
 
- 
 
 Example: "))(((" , "(()(("
 

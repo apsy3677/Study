@@ -1,0 +1,31 @@
+Find all palindrome substrings
+Given a string find all non-single letter substrings that are palindromes. For instance:
+
+Input: "abc"
+Output: 3
+Explanation: Three palindromic strings: "a", "b", "c".
+
+
+
+int countSubstrings(string s) {
+    int n = s.size();
+
+    vector<vector<int>> dp(n+1, vector<int> (n+1, 0));
+    vector<string> pallindromes;
+
+    for(int i=0;i<n;i++) dp[i][i] = 1, pallindromes.push_back(s.substr(i, 1));
+
+    // we have to start this way coz in DP we use states after i+1, so it is necessary to do it this way
+    for(int i = n-1; i>=0;i--){
+        for(int j = i+1;j<n; j++){
+            if(s[i] == s[j]){
+                if((j-i) ==1 || dp[i+1][j-1] == 1)
+                    dp[i][j] = 1,
+                    pallindromes.push_back(s.substr(i, j-i+1));
+            }
+            
+        }
+    }
+    return pallindromes.size();
+
+}

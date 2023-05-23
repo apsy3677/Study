@@ -1,0 +1,12 @@
+Find the missing number
+We are given an array containing ‘n’ distinct numbers taken from the range 0 to ‘n’. Since the array has only ‘n’ numbers out of the total ‘n+1’ numbers, find the missing number. See the example below.
+
+    int missingNumber(vector<int>& arr) {
+        long sum = 0;
+        for(auto x: arr){
+            sum += x;
+        }
+        long n = arr.size();
+        
+        return n*(n+1)/2 - sum;
+    }

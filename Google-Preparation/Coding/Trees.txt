@@ -1,0 +1,22 @@
+Trees
+
+Mirror binary tree nodes
+Given the root node of a binary tree, swap the ‘left’ and ‘right’ children for each node. The below example shows how the mirrored binary tree should look like.
+
+TreeNode* invertTree(TreeNode* root) {
+    if(!root) return root;
+    invertTree(root->left);
+    invertTree(root->right);
+    swap(root->left, root->right);
+
+    return root;
+}
+
+bool isSameTree(TreeNode* p, TreeNode* q) {
+      if(!p && !q) return true;
+
+      if(p && q && p->val == q->val){
+        return isSameTree(p->left, q->left) && isSameTree(p->right, q->right);
+      }
+      return false;
+}

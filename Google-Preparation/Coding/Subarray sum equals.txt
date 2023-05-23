@@ -1,0 +1,44 @@
+Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k.
+
+A subarray is a contiguous non-empty sequence of elements within an array.
+
+
+    int subarraySum(vector<int>& arr, int k) {
+        int currSum = 0, ind =0;
+        int ans =0;
+        unordered_map<int, int> seen;
+        // seen[0] = 1; // it is base case if k matches the arr[i]
+        for(auto num : arr){
+            currSum += num;
+            if(currSum == k) ans++; // used if seen[0] is not used
+            if(seen.find(currSum-k) != seen.end()){
+                ans += seen[currSum-k];
+            }
+            seen[currSum]++;
+        }
+        return ans;
+    }
+
+    vector<int> subarraySumUsingSlidingWindow(vector<int>& arr, int k) {
+        int currSum = 0;
+        int left =0, right =0;
+
+        while(left < right && right < arr.size()){
+            
+            if(currSum == k){
+                // window left, right contains this elements
+                return {left, right};
+            }
+            if(currSum > k){
+                currSum -= arr[left++];
+            }
+            else{
+                currSum += arr[right++];
+            }
+        }
+        if(currSum == k){
+            return {left, right-1};
+        }
+        return {-1,-1};
+    }
+

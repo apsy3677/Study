@@ -1,0 +1,32 @@
+// String Segmentation
+// You are given a dictionary of words and a large input string. You have to find out whether the input string can be completely segmented into the words of a given dictionary. The following two examples elaborate on the problem further.
+// Input: s = "applepenapple", wordDict = ["apple", "pen"]
+// Output: true
+// Explanation: Return true because "applepenapple" can be segmented as "apple pen apple".
+//              Note that you are allowed to reuse a dictionary word.
+
+unordered_set<string> dict;
+
+bool f(int index, string &s, vector<int> &dp){
+    if(index == s.size()) return dp[s.size()] =  1;
+
+    if(dp[index] != -1) return dp[index];
+
+    for(int i=index; i<s.size(); i++){
+        string sub = s.substr(index, i-index+1);
+        if(dict.find(sub) != dict.end()){
+            if(f(i+1, s, dp)){
+                return dp[index] = dp[i] = 1;
+            }
+        }
+    }
+    return dp[index] = 0;
+}
+
+bool wordBreak(string s, vector<string>& wordDict){
+    vector<int> dp(s.size() +1, -1);
+    for(auto w: wordDict) dict.insert(w);
+    return f(0, s, dp);
+}
+
+3 point puzzle 

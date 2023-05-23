@@ -1,0 +1,46 @@
+Print balanced brace combinations
+Print all braces combinations for a given value n so that they are balanced. See the example below.
+For example, given n = 3, a solution set is:
+
+[
+  "((()))",
+  "(()())",
+  "(())()",
+  "()(())",
+  "()()()"
+]
+
+Algo: 
+left_braces count: 0
+right_braces count: 0
+ 
+if left_braces count is less than n:
+  add left_braces and recurse further
+if right_braces count is less than left_braces count:
+  add right_braces and recurse further
+stop recursing when left_braces and right_braces counts are both equal to n
+
+    vector<string> ans;
+
+    void generate(int n, int left, int right, string &s){
+        if(left ==n && right ==n){
+            ans.push_back(s);
+            // cout<<s<< " ";
+            return;
+        }
+        char ch ='(';
+        
+        if(left<n){
+            s += ch;
+            generate(n, left+1,right,s);
+            s.erase(s.end()-1);
+        }
+            
+
+        if(left>right){
+            ch = ')';
+            s += ch;
+            generate(n, left,right+1,s);
+            s.erase(s.end()-1);
+        }
+    }

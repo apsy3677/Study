@@ -1,0 +1,100 @@
+#include <cmath>
+#include <cstdio>
+#include <vector>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+/*
+
+Given an edge weighted tree with N nodes. Length of a path between two nodes
+is the sum of the weights of the edges on the path.
+
+Find the sum of lengths of all possible paths in the tree.
+
+
+      2
+(4)  / \ (5)
+    1   3
+(4)/	 \(6)
+  4       5
+  
+4   5   6  7
+1-2 -> 4
+1-3 -> 9
+2-3 -> 5
+
+2-1-4 -> 8
+3-2-1-4 -> 13
+1-4 -> 4
+
+18 + 25 = 43
+
+4 * (1*3) = 12
+4 * (2*2) = 16
+5 * (1 * 3) = 15
+
+12 + 16 + 15 = 43
+
+
+Answer = 18
+
+4 -> 1  path*weightOfEdge(1-4)
+5 -> 1  1* 1
+
+1 -> allPaths(4) + allPaths(5) + 1 root
+
+2-1 4
+2-1-4 5
+
+2-1-5 5
+
+2-3 5
+
+firstChildPath * edge 
+
+findAllPaths of a every child child
+
+
+*/
+
+//2 has 2 children, 
+//path using 2 = paths using 1st child + paths using 2nd child
+// weight is with edge
+
+// How many times a edge is used ?
+
+// 2-1 how many times this edge is used in paths ?
+// 2-3 how many times this edge is used in paths ?
+
+//  Find all the paths using a edge in tree ?
+
+// N-ary Tree
+
+// N nodes : 
+// each node can have N path in worst ctype_base
+// if we traverse al paths thn 
+// Sum of all the paths 
+// Return this sum 
+
+// O(N*N)
+
+class TreeNode {
+    int id;
+    vector<pair<TreeNode*, int> > children;
+};
+
+// N nodes =  NTreeNodes *(Edges)
+
+// one Node Space: id -4bytes
+// empty : children vectot<> ()  vector<>size 4
+// pair < pointer, int>  4bytes,  4bytes = 8bytes
+
+// 32 bit, pointer 4 bytes
+
+// 4*8 = 32 Bytes + some extra memory that compiler has genrated for its vector 
+
+int main() {
+
+    return 0;
+}

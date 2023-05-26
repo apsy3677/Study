@@ -78,14 +78,39 @@ findAllPaths of a every child child
 
 // N nodes : 
 // each node can have N path in worst ctype_base
-// if we traverse al paths thn 
+// if we traverse all paths thn 
 // Sum of all the paths 
 // Return this sum 
 
 // O(N*N)
+int sizeOf(TreeNode *root){
+	if(!root) return 0;
+	
+	int sz = 1;
+	for(auto child : root->children){
+		sz += sizeOf(child.first);
+	}
+}
+int dfs(TreeNode * root, int n){
+	if(!root) return 0;
+	
+}
+int sumOfAllPaths(TreeNode * root){
+	int n = sizeOf(root);
+	int sum = 0;
+	int sz = 0;
+	for(auto child : root->children){
+		// size of tree
+		sz = sizeOf(child.first);
+		sum += sz*(n-sz) * child.second;
+	}
+	return sum;
+}
+
 
 class TreeNode {
     int id;
+	// node, weight;
     vector<pair<TreeNode*, int> > children;
 };
 
@@ -98,6 +123,8 @@ class TreeNode {
 // 32 bit, pointer 4 bytes
 
 // 4*8 = 32 Bytes + some extra memory that compiler has genrated for its vector 
+
+
 
 int main() {
 

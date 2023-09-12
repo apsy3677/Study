@@ -1,0 +1,115 @@
+
+// Binary Tree Traversals Iterative
+
+// preorder NLR
+use stack and push elements in opposite order of NLR,
+insert elements in R L order., so that left elements will be picked first
+
+vector<int> preorder(Node * root){
+    if(!root){
+        return {};
+    }
+    stack<Node *> st;
+    st.push(root);
+    vector<int> ans;
+    while(!st.empty()){
+        Node * top = st.top();
+        st.pop();
+        ans.push_back(top->val);
+        if(top->right){
+            st.push_back(top->right);
+        }
+        if(top->left){
+            st.push_back(top->left);
+        }
+    }
+    return ans;
+}
+
+// inorder LRN
+
+traverse nodes in the way like recusrsion works
+start from root
+step1: keep going left, while curr is not NULL. and also keep storing in stack.
+step2: when curr is NULL, it means it is top node in stack is N & is to be printed. print it. then go right of top node
+
+vector<int> inorder(Node *root){
+    if(!root) return {};
+    vector<int> ans;
+    stack<Node *> st;
+    Node * curr = root;
+    // 1- 2 -3
+    // st : 1 2 3
+    while(true){
+        if(curr){
+            st.push(curr); //step 1
+            curr = curr->left;
+        }
+        else{
+            if(st.empty()) break; // no more node to process, traversal done.
+            curr = st.top(); st.pop(); // current node will be of stack top
+            ans.push_back(curr->val);
+            curr = curr->right;
+        }
+    }
+
+    return ans;
+}
+
+// post order LRN
+
+// using 2 stacks
+
+vector<int> postorder(Node *root){
+    if(!root) return {};
+    stack<Node*> s1, s2;
+    vector<int> ans;
+    Node *curr = root;
+    s1.push(curr);
+    while(!s1.empty()){
+        curr = s1.top(); s1.pop(); // take out top and pop
+        s2.push(curr);
+        if(curr->left) s1.push(curr->left); // instead of stack we can push in a vector, and return the reverse of vector for post order traversal
+        if(curr->right) s1.push(curr->right);
+    }
+    while(!s2.empty()){
+        curr = s2.top(); s2.pop(); // take out top and pop
+        ans.push_back(curr->val);
+    }
+    return ans;
+}
+
+// post order using one stack
+
+// all traversals in one pass;
+
+// keep a stack<Node *, int> {Node, How many times it occured}
+
+void allTraversal(Node *root){
+    if(!root) return;
+    vector<int> pre, in, post;
+    stack< pair<Node *, int> > st;
+
+    st.push({root, 1});
+
+    while(!st.empty()){
+        auto [node, cnt] = st.top(); st.pop();
+
+        if(cnt ==1){
+            pre.push_back(node->val);
+            cnt++;
+            st.push({node,cnt});
+            if(node->left) st.push({node->left, 1});
+        }
+        else if(cnt ==2){
+            in.push_back(node->val);
+            cnt++;
+            st.push({node,cnt});
+            if(node->right) st.push({node->right,1});
+        }
+        else{
+            post.push_back(node->val);
+        }
+    }
+    // print all pre, in, post
+}

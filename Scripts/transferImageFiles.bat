@@ -1,14 +1,14 @@
 @echo off
 setlocal
 
-set "source_folder=C:\Users\anujyadav\OneDrive - Microsoft\Personal\Wedding-Iphone Pictures\Wedding - iphone11-18-Nov-2021\103APPLE(1)"
-set "destination_folder=D:\Picstransfer"
+set "source_folder=This PC\Apple iPhone\Internal Storage\DCIM"
+set "destination_folder=D:\Personal\Lala\PicsTransfer"
 
 if not exist "%destination_folder%" (
     mkdir "%destination_folder%"
 )
 
-for %%F in ("%source_folder%\*.jpg", "%source_folder%\*.heic") do (
+for %%F in ("%source_folder%\*.jpg", "%source_folder%\*.png", "%source_folder%\*.heic") do (
     move "%%F" "%destination_folder%\"
     echo Transferred: %%~nxF
 )

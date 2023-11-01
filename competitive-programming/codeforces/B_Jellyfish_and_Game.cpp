@@ -1,14 +1,3 @@
-// #include <bits/stdc++.h>
-
-// using namespace std;
-
-// int main(){
-
-//     cout<<"Hello World";
-//     cout<<"No Hello ";
-//     return 0;
-// }
-
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -55,7 +44,39 @@ void print_v(vector<T> &v) { cout << "{"; for (auto x : v) cout << x << ","; cou
 
 
 void solve() {
-    cout<< "Hello World";
+    ll n,m,k;
+    cin>>n>>m>>k;
+
+    vector<ll> arr(n), brr(m);
+    ll sum1=0, sum2=0;
+    for(int i=0;i<n;i++){
+        cin>>arr[i];
+        sum1 += arr[i];
+    }
+    sort(all(arr));
+    for(int i=0;i<m;i++){
+        cin>>brr[i];
+        sum2 += brr[i];
+
+    }
+    sort(all(brr));
+    // cout<<sum1<< " " <<sum2 <<":: ";
+    if(k & 1){
+        // 1 will win
+        if(arr[0] <= brr[m-1]) {
+            cout << sum1 + brr[m-1] - arr[0] << endl;
+        }
+        else{
+            cout<<sum1 <<endl;
+        }
+    } else {
+        if(arr[0] >= brr[m-1]) {
+            cout << sum1 + brr[0] - arr[n-1] << endl;
+        }
+        else {
+            cout<<sum1 - arr[0] + brr[m-1] - arr[n-1] + brr[0]<<endl;
+        }
+    }
 }
 
 int main() {
@@ -66,7 +87,7 @@ int main() {
 	#endif
 
     int tc = 1;
-    // cin >> tc;
+    cin >> tc;
     for (int t = 1; t <= tc; t++) {
         // cout << "Case #" << t << ": ";
         solve();

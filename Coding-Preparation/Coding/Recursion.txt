@@ -1,0 +1,22 @@
+Recursion
+
+Print all subsequences:
+
+[1,2,3]
+
+printSubSequences(int idx, int n, vector<int> arr, vector<int> &str) {
+    if(i>=n){
+        // print subsequence
+        cout<<str;
+        return;
+    }
+
+    for(int i= idx;i<arr.size();i++){
+        // not take
+        printSubSequences(i+1,n,arr,str);
+        //take
+        str.push_back(arr[i]);
+        printSubSequences(i+1,n,arr,str);
+        str.pop_back();
+    }
+}

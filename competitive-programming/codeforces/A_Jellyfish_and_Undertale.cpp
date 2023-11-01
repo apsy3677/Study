@@ -1,14 +1,3 @@
-// #include <bits/stdc++.h>
-
-// using namespace std;
-
-// int main(){
-
-//     cout<<"Hello World";
-//     cout<<"No Hello ";
-//     return 0;
-// }
-
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -55,7 +44,19 @@ void print_v(vector<T> &v) { cout << "{"; for (auto x : v) cout << x << ","; cou
 
 
 void solve() {
-    cout<< "Hello World";
+    ll n,a,b;
+    cin>>a>>b>>n;
+    ll arr[n];
+    ll sum =0;
+    for(int i=0;i<n;i++){
+        cin>>arr[i];
+        sum += min(arr[i], a-1);
+    }
+    // sort(arr, arr+n);
+    // reverse(arr, arr+n);
+    int count = 0, canAdjust =0;
+    ll ans = sum + b;
+    cout<<ans<<endl;
 }
 
 int main() {
@@ -66,7 +67,7 @@ int main() {
 	#endif
 
     int tc = 1;
-    // cin >> tc;
+    cin >> tc;
     for (int t = 1; t <= tc; t++) {
         // cout << "Case #" << t << ": ";
         solve();

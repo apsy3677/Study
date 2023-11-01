@@ -1,0 +1,68 @@
+ZIP encodes data using binary prefix trees (aka Huffman trees)
+In a binary prefix tree, values can only appear at the leaves of the tree
+To decode a file, we read bits from the file, use them to follow a path in the tree to a leaf, which determines a value:
+We start at the root of the tree
+When encountering a 0 bit, we descend to the left child, and when encountering a 1 bit we descend to the right child
+When reaching a leaf, we emit the value stored in the leaf
+Attached below is a sample tree:
+
+  *      0 = left, 1 = right
+ / \
+e   *        e = 0
+   / \       b = 10
+  b   z      z = 11
+To save the tree efficiently in ZIP files, we save a mapping from byte-value to bit-length. For example:
+
+{'b': 2, 'e': 1, 'z': 2}
+To make sure the mapping only represents a single tree, the tree must satisfy the following properties:
+
+Short paths (in the tree) are to the left of long paths
+Within the same length, smaller values appear to the left of larger values (so 'b' to the left of 'z', etc.)
+The main question: Given the encoding (byte->length mapping), construct a valid tree. Analyze the runtime complexity.
+  
+  // GIven encoding
+  'b' : string 
+  val : number (length of bit sequence)
+  
+  Range of val : int ?
+    
+    
+    
+  Struct Node {
+    
+    int bit_len;
+    string name;
+  };
+{'b': 2, 'e': 1, 'z': 2}
+{{1:e}, {2:e}, {2:z}
+   *      0 = left, 1 = right
+ / \
+e   *        e = 0
+   / \       b = 10
+  b   z      z = 
+Node * buildTree(std:map<string, int> & encoding) {
+  
+  priority_queue<Node, vector<Node>, greater<Node>> pq;
+  
+  for(auto entry : encoding{
+    pq.push(Node(entry.first, entry.second));
+  }
+      {{1:e}, {2:e}, {2:z}
+       {5, "*"}
+      while(pq.size()>1) {
+        // 2nd iter {2:z} {3, "*"}
+          Node *left = new Node("", 0); 
+          Node *right = new Node("", 0); 
+          
+          left = pq.top(); pq.pop(); 
+          right = pq.top(); pq.pop();
+          // {} {1:e}, {2:e} 
+          // {2:z} {3, "*"}
+          Node *intNode = new Node ("*", left->bit_length + right->bit_length); {"", 3}
+          intNode->left = left;
+          intNode->right = right;
+          pq.push(*intNode);
+      }
+      
+      return new Node (pq.top());
+}

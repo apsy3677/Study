@@ -1,0 +1,79 @@
+/*
+Find the LCS (Longest Common Subsequence) of two strings.
+
+Consider the two following sequences X and Y
+X: ABCBDAB
+Y: BDCABA
+The length of LCS is 4 LCS are BCAB, BCBA and BDAB.
+*/
+
+n,m
+
+last char of s1 is matching with last char s2,
+
+lcs will incr by 1
+  n-1, m-1
+  else
+    n-1, m
+    n, m-1
+    
+   rec(n, m, s1, s2) n n, 0  m m 0
+    
+    if(n==0 || m==0)
+       return 0;
+    
+    if(s1[n-1] == s2[m-1])
+        return 1 + rec(n-1,m-1, s1, s2)
+     
+      
+      return max(rec(n-1,m,s1,s2) , rec(n, m-1,s1,s2))
+      
+      TC: 2^m * 2^n
+      
+      n =4 : ____ 2 2 2 2 : 2 possiblity for each 
+      m = 3 : ___ 2*2*2
+        
+        MN
+        
+     0-n 0-m
+     
+     AAAA, AAA
+     n=3, m=3
+        these cases will repeat
+        (n-1,m ); (1,2)
+         (n, m-1) (1,2)
+        
+        
+        i, j LSC(X[0..i], Y[0..j])
+        
+X:ABCBDAB 7
+Y: BDCABA 6
+  6,5 -> (5,5) (6,4)
+  (5,5) -> 1 + (4,4)
+   int lcsUtil(int l1, int l2, string &s1, string &s2, vector<vector<int>> &dp){
+          
+          if(l1<0 || l2 <0){
+            return 0;
+          }
+          if(dp[l1][l2] != -1){
+            return dp[l1][l2];
+          }
+          if(s1[l1] == s2[l2]){
+            return dp[l1][l2] = 1 + lcsUtil(l1-1, l2-1,s1,s2,dp);
+          }
+          else{
+            int left = 0 + lcsUtil(l1-1, l2,s1,s2,dp);
+            int right = 0 + lcsUtil(l1, l2-1,s1,s2,dp);
+            return dp[l1][l2] = max(left, right);
+          }
+        
+        }
+          TC : O(M*N)
+            SC = (M*N) + O(M+N) 
+            
+  int lcs(string s1, string s2){
+    int n=s1.size(), m = s2.size();
+          vector<vector<int>> dp(n+1, vector<int>(m+1, -1);
+          return lcsUtil(n-1,m-1,s1,s2,dp);
+     }
+        

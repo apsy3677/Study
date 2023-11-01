@@ -69,8 +69,8 @@ vector<pii> merge(int i, int j){
     if(i==j) return T[i];
 
     int mid = (i+j)/2;
-	vector<pii> left = merge(i, mid),
-		right = merge(mid+1, j);
+	  vector<pii> left = merge(i, mid),
+		vector<pii> right = merge(mid+1, j);
     return mergeSeriesData(left, right);
 }
   int main() {

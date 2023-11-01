@@ -1,0 +1,133 @@
+  a: [1, 2, 3]
+  b: [3, 4, 5]
+  union: [1, 2, 3, 4, 5]
+  intersection: [3]
+  
+2 sorted sets
+union and 
+
+
+vector<int> getUnion(vector<int> &s1, vector<int> &s2) {
+  int i=0, j=0;
+  vector<int> un;
+  while(i<s1.size() && j <s2.size()){
+    if(s1[i] < s2[j] ){
+      un.push_back(s1[i]);
+      i++;
+    }
+    else if(s1[i] > s2[j] ){
+      un.push_back(s2[j);
+      j++;
+    }
+    else{
+      un.push_back(s1[i]);
+      i++, j++;
+    }
+  }
+  while(i<s1.size()){
+    un.push_back(s1[i]);
+    i++;
+  }
+  while(j<s2.size()){
+    un.push_back(s2[j]);
+    j++;
+  }
+  return un;
+                      
+}
+                      
+vector<int> getIntersection(vector<int> &s1, vector<int> &s2) {
+  int i=0, j=0;
+  vector<int> in;
+  while(i<s1.size() && j <s2.size()){
+    if(s1[i] < s2[j] ){
+      
+      i++;
+    }
+    else if(s1[i] > s2[j] ){
+      
+      j++;
+    }
+    else{
+      in.push_back(s1[i]);
+      i++, j++;
+    }
+  }
+  
+  return in;
+                      
+}
+
+There are N rooms labeled from 0 to N-1. You are given appointment times and durations for a set of customers.
+Each customer is assigned to the first available room with the lowest index. A room can only have one customer at a time.
+Find the rooms which had the most appointments booked after all customers have gone through their appointments.
+N=2
+[
+  {start: 1, duration: 5},
+  {start: 1, duration: 2},
+  {start: 3, duration: 1},
+  {start: 4, duration: 7},
+]
+                      
+1:0
+2:1
+3:1
+4:1
+
+                   rooms   1
+                    ends  6
+                   1,5
+                      0-> 1,5
+                      
+ N, rooms
+M customers
+  M * (log(M) + log(N)) + O(N) 
+  
+  typedef pair<int,int> PII;
+  int mostBookedRoom(vector<vector<int,int> > & customers, int n)
+  {
+	if(customers.size()==0) return -1;
+	priorty_queue<int, vector<int>, greater<int>> pqRooms;
+	priorty_queue<PII, vector<PII>, greater<PII>> pq;
+	vector<int> meetingsHeld(n,0);
+	
+	for(int i=0;i<n;i++){
+	  pqRooms.push(i);
+	}
+	meetingsHeld[0]++;     
+	pq.push({customers[0][1] + customers[0][0], 0});
+	
+	for(int i=1;i<customers.size();i++){
+	  int start = customers[i][0];
+	  int end = customers[i][0] + customers[i][1];
+	  
+	  // finish all mettings before start time
+	  while(!pq.empty() && start >= pq.top().first){
+		int room = pq.top.second;
+		pq.pop();
+		pqRooms.push(room);
+	  }
+	  
+	  if(!pqRooms.empty()){
+		int room = pqRooms.top();
+		pqRooms.pop();
+		pq.push({end, room});
+		meetingsHeld[room]++;
+	  }
+	  else{
+		auto it = pq.top();
+		pq.pop();
+		meetingsHeld[it.second]++;
+		pq.push({it.first + end -start, it.second});
+	  }
+	}
+	int maxi = 0 ans =0;
+	
+	for(int i=0;i<n;i++{
+	  if(maxi < meetingsHeld[i]){
+		maxi = meetingsHeld[i];
+		ans = i;
+	  }
+	}
+		return ans;
+  }

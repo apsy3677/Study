@@ -20,3 +20,33 @@ bool isSameTree(TreeNode* p, TreeNode* q) {
       }
       return false;
 }
+
+Max Path sum in Tree of non-empty path
+      1
+    2     5
+  3   4  4  3
+
+// prefix sums:
+        10
+    6       9
+  3   4   4   3
+
+  check nodes value :
+  by taking it 
+  by not taking it if not taking start with 0
+int maxPathSum(TreeNode* root) {
+// prefix sum of trees 
+  int maxSum = INT_MIN;
+  maxPath(root, maxSum);
+}
+
+int maxPath(TreeNode * root, int &maxSum){
+  if(!root) return 0;
+
+  int lsum = max(0, maxPath(root->left, maxSum));
+  int rsum = max(0, maxPath(root->right, maxSum));
+
+  maxSum = max(maxSum, lsum + rsum + root->val);
+
+  return root->val + max(lsum, rsum);
+}

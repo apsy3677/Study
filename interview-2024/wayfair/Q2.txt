@@ -1,0 +1,83 @@
+Given an array task_memory of n positive integers representing the amount of memory required to process each task, an array task_type of n positive integers representing the type of each task, and an integer max_memory, find the minimum amount of time required for the server to process all the tasks.
+Each task takes 1 unit of time to process. The server can process at most two tasks in parallel only if they are of the same type and together require no more than max_memory units of memory.
+Example
+Suppose n = 4, task_memory = [7, 2, 3, 9], task_type = [1, 2, 1, 3], and max_memory = 10.
+
+Function Description
+Complete the function getMin Time in the editor below.
+getMin Time has the following parameter(s):
+int task_memory[n]: the memory required by the tasks
+int task_type[n]: the type of the tasks
+int max_memory: the maximum total memory that can be allocated to the tasks
+Returns
+int: the minimum time required to process all tasks
+
+Constraints
+• 1≤ n≤2*105
+1 ≤ max_memory≤ 109
+1 s task_memory[i] ≤ max_memory 1 s task_type[i] ≤ 109
+
+
+1 2 3 5 last =3
+
+1 5 3 last = 2
+
+10 11 12
+
+max numbers of pairs whose sum <= X ?
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
+
+public class TaskProcessor {
+
+    public static int getMinTime(int n, int[] task_memory, int[] task_type, int max_memory) {
+        Map<Integer, PriorityQueue<Integer>> typeToMemoryMap = new HashMap<>();
+
+        for (int i = 0; i < n; i++) {
+            int type = task_type[i];
+            int memory = task_memory[i];
+
+            typeToMemoryMap.putIfAbsent(type, new PriorityQueue<>());
+            typeToMemoryMap.get(type).add(memory);
+        }
+
+        int minTime = 0;
+
+        for (Map.Entry<Integer, PriorityQueue<Integer>> entry : typeToMemoryMap.entrySet()) {
+            PriorityQueue<Integer> memoryQueue = entry.getValue();
+            int currentMemory = 0;
+
+            while (!memoryQueue.isEmpty()) {
+                int firstTask = memoryQueue.poll();
+
+                if (!memoryQueue.isEmpty() && currentMemory + firstTask + memoryQueue.peek() <= max_memory) {
+                    // Process two tasks in parallel
+                    currentMemory += firstTask + memoryQueue.poll();
+                } else {
+                    // Process a single task
+                    currentMemory += firstTask;
+                }
+
+                minTime++;
+				// make currentMemory =0 after processing tasks.
+				currentMemory = 0;
+            }
+        }
+
+        return minTime;
+    }
+
+    public static void main(String[] args) {
+        int n = 4;
+        int[] task_memory = {7, 2, 3, 9};
+        int[] task_type = {1, 2, 1, 3};
+        int max_memory = 10;
+
+        int result = getMinTime(n, task_memory, task_type, max_memory);
+        System.out.println("Minimum time required: " + result);
+    }
+}

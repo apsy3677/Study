@@ -1,0 +1,29 @@
+We are running a simple photo storage and sharing service. People upload their photos to our servers and then give links to other users who can then view them.
+We're trying to figure out how to split the photos and associated data evenly onto multiple machines, especially as we get new users. We've decided to shard the photos evenly alphabetically by username. For example, if we had 26 servers, all the usernames starting with 'a' would be on server 1, usernames starting with 'b' would be on server 2, and so on. We have created a scheme like this that will work for any number of servers.
+Are there any problems with this design?
+
+We are developing an indie music streaming service, where bands can upload songs a nd users can stream them.
+Our central load balancing server distributes the songs onto a series of physical servers using consistent hashing, so every server has the same number of songs.
+Do you have any concerns about this system?
+
+We are developing an indie music streaming service, where bands can upload songs and users can stream them.
+Our central load balancing server distributes the songs onto a series of physical servers using consistent hashing, so every server has the same number of songs.
+Do you have any concerns about this system?
+
+We've developed a crossword puzzle mobile app. The app can give hints which include a synonym for the answer, a picture, or a short video clip.
+We are debating two options for how to implement these hints:
+- Access hints from the server.
+- Preloaded hints into the app.
+What are some advantages and disadvantages of each option?
+
+We are building a business analytics application that analyzes large XML files containing sales data in chronological order.
+Due to the sensitive nature of the data, we want to keep all processing on our local machine. However, the files are sometimes larger than the available RAM on our computer.
+I
+What are some techniques which we could use to process this data?
+
+We run a sports news classification service, where users can provide a link to a sports article and our service downloads the article, uses machine learning to detect and report any bias towards a specific team.
+We want to plan our budget for the next six months. What information do we need to estimate the resources needed?
+
+We run a social networking mobile app for university students. The app allows students to express interests in study groups or hobbies and find students with similar interests. It has been really successful in the United States so we've decided to release it worldwide.
+The translations and front-end have been updated. What updates would you make to the backend to ensure a smooth international release?
+

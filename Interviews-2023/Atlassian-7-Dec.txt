@@ -1,0 +1,25 @@
+We are working on a service that generates subtitles for users' videos. This proce ss starts a new thread for every video and is processor-intensive. Currently, this service runs as a single process on a machine.
+We've run into a bug where if the service is processing more than 10 videos at the same time, the service crashes the server, losing all requests currently being pro cessed and affecting other processes on the machine.
+It may take a long time to find and fix this bug. What workarounds could we implem ent to continue running the service while we do so?
+
+
+You're working on infrastructure for internet-connected vending machines. The plan is to install around 100,000 of these vending machines in the coming year, in major cities around the world. These machines will connect to the internet through cellular devices.
+Each machine will connect to a central server at midnight to report remaining stock and any maintenance issues like coin jams or stuck items. These machine status updates will be stored in a database, and a batch job will run at 1 AM to schedule the restocking and maintenance of machines.
+Are there any problems with the above design?
+
+We are working on a mobile app for the board game Go. We'd like to add a feature w here the computer will analyze a completed game. The analysis looks at each positi on from the game and provides suggested moves to help improve our users' play.
+We've found a library we can use to do this analysis. It takes an average of a min ute on a modern desktop computer to analyze an entire game. An average game consis ts of about 200 moves.
+We are considering two approaches. 1) running this analysis on the phone itself, nd 2) sending the game to a server farm for analysis that will be returned to the user.
+What are some advantages or disadvantages of each approach?
+
+We are running a simple photo storage and sharing service. People upload their photos to our servers and then give links to other users who can then view them.
+Instead of using a cloud service, we have our own server farms. You've been tasked with creating an estimate of the storage required over the coming year and the cost of that storage. What information would you need and what factors would you consider as you generate this estimate? 
+
+
+We are running a simple photo storage and sharing service. People upload their photos to our servers and then give links to other users who can then view them.
+We're trying to figure out how to split the photos and associated data evenly onto multiple machines, especially as we get new users. We've decided to shard the photos evenly alphabetically by username. For example, if we had 26 servers, all the usernames starting with 'a' would be on server 1, usernames starting with 'b' would be on server 2, and so on. We have created a scheme like this that will work for any number of servers.
+Are there any problems with this design?
+How to split the data ?
+
+what would be a better way of splitting the data evenly ?
+

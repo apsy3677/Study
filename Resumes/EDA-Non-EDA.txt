@@ -1,0 +1,188 @@
+EDA
+
+ANUJ PRATAP SINGH YADAV
+LinkedIn | +91-9752373677 | yadav.anuj.singh@gmail.com
+
+SUMMARY
+------------------------------------------------------------------------------------------
+Innovative and detail-oriented Software Engineer with 10 years of experience across Adobe, Microsoft, and Synopsys. Currently specializing in EDA domain with expertise in formal verification, high-performance C++ systems, and parallel processing. Proven track record of delivering scalable, impactful solutions used by millions of end-users and enabling top silicon vendors like Nvidia, Intel, and Apple.
+
+CORE SKILLS
+------------------------------------------------------------------------------------------
+Languages: C++, C, Java, C#, Objective C/C++, Python, Bash, TCL, JavaScript, TypeScript, SQL, NoSQL
+Tools & Frameworks: VC-Formal, DPV, EDAG, Azure EventHub, Kafka, Node.js, React.js, Git, CI/CD, jQuery
+Domains: Formal Verification, Distributed Systems, Microservices, Backend/Frontend Development, DataPath Validation, Scripting
+
+EXPERIENCE
+------------------------------------------------------------------------------------------
+**Synopsys, Noida, INDIA**
+*R&D Staff Engineer* – May 2023 to Present
+- Enhancing DPV (Datapath Validation) formal verification tool for top clients (Nvidia, Intel, Apple)
+- Developed code coverage and over-constraint analysis features for C++ designs
+- Designed token-based licensing system enabling shared token usage across formal apps
+- Improved performance for massive designs by adding support for partitioning and multi-processing
+- Enabled save/restore designs, and single design setup enhancements improving customer workflows
+
+**Microsoft, Noida, INDIA**
+*Software Engineer II* – May 2021 to May 2023
+- **OneDrive Sku Filtering**: Prevented severe incidents by implementing catalog filtering, improving reliability
+- **Stream 2.0 Office Integration**: Built video playback modules inside Excel using SharePoint/OneDrive-linked videos
+- **Explainer Videos**: Boosted recording MAUs from 1.5M to 4.2M by adding blur camera and recording enhancements
+- **Cameo Feature**: Designed customizable camera overlays in PowerPoint, used in 1.2M sessions
+- Led test automation for explainer videos, contributing to stability and release-readiness
+
+**Adobe, Noida, INDIA**
+*Member of Technical Staff 2* – Aug 2015 to Apr 2021
+- Integrated MathML in AEM Web Editor, enabling SVG math expression support
+- Developed user profile-based UI personalization for enterprise clients
+- Implemented lazy loading for large files, reducing loading time by 60%
+- Created “ColorPop” effect in Photoshop Elements; masked key objects while applying B/W filter elsewhere
+- Migrated CI/CD pipelines from RIBS to Hyperdrive, reducing install time by 50%
+
+EDUCATION
+------------------------------------------------------------------------------------------
+**B.Tech in Computer Science**, Maulana Azad National Institute of Technology (NIT Bhopal), 2015
+GPA: 8.27/10
+
+**CBSE 12th**, Kendriya Vidyalaya Shivpuri, 2010 | 78%  
+**CBSE 10th**, Kendriya Vidyalaya JRC Bareilly, 2008 | 85.6%
+
+AWARDS & RECOGNITION
+------------------------------------------------------------------------------------------
+- Spot Award for migrating Elements to Hyperdrive at Adobe
+- Top 3 in coding contests (Knight Coders & Code Pokers at TechnoSearch)
+- CodeChef max rating: 1974 | Codeforces max rating: 1693
+
+HOBBIES
+------------------------------------------------------------------------------------------
+Competitive programming, Cricket, Football, Chess
+
+
+
+Version 2:
+
+**Anuj Pratap Singh Yadav**
+
+[LinkedIn] | 9752373677 | yadav.anuj.singh@gmail.com
+
+---
+
+### Summary
+Experienced Software Engineer with 8+ years of strong expertise in EDA tools, formal verification, and data path validation. Adept at developing scalable software solutions and enhancing tool features for leading semiconductor companies. Proficient in C++, formal methods, and parallel systems.
+
+---
+
+### Skills
+- **Languages**: C++, C, Python, Bash, TCL
+- **EDA Tools**: VC-Formal, DPV (Data Path Validation), EDAG
+- **Technologies**: CI/CD, Token Licensing, Parallelism, Multi-processing
+- **Concepts**: OOP, Unit Testing, Formal Verification, Distributed Systems
+- **Tools**: Git, Azure, Kafka
+
+---
+
+### Experience
+
+**Synopsys** — *R&D, Staff Engineer*  
+*Noida, India | May 2023 – Present*
+- Enhanced DPV (Data Path Verification) tool with code coverage and over-constraint analysis capabilities.
+- Implemented partitioning and multi-processing features to improve scalability of DPV for designs with high complexity.
+- Introduced token-based licensing across formal verification tools for improved licensing flexibility.
+- Enabled new features like saving/restoring designs and single-design setups for smoother user workflows.
+
+**Microsoft** — *Software Engineer II*  
+*Noida, India | May 2021 – May 2023*
+- Designed catalog filtering to prevent sales disruptions in OneDrive due to unsupported SKUs.
+- Developed integrated playback module for Stream 2.0 videos inside Excel documents.
+- Revamped PowerPoint’s Recording Studio by enabling explainer videos and camera background enhancements.
+- Led test automation efforts and telemetry integration for recording features.
+
+**Adobe** — *Member Of Technical Staff 2*  
+*Noida, India | Aug 2015 – Apr 2021*
+- Added MathML support and SVG rendering for AEM Docx Web Editor.
+- Built APIs for user-based profiles and UI customization in the Web Editor.
+- Reduced loading time for large files by implementing lazy loading.
+- Developed the "ColorPop" feature in Photoshop Elements and optimized CI/CD pipelines.
+
+---
+
+### Education
+**B.Tech, Computer Science**  
+Maulana Azad National Institute of Technology, Bhopal  
+GPA: 8.27/10 | 2011 – 2015
+
+---
+
+### Achievements
+- Spot Award at Adobe for Hyperdrive migration
+- Competitive programming accolades: Max Rated 1974 on CodeChef, 1693 on Codeforces
+
+---
+
+### Interests
+Competitive programming, Cricket, Football, Chess
+
+NON EDA 
+
+
+**Anuj Pratap Singh Yadav**
+
+[LinkedIn] | 9752373677 | yadav.anuj.singh@gmail.com
+
+---
+
+### Summary
+Versatile Software Engineer with over 8 years of experience in full-stack development, cloud integration, and system design across Microsoft and Adobe. Proven track record of improving service reliability, user experience, and system scalability through innovative software solutions.
+
+---
+
+### Skills
+- **Languages**: C++, Java, C#, Python, JavaScript, TypeScript, Bash
+- **Frameworks**: ReactJS, Node.js, jQuery
+- **Technologies**: Azure EventHub, Kafka, Microservices, NoSQL, SQL
+- **Concepts**: CI/CD, OOP, Unit Testing, Distributed Systems, Telemetry
+- **Tools**: Git, Azure DevOps
+
+---
+
+### Experience
+
+**Microsoft** — *Software Engineer II*  
+*Noida, India | May 2021 – May 2023*
+- Built catalog filtering for OneDrive to filter unsupported SKUs, reducing incident rate and improving system stability.
+- Developed playback integration for Stream 2.0 videos inside Office documents, enhancing enterprise video use.
+- Transformed PowerPoint’s Recording Studio with new camera features and MAU growth from 1.5M to 4.2M.
+- Implemented Cameo feature for personalized recording and improved video-slide integration (1.2M MAU).
+- Led automation and telemetry efforts for recording tools, ensuring feature robustness and observability.
+
+**Adobe** — *Member Of Technical Staff 2*  
+*Noida, India | Aug 2015 – Apr 2021*
+- Integrated MathML support in AEM Web Editor to serve educational clients.
+- Enabled custom UI configuration with user profile API for organizational editors.
+- Reduced load time of large files in Web Editor by 60% through lazy loading.
+- Created "ColorPop" in Photoshop Elements using object masking and automation triggers.
+- Migrated Elements to Hyperdrive infrastructure, reducing install times by 50%.
+
+**Synopsys** — *R&D, Staff Engineer*  
+*Noida, India | May 2023 – Present*
+- Developed enhancements for formal verification tools, including code coverage, over-constraint analysis, and multi-processing for design optimization.
+- Introduced licensing system improvements for flexibility across apps.
+
+---
+
+### Education
+**B.Tech, Computer Science**  
+Maulana Azad National Institute of Technology, Bhopal  
+GPA: 8.27/10 | 2011 – 2015
+
+---
+
+### Achievements
+- Spot Award at Adobe for Hyperdrive migration
+- Competitive programming accolades: Max Rated 1974 on CodeChef, 1693 on Codeforces
+
+---
+
+### Interests
+Competitive programming, Cricket, Football, Chess
+

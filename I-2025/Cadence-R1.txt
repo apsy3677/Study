@@ -1,0 +1,161 @@
+BInary Tree 
+integers
+
+2 integers also
+
+Shortest path between 2 integers in the tree.
+Print the path.
+
+if both are not present, ""
+
+TreeNode {
+    left
+    right
+    data
+}
+
+TreeNode * findLCA(TreeNode * root, int a, int b) {
+    if (!root || root->data == a || root->data == b) {
+        return root;
+    }
+
+    TreeNode * left = findLCA(root->left, a, b);
+    TreeNode *right = findLCA(root->right, a, b);
+
+    if(left && right) return root;
+
+    reurn left ? left : right;
+}
+
+//     1
+2       3
+4  5    6  7
+
+a 4, b 7
+bool findPathHelper(TreeNode * root, int a, vector<int> &path) {
+    if (!root) return false;
+
+    path.push_back(root->data);
+    if(root->data == a) return true;
+
+    if(findPathHelper(root->left, a, path) || findPathHelper(root->left, a, path) ) {
+        return true;
+    }
+    // backtrack if path not found
+    path.pop_back();
+    return false;
+}
+
+vector<int> printPathBwtnNodes( TreeNode * root, int a, int b) {
+    TreeNode * lca = findLCA(root, a, b);
+
+    if (!lca) {
+        cout<< "No Path FOund";
+        return {};
+    }
+
+    vector<int> pathA, pathB;
+
+    findPathHelper(lca, a, pathA);
+    findPathHelper(lca, b, pathB);
+
+    // reverse pathA
+    reverse(pathA.begin(), path.end());
+    for (int i=0; i<pathA.size();i++) {
+        cout << pathA[i] << " ";
+    }
+    for (int i=1; i<pathB.size();i++) {
+        cout << pathB[i] << " ";
+    }
+
+
+} 
+
+//     1
+    2       3
+   4  5    6  7
+   
+   a 4, b 7
+
+
+Array 
+pair <start, end> 
+
+Minimum no of rooms required to accomodate these meetings.
+
+Array not sorted.
+
+sort on basis of start time.
+
+rooms [] with ends
+
+5, 7, 8 ending
+6
+
+
+int findMinMeetingRooms(vector< pair<int, int> > arr) {
+
+    if(arr.size()==0) return 0;
+
+    sort(arr.begin(), arr.end());
+    // sorted with min start time.
+
+    {0,30 5,10 15,20 5, 8 }
+    //min heap
+
+    // non-decresing
+    // a, b 
+    // a.first < b.first return a;
+    // a.first == b.first return a.second < b.second;
+    priority_queue <int, vector<int>, grater<int> > minHeap;
+    int maxRooms = 0;
+
+    for (auto & meeting : arr) {
+        int start = meeting.first;
+        int end = meeting.end;
+
+        while( !minHeap.empty() && minHeap.top() <= start) {
+            minHeap.pop();
+        }
+        minHeap.push(end);
+        maxRooms = max(maxRooms, (int)minHeap.size());
+    }
+    return maxRooms;
+}
+
+Rectilinear Object.
+
+
+Polygen which V
+
+Edges -> 
+
+P1 P2
+
+
+If two line segments are intersect.
+
+TC O(C)
+
+N *  N = O(N^2)
+
+INtersect (Point p1, q1, p2, q2) {
+    bool v1 = p1.x == q1.x;
+    bool v2 = p2.x == q2.x;
+
+    bool h1 = p1.y == q1.y;
+    bool h2 = p2.y == q2.y;
+
+    if (v1 && h2) {
+        return p1.x >= min(p2.x, q2.x) && p1.x <= max (p2.x, q2.x)
+            p1.y >= min(p2.y, q2.y) && p1.x <= max (p2.y, q2.y);;
+    }
+
+    if (h1 && v2) {
+        return p2.x >= min(p1.x, q1.x) && p2.x <= max(p1.x, q1.x) && 
+                p1.y >= min(p2.y, q2.y) && p1.y <= max(p2.y, q2.y)
+    }
+
+    // parallel lines
+    if (h1 && )
+}

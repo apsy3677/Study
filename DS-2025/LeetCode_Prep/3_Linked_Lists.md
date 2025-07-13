@@ -176,6 +176,117 @@ ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
 }
 ```
 
+## 5. Intersection of Two Linked Lists (LC160)
+
+**Problem**: Find the node at which the intersection of two singly linked lists begins.
+
+**Approach**: Use two pointers that switch to the head of the other list when reaching the end. They will meet at the intersection point.
+
+**Time Complexity**: O(m + n) where m and n are the lengths of the two lists.
+
+**Space Complexity**: O(1) - constant extra space.
+
+```cpp
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+    if (!headA || !headB) return nullptr;
+    
+    ListNode* ptrA = headA;
+    ListNode* ptrB = headB;
+    
+    // When the pointers are at different positions or both null
+    while (ptrA != ptrB) {
+        // Move to next node or switch to the head of the other list
+        ptrA = ptrA ? ptrA->next : headB;
+        ptrB = ptrB ? ptrB->next : headA;
+    }
+    
+    // Either found intersection node or both are null (no intersection)
+    return ptrA;
+}
+```
+
+## 6. Linked List Cycle Detection (LC141/142)
+
+**Problem**: Determine if a linked list has a cycle and find the node where the cycle begins.
+
+**Approach**: Use Floyd's Tortoise and Hare algorithm (slow/fast pointers).
+
+**Time Complexity**: O(n) where n is the number of nodes.
+
+**Space Complexity**: O(1) - constant extra space.
+
+```cpp
+// Detect if there's a cycle (LC141)
+bool hasCycle(ListNode *head) {
+    if (!head || !head->next) return false;
+    
+    ListNode* slow = head;
+    ListNode* fast = head;
+    
+    // Fast pointer moves twice as fast as slow pointer
+    while (fast && fast->next) {
+        slow = slow->next;          // Move one step
+        fast = fast->next->next;    // Move two steps
+        
+        // If they meet, there's a cycle
+        if (slow == fast) return true;
+    }
+    
+    // Fast pointer reached the end, no cycle
+    return false;
+}
+
+// Find the start of the cycle (LC142)
+ListNode *detectCycle(ListNode *head) {
+    if (!head || !head->next) return nullptr;
+    
+    ListNode* slow = head;
+    ListNode* fast = head;
+    bool hasCycle = false;
+    
+    // Phase 1: Detect cycle using slow/fast pointers
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        
+        if (slow == fast) {
+            hasCycle = true;
+            break;
+        }
+    }
+    
+    // No cycle found
+    if (!hasCycle) return nullptr;
+    
+    // Phase 2: Find cycle start - reset slow to head and keep fast at meeting point
+    slow = head;
+    while (slow != fast) {
+        slow = slow->next;
+        fast = fast->next;
+    }
+    
+    return slow;  // This is the start of the cycle
+}
+```
+
+### Simple Explanation of Floyd's Cycle-Finding Algorithm:
+
+Imagine two runners on a track - one running at normal speed (slow pointer) and one running at twice the speed (fast pointer). There are two scenarios:
+
+1. **If there's no cycle**: The faster runner will reach the end of the track.
+
+2. **If there's a cycle**: The faster runner will eventually lap the slower runner and they'll meet somewhere in the cycle.
+
+When they meet, we know there's a cycle. To find where the cycle begins:
+- Put the slow runner back at the start
+- Keep the fast runner at the meeting point
+- Have both runners move at the same speed (one step at a time)
+- The point where they meet is the start of the cycle
+
+**Why this works**: If the distance from the list head to the cycle start is 'x' and the meeting point is 'y' distance into the cycle, the math works out perfectly so that when they move at the same speed from their new starting positions, they'll meet exactly at the cycle's beginning.
+
+The intuition behind this approach is elegant: if two linked lists intersect, then the last nodes must be the same. If we traverse both lists and switch to the other list when reaching the end, both pointers will travel the same distance before meeting at the intersection point or both becoming null (if there's no intersection).
+
 ## Key Patterns for Linked List Problems
 
 1. **Two-Pointer Technique**:

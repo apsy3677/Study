@@ -60,7 +60,7 @@
 
 **Task**: "The original three-month project scope expanded to include static analysis tools, synthesis products, and eventually became a company-wide licensing platform initiative spanning 18 months."
 
-**Action**: "Instead of viewing the scope expansion as project creep, I embraced Meta's 'Focus on Long-term Impact' principle. I worked with leadership to restructure the project as a platform initiative with dedicated resources. I established a working group with representatives from each product team and created a modular architecture that could accommodate different licensing models. Rather than trying to solve everything at once, we implemented a phased rollout that delivered value incrementally."
+**Action**: "Instead of viewing the scope expansion as project creep, I embraced Meta's 'Focus on Long-term Impact' principle. I worked with leadership to restructure the project as a platform initiative with dedicated resources. I establihed a working group with representatives from each product team and created a modular architecture that could accommodate different licensing models. Rather than trying to solve everything at once, we implemented a phased rollout that delivered value incrementally."
 
 **Result**: "The expanded project became Synopsys's unified licensing platform, improving license utilization by an average of 35% across all products and reducing customer licensing complexity significantly. The platform approach enabled faster feature development for all product teams and became a competitive advantage in enterprise sales. What started as a single-product enhancement became a company-wide strategic asset."
 
@@ -88,15 +88,15 @@
 
 **STARR Story: Strategic Technical Presentation Skills**
 
-**Situation**: "At Microsoft, I observed how Sarah, a Principal Engineer, could present complex technical concepts to executive leadership in ways that immediately resonated and gained support for engineering initiatives."
+**Situation**: "At Microsoft, I observed how Varun, a Principal Engineer, could present complex technical concepts to executive leadership in ways that immediately resonated and gained support for engineering initiatives."
 
 **Task**: "I wanted to develop similar skills to be more effective in senior-level discussions and help our team's technical proposals gain better organizational support."
 
-**Action**: "I studied Sarah's presentation style and noticed she always connected technical decisions to business outcomes and competitive positioning. I asked her for mentorship and began practicing this approach. I started reframing my technical updates to focus on user impact and strategic value rather than implementation details. I also began attending more cross-functional meetings to understand how different stakeholders think about technical decisions."
+**Action**: "I studied Varun's presentation style and noticed he always connected technical decisions to business outcomes and competitive positioning. I asked him for mentorship and began practicing this approach. I started reframing my technical updates to focus on user impact and strategic value rather than implementation details. I also began attending more cross-functional meetings to understand how different stakeholders think about technical decisions."
 
 **Result**: "Within six months, my technical presentations began receiving much more positive reception from leadership. My proposal for PowerPoint video integration gained executive sponsorship specifically because I could articulate its competitive advantages and user engagement potential. I was subsequently invited to present technical roadmaps to senior leadership and became our team's primary interface with product strategy."
 
-**Reflection**: "Observing and learning from peers who excel in different areas is crucial for growth. Sarah's strategic communication style helped me understand that technical leadership requires translating engineering excellence into business impact."
+**Reflection**: "Observing and learning from peers who excel in different areas is crucial for growth. Varun's strategic communication style helped me understand that technical leadership requires translating engineering excellence into business impact."
 
 ---
 

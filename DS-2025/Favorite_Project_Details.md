@@ -7,7 +7,7 @@ Developed comprehensive code coverage and over-constraint analysis capabilities 
 
 ### Why This is a Great "Favorite Project"
 - **High Impact**: Prevented potential chip redesigns costing millions of dollars
-- **Technical Complexity**: Novel approach combining static analysis with formal verification
+- **Technical Complexity**: Unique approach combining static analysis with formal verification
 - **Innovation**: Created new capabilities previously unavailable in the industry
 - **Visible Results**: Improved verification coverage from ~85% to 97% for critical designs
 - **Leadership Component**: Led cross-team effort and mentored junior engineers
@@ -19,11 +19,11 @@ Developed comprehensive code coverage and over-constraint analysis capabilities 
 
 **Task**: "As Staff Engineer, I was tasked with designing and implementing code coverage and over-constraint analysis for formal verification that could handle the complexity and scale of modern semiconductor designs while providing actionable insights about verification completeness."
 
-**Action**: "I led this initiative by first developing a deep understanding of customer verification workflows through site visits and engineering discussions. I then created a novel approach that combined static analysis of C++ designs with dynamic tracking of formal verification paths. This required solving several technical challenges:
+**Action**: "I led this initiative by first developing a deep understanding of customer verification workflows through site visits and engineering discussions. I then created a approach that combined static analysis of C++ designs with dynamic tracking of formal verification paths. This required solving several technical challenges:
 
 1. Efficiently representing coverage data for massive state spaces
 2. Developing heuristics to identify meaningful coverage metrics specific to formal verification
-3. Creating a custom symbolic execution engine that could analyze which branches and conditions were exhaustively verified versus those that relied on constraints
+3. Leveraged symbolic execution engine that could analyze which branches and conditions were exhaustively verified versus those that relied on constraints
 
 When performance issues emerged with large designs, I implemented a hierarchical analysis approach that could efficiently process complex designs by analyzing subcomponents independently. I also personally mentored two junior engineers who joined the project, helping them understand the complex domain while accelerating our development timeline."
 

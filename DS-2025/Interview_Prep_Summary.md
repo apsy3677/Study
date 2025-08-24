@@ -10,18 +10,18 @@
 
 ## Part 2: Key Accomplishments & Real-World Impact
 
-"Throughout my career, I've led several impactful projects:
+"Throughout my career, I've gotten opportunity to led several impactful projects:
 
-* At Synopsys, I designed and implemented C++ code coverage analysis for formal verification, enabling semiconductor leaders like Nvidia and Intel to validate critical datapath designs more thoroughly
-* Developed a token-based licensing system that optimized resource utilization across formal verification applications, significantly reducing licensing costs for customers
-* At Microsoft, I enhanced PowerPoint's Recording Studio, which increased monthly active users from 1.5M to 4.2M and transformed how enterprise users create presentation content
+* At Synopsys, I designed and implemented C++ code coverage analysis for formal verification, enabling semiconductor leaders like Nvidia and Intel to validate critical datapath designs more thoroughly and prventing potential chip redesigns costing millions of dollars.
+* Developed a token-based licensing system that optimized resource utilization across formal verification applications, significantly reducing licensing costs for customers and allowing smaller customers to use multiple apps with the same set of licenses.
+* At Microsoft, I enhanced PowerPoint's Recording Studio, which increased monthly active users from 1.5M to ~4M and transformed how enterprise users create presentation content with their videos.
 * Engineered the integration of Stream 2.0 videos within Office 365 documents, creating a seamless collaborative experience for Microsoft 365 enterprise users"
-* Led performance optimization for Adobe's Web Editor, implementing lazy loading that reduced loading time by 60% for large documents, directly addressing critical customer pain points
+* Led performance optimization for Adobe's Web Editor, implementing lazy loading that reduced loading time by 60% for large documents, directly addressing critical customer pain points.
 
 ## Part 3: Future Aspirations & Closing
 
-"At this stage in my career, I'm looking to lead more cross-functional technical initiatives and architect solutions that have broad organizational impact. I'm particularly drawn to [Company]'s work in [relevant area] and believe my background in both high-performance systems and user-focused applications would be valuable as you tackle [specific company challenge]. I'd be interested to hear more about your current technical priorities and how my experience might align with your team's needs."
+"At this stage in my career, I'm looking to lead more cross-functional technical initiatives and architect solutions that have broad organizational impact.
 
-"At this stage in my career, I'm looking to work on big technical challenges that have a real impact. I'm especially interested in Meta because of the way you build products that connect people at a huge scale. I think my experience making complex systems faster and easier to use could be helpful as Meta keeps growing and solving new problems.
+"At this stage in my career, I'm looking to work on big technical challenges that have a even broader impact at organization level. I'm especially interested in Meta because of the way you build products that connect people at a huge scale. I think my experience making complex systems faster and easier to use could be helpful as Meta keeps growing and solving new problems.
 
 I'd be interested to hear more about meta's current technical priorities and how my experience might align with it."

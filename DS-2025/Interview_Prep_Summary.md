@@ -6,7 +6,7 @@
 
 ## Part 1: Brief Personal Introduction
 
-"Hi Everyone, I am Anuj, software Engineer with 10 years of experience across Synopsys, Microsoft, and Adobe, specializing in high-performance software systems and formal verification. My career has centered around building robust, efficient solutions for complex technical challenges, particularly in EDA and enterprise software. I'm especially passionate about performance optimization – whether that's improving verification engines, enhancing web editor responsiveness, or streamlining video capabilities in Microsoft Office products."
+"Hi , I am Anuj, software Engineer with 10 years of experience across Synopsys, Microsoft, and Adobe, specializing in high-performance software systems and formal verification. My career has centered around building robust, efficient solutions for complex technical challenges, particularly in EDA and enterprise software. I'm especially passionate about performance optimization – whether that's improving verification engines, enhancing web editor responsiveness, or streamlining video capabilities in Microsoft Office products."
 
 ## Part 2: Key Accomplishments & Real-World Impact
 

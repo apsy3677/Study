@@ -1,0 +1,31 @@
+Design a Project Management Tool Like Jira
+Candidates are expected to discuss the architecture required to support features like task tracking, issue management, workflows, and reporting. Key points include handling concurrent users, ensuring data consistency, scalability, and providing a seamless user experience.
+
+Design a Real-Time Collaboration Tool
+This question tests the ability to design a system that supports real-time collaboration, such as document editing, chat, or whiteboarding. Important considerations include real-time data synchronization, handling conflicts, low latency, and scalability.
+
+Design a Scalable Notification System
+Candidates need to explain how they would build a system that sends notifications to users in real-time about project updates, comments, or other events. Key aspects include managing user preferences, ensuring low latency, reliable delivery, and handling high volumes of notifications.
+
+Design a Search System for Knowledge Base Articles
+This question involves creating a system that allows users to search through a large collection of knowledge base articles efficiently. Important considerations include data indexing, query optimization, handling large volumes of data, and providing relevant search results.
+
+Design an API Gateway for Atlassian Services
+Candidates should discuss the architecture for an API gateway that handles incoming API requests, performs routing, load balancing, and security checks. Key points include scalability, rate limiting, authentication, and monitoring.
+
+Design a Version Control System for Documentation
+This question tests the ability to design a system that manages versioning for project documentation, including tracking changes, handling concurrent edits, and providing version history. Important considerations include data storage, conflict resolution, and ensuring data integrity.
+
+Design a Real-Time Analytics Platform
+Candidates need to design a system that collects, processes, and analyzes data in real-time for project management and collaboration tools. Key aspects include data ingestion, stream processing, scalability, and providing real-time insights.
+
+Design a Scalable User Authentication and Authorization System
+This involves creating a system that provides secure user authentication and authorization for accessing various Atlassian services. Important considerations include multi-factor authentication, single sign-on, handling password resets, and ensuring secure communication.
+
+Design a Workflow Automation System
+Candidates should discuss how they would design a system to automate workflows for project management tasks, including task assignments, notifications, and progress tracking. Key points include workflow modeling, task scheduling, user roles and permissions, and handling exceptions.
+
+Design a Logging and Monitoring System
+This question tests the ability to design a system that collects, stores, and analyzes logs from various services to monitor the health and performance of Atlassian tools. Important considerations include data collection, storage solutions, real-time processing, alerting mechanisms, and scalability.
+
+These questions reflect Atlassian’s emphasis on creating seamless and efficient collaboration and project management tools, as well as their need for scalable and reliable systems to support their cloud services. Preparing for these questions involves understanding the technical aspects of system design, scalability challenges, and creating robust, user-centric solutions that can handle large-scale operations efficiently.

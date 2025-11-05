@@ -1,0 +1,55 @@
+## DSA, LLD and HLD Questions (Microsoft Interview Prep)
+
+This file organizes your questions into DSA, LLD, and HLD. Detailed, interview-ready solutions live in these files:
+- `MS/DSA.md`
+- `MS/LLD.md`
+- `MS/HLD.md`
+
+### DSA
+- Canonical file path simplification (see `MS/DSA.md#canonical-file-path-simplification`)
+- LeetCode 1011: Capacity To Ship Packages Within D Days (binary search) (see `MS/DSA.md#capacity-to-ship-packages-within-d-days`)
+- Next closest time using only current digits (see `MS/DSA.md#next-closest-time-using-available-digits`)
+- Gas Station (optimal O(n)) (see `MS/DSA.md#gas-station`)
+- Substring with Concatenation of All Words (sliding window by word-length) (see `MS/DSA.md#substring-with-concatenation-of-all-words`)
+- LRU Cache (see `MS/DSA.md#lru-cache`)
+- Core templates: BFS/DFS, sliding window, DP on arrays/strings (see `MS/DSA.md#core-templates`)
+
+### LLD
+- Alert Monitoring System: sensors, thresholds, alerts, push vs pull models (see `MS/LLD.md#alert-monitoring-system`)
+- Multi-level EV Charging Station: scheduling strategies, sessions, payments (see `MS/LLD.md#multi-level-ev-charging-station`)
+- Chess Game: board, pieces, move validation, extensibility (see `MS/LLD.md#chess-game`)
+- Rate Limiter (LLD): token bucket / leaky bucket (see `MS/LLD.md#rate-limiter-lld`)
+- Design patterns recap: Factory, Strategy, Observer, etc. (see `MS/LLD.md#useful-design-patterns`)
+
+### HLD
+- Concurrent Job Orchestrator: priority, license handling, autoscaling (see `MS/HLD.md#concurrent-job-orchestrator`)
+- Automated Fault Detection and Prevention (e.g., router telemetry) (see `MS/HLD.md#automated-fault-detection-and-prevention`)
+- Rate Limiter (global, distributed) (see `MS/HLD.md#rate-limiter-hld`)
+- CDN (see `MS/HLD.md#cdn`)
+- URL Shortener (see `MS/HLD.md#url-shortener`)
+- Dropbox-like Storage (see `MS/HLD.md#dropbox-like-storage`)
+- Analytics/Real-time Aggregations (see `MS/HLD.md#analytics-system`)
+- News Feed (see `MS/HLD.md#news-feed`)
+- Web Crawler (see `MS/HLD.md#web-crawler`)
+- Distributed Key-Value Store (see `MS/HLD.md#distributed-key-value-store`)
+- Notification System (see `MS/HLD.md#notification-system`)
+
+### Prep Focus and Tips
+- Focus on binary trees, graphs (BFS/DFS), sliding window, and DP on strings/arrays.
+- Brush up OOD principles and patterns (Factory, Strategy, Observer). Parking Lot, ATM, BookMyShow are great warmups.
+- Revise sharding, load balancing, caching, CAP; be ready to justify trade-offs.
+- Behavioral: Use STAR (Situation, Task, Action, Result). Leadership, conflict resolution, decision-making.
+
+### Misc Knowledge Checks
+- What are design patterns? Explain a few common ones.
+- How does DNS work? What is routing? What is context switching?
+
+### Notes from Recent Interviews (kept for context)
+- Round: DSA — canonical path simplification; implemented O(n) time & space in Python.
+- Round: LLD — Alert Monitoring System. Discussed sensors publishing to a queue vs system polling sensors. View separation also discussed.
+- Round: DSA — Gas Station (covered brute force to optimal).
+- Round: LLD — Multi-level Charging Station; class design with strategies.
+- Round: LLD — Chess Game; modular design, AI vs human follow-ups.
+- Round: DSA — Substring with Concatenation of All Words; reached optimal after a hint.
+
+See detailed solutions and code examples in the dedicated files above.

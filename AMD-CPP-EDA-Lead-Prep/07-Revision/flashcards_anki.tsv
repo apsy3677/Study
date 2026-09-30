@@ -1,0 +1,130 @@
+#separator:tab
+#html:false
+#tags column:3
+What does a virtual call compile to?	Load vptr from object → load function pointer from vtable slot → indirect call. Main cost: no inlining.	cpp
+Virtual function called in a base constructor dispatches to…?	The base version (vptr = Base vtable during Base ctor). Pure virtual there = UB/abort.	cpp
+Delete Derived via Base* with non-virtual ~Base?	UB; typically only ~Base runs → derived resources leak. Fix: virtual ~Base (or protected non-virtual).	cpp
+shared_ptr<Base>(new Derived) with non-virtual ~Base: ~Derived called?	Yes — the control block captures Derived's deleter. unique_ptr<Base> would NOT.	cpp
+Default arguments on virtual functions are bound…?	Statically (by the static type) — body dynamic, default arg static. Never change defaults in overrides.	cpp
+Object slicing?	Copying Derived into Base by value keeps only the Base subobject (Base vptr). Pass by reference/pointer.	cpp
+sizeof(empty class)? sizeof(class with one virtual)?	1 (unique address); 8 on x86-64 (vptr).	cpp
+Name hiding fix?	A derived f(double) hides all base f overloads → add `using Base::f;`.	cpp
+What does std::move do?	static_cast to T&& — enables move overloads. Moves nothing itself. Moved-from = valid but unspecified.	cpp
+std::move on a const object?	Yields const T&& → binds copy ctor → silent copy.	cpp
+std::forward purpose?	Perfect forwarding: preserves the caller's value category for forwarding references (T&& in templates).	cpp
+Rule of 0 / 3 / 5?	0: no custom special members (RAII members). 3: dtor+copy ctor+copy assign together. 5: plus move ctor/assign.	cpp
+Declaring a destructor affects implicit moves how?	Suppresses implicit move ctor/assign → the class silently copies.	cpp
+Why must move ctor be noexcept?	vector uses move_if_noexcept on reallocation; throwing move → it copies to keep the strong guarantee.	cpp
+return std::move(local)?	Pessimization: blocks NRVO. Just `return local;`.	cpp
+RAII in one line?	Resource lifetime bound to object scope: acquire in ctor, release in dtor → exception-safe, no leaks.	cpp
+unique_ptr size and copyability?	One pointer (stateless deleter); move-only.	cpp
+shared_ptr control block contains?	Strong count, weak count (atomic), deleter/allocator, and the object if make_shared.	cpp
+make_shared pro and con?	One allocation + locality. Con: object memory held until last weak_ptr dies.	cpp
+shared_ptr thread-safety?	Refcount atomic; pointee not synchronized; same instance written by 2 threads = race (use atomic<shared_ptr>).	cpp
+weak_ptr::lock()?	Atomically increments strong count if > 0 (CAS loop); returns empty if expired.	cpp
+Lambda capturing [this] stored in async callback — risk?	Object may be destroyed before callback runs → dangling. Capture weak_ptr (shared_from_this).	cpp
+volatile for threads?	No. volatile = don't elide accesses (MMIO). Not atomic, no ordering. Use std::atomic.	cpp
+Static init order fiasco fix?	Construct on first use: function-local static (thread-safe since C++11).	cpp
+new vs malloc?	new = allocate + construct, throws bad_alloc; malloc = raw bytes, NULL, no ctor. Never mix with free/delete.	cpp
+Placement new?	Construct object in existing memory: new (buf) T(args); destroy with p->~T().	cpp
+Throwing from a destructor?	Destructors are noexcept → std::terminate.	cpp
+CRTP?	template<class D> struct Base { void f(){ static_cast<D*>(this)->impl(); } }; static polymorphism, no vtable.	cpp
+string_view risk?	Non-owning → dangling if source dies (e.g., bound to a temporary string).	cpp
+Five UB examples?	Signed overflow, OOB, use-after-free, data race, uninitialized read (also: null deref, strict aliasing, shift ≥ width).	cpp
+vector growth factor and cost?	×2 (libstdc++) / ×1.5 (MSVC); amortized O(1) push_back; reallocation invalidates all iterators/refs.	stl
+unordered_map rehash invalidates…?	Iterators (not references/pointers to elements). reserve(n) avoids rehash.	stl
+map vs unordered_map?	RB-tree O(log n) ordered, floor/ceil, stable iterators vs hash O(1) avg / O(n) worst, unordered.	stl
+map[k] on a missing key?	Inserts a value-initialized element. Use find/count/contains for reads.	stl
+std::sort algorithm & stability?	Introsort (quick + heap + insertion), not stable. stable_sort = merge sort.	stl
+std::lower_bound on std::set?	O(n) (bidirectional iterators). Use s.lower_bound(x): O(log n).	stl
+Min-heap declaration?	priority_queue<int, vector<int>, greater<int>>. Comparator(a,b)=true means a has LOWER priority.	stl
+Erase from vector/map while iterating?	it = c.erase(it); else ++it. Or std::erase_if (C++20).	stl
+deque iterator/reference validity on push_back?	References stay valid; iterators invalidated.	stl
+Data race vs race condition?	Data race: unsynchronized concurrent access with a write → UB. Race condition: timing-dependent logic bug (can exist with atomics).	conc
+Mutex vs semaphore?	Mutex: ownership, mutual exclusion. Semaphore: counter, no owner, limits N / signals.	conc
+Why predicate in cv.wait?	Spurious wakeups + state may change (stolen/lost wakeup). Re-check under lock.	conc
+Bounded blocking queue ingredients?	mutex, 2 condvars (notFull/notEmpty), deque, capacity, closed flag; pop returns optional.	conc
+Deadlock conditions & prevention?	Mutual exclusion, hold-and-wait, no preemption, circular wait. Global lock order / std::scoped_lock.	conc
+acquire/release publish pattern?	Producer: write data; flag.store(true, release). Consumer: while(!flag.load(acquire)); read data safely.	conc
+shared_ptr refcount memory orders?	Increment relaxed; decrement acq_rel (the deleter must see all prior writes).	conc
+False sharing?	Threads write different vars on same 64B cache line → line ping-pong. Fix: alignas(64), local accumulation.	conc
+Amdahl's law?	Speedup ≤ 1/(s + (1−s)/N). 5% serial on 128 cores ≈ 17×.	conc
+ABA problem?	CAS sees A→B→A and wrongly succeeds (lock-free with memory reuse). Fix: tagged pointers, hazard pointers, epochs.	conc
+Tool to find data races?	ThreadSanitizer (-fsanitize=thread); also helgrind/DRD.	conc
+Sources of non-determinism in parallel EDA code?	Hash/pointer-order iteration, first-finisher-wins, FP reduction order, uninit memory, time seeds.	conc
+Process vs thread?	Own vs shared address space; crash isolation; cost; IPC vs shared memory. Linux: both clone() tasks.	os
+fork() return values & COW?	0 in child, child PID in parent, −1 error. Pages shared read-only, copied on first write.	os
+fork() in multithreaded program — danger?	Only calling thread survives; locks held by others stay locked → child deadlocks (e.g., malloc). exec ASAP / posix_spawn.	os
+Zombie vs orphan?	Zombie: exited, not reaped by parent. Orphan: parent died → reparented to init which reaps it.	os
+User → kernel mode entry?	Syscalls, interrupts, exceptions (page faults).	os
+Process memory layout (low→high)?	text, rodata, data, bss, heap↑ … mmap … stack↓, kernel.	os
+Minor vs major page fault?	Minor: page in memory (map it; first-touch/COW). Major: read from disk/swap.	os
+TLB & huge pages?	TLB caches translations; huge pages (2MB/1GB) cut TLB misses for big heaps.	os
+MESI/MOESI?	Cache coherence states: Modified, (Owned), Exclusive, Shared, Invalid. AMD uses MOESI.	os
+Cache line size & DRAM latency?	64 bytes; ~80–100 ns (L1 ~1 ns).	perf
+Performance methodology?	Benchmark+metric → profile (where, why) → hypothesis/smallest change → measure A/B → guard in CI + communicate.	perf
+perf stat vs perf record?	stat: aggregate counters (IPC, misses). record: sampled stacks → report/flame graph.	perf
+AoS vs SoA?	SoA wins when hot loops touch few fields of many objects (less memory traffic, SIMD).	perf
+Why 32-bit ids instead of pointers in netlist DB?	Half size, stable on realloc, index side tables, serializable/mmap-able.	perf
+Crash only in release — likely causes?	UB exploited by optimizer, races, uninitialized vars, ODR/ABI mismatch. Build -g, sanitizers, core dump, bisect flags.	perf
+RSS grows but no leak reported?	Reachable growth (caches/containers) or fragmentation. Heaptrack/massif snapshots; compare live bytes vs RSS; try jemalloc.	perf
+NUMA on EPYC?	Remote memory slower; use first-touch by workers, interleave, pin threads, per-node pools.	perf
+PGO?	Profile-guided optimization: build instrumented, run training, rebuild with profile → better inlining/layout (5–15%).	perf
+Tool for heap growth over time?	heaptrack / valgrind massif.	perf
+Prefix sum + hash map pattern?	Subarray sum = k (negatives OK): count[prefix − k]; seed {0:1}.	dsa
+Sliding window works only if…?	Validity is monotone (shrinking valid stays valid). Negatives in sum break it.	dsa
+Longest vs shortest window: where to record?	Longest: after shrinking-while-invalid. Shortest: inside while-valid, before shrinking.	dsa
+Binary search first-true template?	while(lo<hi){mid=lo+(hi−lo)/2; if(ok(mid)) hi=mid; else lo=mid+1;} return lo;	dsa
+Binary search on answer — triggers?	"Minimum capacity/speed/time such that feasible", "minimize the max".	dsa
+Rotated sorted array key insight?	One half is always sorted; check if target is inside it.	dsa
+Monotonic stack invariant (next greater)?	Stack of indices with decreasing values = elements waiting for an answer. O(n).	dsa
+Sliding window maximum?	Monotonic deque of indices, decreasing values; pop front if expired, pop back if ≤ new.	dsa
+Top-K largest?	Min-heap of size k (O(n log k)) or nth_element O(n) avg.	dsa
+Meeting rooms?	Sort by start + min-heap of ends (pop while top ≤ start) or sweep +1/−1 (ends before starts at ties).	dsa
+Merge intervals?	Sort by start; if cur.start ≤ last.end → last.end = max(last.end, cur.end).	dsa
+Reverse list loop body?	nxt=cur->next; cur->next=prev; prev=cur; cur=nxt; return prev.	dsa
+Floyd cycle start?	After meet, reset one to head; move both 1 step; they meet at start (a = kL − b).	dsa
+Palindrome list O(1) space?	Middle → reverse 2nd half → compare → restore.	dsa
+LRU cache?	unordered_map<key, list::iterator> + list (front = recent); splice to front; evict back.	dsa
+Tree recursion question?	What do I need from children (bottom-up) / what do I pass down (top-down)?	dsa
+LCA recursion?	If node is a/b return it; recurse both; if both non-null → node; else the non-null one.	dsa
+Validate BST?	Pass (lo, hi) bounds down; strict; use long long / pointers for bounds.	dsa
+Balanced tree in O(n)?	Return −1 for unbalanced, else height; short-circuit.	dsa
+Backtracking template?	choose → explore → un-choose; sort + skip dup at same depth.	dsa
+Frontier → algorithm?	FIFO=BFS, min-heap=Dijkstra, deque=0-1 BFS, indegree-0 queue=Kahn.	graph
+BFS visited marking?	Mark on push, not pop.	graph
+Bipartite check trap?	Disconnected graph — start BFS from every uncolored node. Failure = same-color edge (odd cycle).	graph
+Directed cycle detection?	3-color DFS (gray→gray = back edge) or Kahn count < n.	graph
+Union-Find complexity?	Path compression + union by size → α(n) ≈ O(1).	graph
+Dijkstra stale entries?	No decrease-key: push duplicates; on pop skip if d != dist[u].	graph
+Kosaraju SCC?	DFS finish order → transpose → DFS in reverse finish order; each tree = SCC.	graph
+CSR graph?	offsets[n+1] + targets[E]: contiguous adjacency, cache-friendly, one allocation.	graph
+DP 5 steps?	State (in words) → transition (last choice) → base → order → answer location.	dp
+Coin change combinations vs permutations?	Coins outer = combinations; amount outer = permutations.	dp
+0/1 knapsack 1D loop?	Items outer, capacity descending.	dp
+LIS n log n?	tails[k] = min tail of inc. subsequence of length k+1; lower_bound replace/append.	dp
+Edit distance recurrence?	Match: diag; else 1 + min(replace diag, delete up, insert left); base dp[i][0]=i, dp[0][j]=j.	dp
+x & (x−1) and x & −x?	Drop lowest set bit; isolate lowest set bit.	dsa
+Fast power mod?	Square-and-multiply: while b: if b&1 r=r*a%m; a=a*a%m; b>>=1. Reduce a%=m first.	dsa
+Setup vs hold check?	Setup: data arrives before capture edge − setup (max delay). Hold: data stable after capture edge + hold (min delay).	eda
+Slack, WNS, TNS?	Slack = required − arrival. WNS = worst negative slack. TNS = sum of negative endpoint slacks.	eda
+STA propagation?	Forward topo: AT[v]=max(AT[u]+d). Backward: RT[u]=min(RT[v]−d). Slack = RT − AT.	eda
+Positive clock skew effect?	Helps setup, hurts hold.	eda
+Incremental STA?	Dirty arc → forward fanout cone in level order (bucket queue), early stop; backward fanin cone for required.	eda
+Levelization?	Kahn; level[v] = max(level[pred]) + 1. Loop → leftover nodes → SCC report.	eda
+HPWL?	Net bounding box width + height; standard wirelength estimate.	eda
+Partitioning algorithms?	KL (pair swaps), FM (single moves, gain buckets, O(pins)/pass), multilevel hMETIS (coarsen/partition/refine).	eda
+Placement algorithms?	Simulated annealing (VPR), analytic/quadratic (CG solve + spreading), ePlace/RePlAce (electrostatics+Nesterov), legalization, detailed.	eda
+Lee router?	BFS wavefront on grid from source to target + backtrace; optimal, O(grid). A* adds Manhattan heuristic.	eda
+PathFinder cost?	(base + history) × present-congestion; rip-up & reroute until no overuse; history prevents oscillation.	eda
+AIG + strash?	2-input AND + inverters; structural hashing = hash-cons (a,b) normalized to reuse identical nodes.	eda
+BDD vs SAT for multipliers?	BDDs blow up exponentially for multipliers in any order → SAT-based methods (with case splits).	eda
+K-feasible cut / tech mapping?	Set of ≤K nodes separating node from PIs → one K-LUT. Enumerate cuts bottom-up (priority cuts); FlowMap depth-optimal.	eda
+UltraScale+ CLB contents?	1 slice: 8 LUT6, 16 FFs, CARRY8, F7/F8/F9 muxes. SLICEM LUTs can be distributed RAM/SRL.	eda
+Vivado implementation flow?	synth_design → opt_design → place_design → phys_opt_design → route_design → write_bitstream (+ checkpoints .dcp).	eda
+SLR?	Super Logic Region: one die in stacked-silicon FPGAs; crossings via SLLs — a partitioning/placement cost.	eda
+Why determinism matters in EDA tools?	Customers & developers need identical results for debug/regression regardless of threads/platform.	eda
+STAR format?	Situation, Task, Action (what YOU did), Result (numbers) — plus what you learned.	lead
+Why AMD (3 points)?	Domain fit (EDA scale+formal+C++ perf ↔ Vivado QoR/runtime), closer to silicon (own FPGAs/adaptive SoCs), Lead scope for perf initiatives.	lead
+AI tools answer skeleton?	Concrete uses (code reading, test scaffolding, triage) + verification discipline + IP/confidentiality rules + measuring benefit + team enablement.	lead
+Two questions to ask the interviewer?	What are the top runtime/QoR bottlenecks the team is attacking this year? How is success for this Lead role measured in 6 months?	lead

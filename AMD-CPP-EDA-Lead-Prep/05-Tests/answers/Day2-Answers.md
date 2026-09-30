@@ -1,0 +1,22 @@
+# Day 2 Quiz: Answers
+
+1. `next = cur->next; cur->next = prev; prev = cur; cur = next;`: save, cut/rewire, advance prev, advance cur. Return `prev`.
+2. Set `prev = groupNext` (the node after the group). The first node of the group, which becomes the group's tail, then points directly at the rest of the list, so no separate "connect tail" step is needed. You only fix `groupPrev->next = kth`.
+3. Let a = head→start, b = start→meet, L = the cycle length. Slow went a+b, fast 2(a+b) = a + b + kL → a = kL − b. From the meet point, walking a steps = (kL − b) lands exactly on the start, and so does walking a steps from the head.
+4. Find the middle (slow/fast) → reverse the second half → compare the two halves. **Lead extra:** reverse the second half back to restore the input (callers don't expect mutation), and mention it's not thread-safe while it's temporarily mutated.
+5. Each node is a separate allocation → pointer chasing → a cache miss per node (~100 ns) plus allocator cost. A vector's O(n) shift is a `memmove` over contiguous memory with prefetching. That's usually faster up to surprisingly large n, and finding the insertion point in a list is O(n) anyway.
+6. Indices of elements still waiting for their next greater, with values **decreasing** from bottom to top. Each index is pushed once and popped once → O(n) amortized.
+7. `width = stack.empty() ? i : i − stack.top() − 1` (the new top is the previous smaller bar, and i is the next smaller bar). Area = `h[j] * width`.
+8. Heap: pop while `top <= start` (≤, so an end at 10 frees the room for a start at 10). Sweep: at equal times process the **end (−1) before the start (+1)**.
+9. A max-heap for the lower half, a min-heap for the upper half. Invariant: every element in lo ≤ every element in hi, and `lo.size() == hi.size()` or `lo.size() == hi.size() + 1`. The median is lo.top() or the average of both tops.
+10. Bottom-up (postorder): height, diameter, balanced, LCA. Children return info up to the parent. Top-down (preorder): validate BST with (lo, hi) bounds, root-to-leaf path sums. The parent passes constraints down to the children.
+11. The constraint is on the **whole subtree**, not just the children. Counterexample: root 5, right child 6, 6's left child 3. Each local check passes (3 < 6), but 3 < 5 sits in the right subtree. Pass (lo, hi) bounds down.
+12. RB trees are less strictly balanced (height ≤ 2 log n) and need fewer rotations on insert/delete (O(1) amortized rotations), which suits general-purpose mixed workloads. AVL (height ≤ 1.44 log n) has faster lookups but more rebalancing.
+13. `key → std::list<pair<key,value>>::iterator`. `list::splice(list.begin(), list, it)` moves the node to the front in O(1) without invalidating iterators.
+14. (a) Keep a `count`, (b) waste one slot (full when `(tail+1) % cap == head`), (c) use ever-increasing indices (full when `tail − head == cap`), taking `% cap` on access.
+15. Strong count, weak count, the deleter (and allocator), plus the object itself if made by `make_shared`. The count increments/decrements are atomic: increment `relaxed`; decrement `acq_rel` (release so our writes happen-before the delete; acquire for the thread doing the delete). The pointee itself isn't synchronized.
+16. Spurious wakeups, plus the state may change between the notify and the wakeup (another consumer stole the item) → re-check under the lock. Two condvars so producers wait on `notFull` and consumers on `notEmpty`, notifying only the relevant side (fewer useless wakeups than one shared condvar with `notify_all`).
+17. In a lock-free CAS loop, a thread reads A, gets preempted; others change A→B→A (and possibly free and reuse the node). The CAS succeeds wrongly. It bites lock-free stacks/queues with memory reuse. Fix: tagged/versioned pointers, hazard pointers, epoch-based reclamation.
+18. `erase(it)` invalidates `it`, then `++it` is UB. Fix: `for (auto it = m.begin(); it != m.end(); ) { if (it->second == 0) it = m.erase(it); else ++it; }` or C++20 `std::erase_if(m, pred)`.
+19. `vector<int> vals` + `unordered_map<int, size_t> idx`. Insert: push_back + record the index. Delete: swap the element with the last one in the vector, update the moved element's index, pop_back, erase from the map. getRandom: `vals[rand() % size]`. All O(1) average.
+20. The recursion returns the best **downward** path from the node: `node + max(0, max(L, R))`. The global update is `best = max(best, node + max(0,L) + max(0,R))` (a path bending at the node). O(n). Init `best` to `INT_MIN` (all-negative trees).

@@ -1,6 +1,7 @@
 # Visualizers: step-through pattern trainers
 
 Open any `.html` file in a browser. Each one stands alone: no server, no other files needed.
+**On any device:** `trainer-hub.html` is published (and pinned in the claude.ai sidebar) as the Trainer Hub, one page that links to every published trainer. Sign in to the same Claude account to open it.
 Every trainer has **Step / Back / Play** (or the arrow keys) and a **Predict** mode that asks you to call the next move before it's revealed.
 
 | Trainer | What you watch | Pairs with |

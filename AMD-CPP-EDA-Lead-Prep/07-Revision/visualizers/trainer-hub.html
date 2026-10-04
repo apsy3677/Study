@@ -1,0 +1,158 @@
+<title>Trainer Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* One page to bookmark on any device: every step-through trainer, grouped by the course day,
+   each with its one-sentence model and the note to read first. Same look as the trainers. */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --ink: #152030;
+  --muted: #5a6779;
+  --rule: #d5dbe4;
+  --cobalt: #2a55e0;
+  --cobalt-ink: #ffffff;
+  --amber: #b9770a;
+  --code-bg: #f4f6fa;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+    --cobalt: #7d9bff; --cobalt-ink: #0d1218; --amber: #f0b33f; --code-bg: #10161e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+  --cobalt: #7d9bff; --cobalt-ink: #0d1218; --amber: #f0b33f; --code-bg: #10161e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 32px); padding-block: 28px 48px; display: grid; gap: 28px; }
+header { display: grid; gap: 8px; }
+.eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.9rem, 6vw, 2.6rem); line-height: 1.05; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 66ch; }
+.howto { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.howto li { font-size: 0.86rem; padding: 4px 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--panel); }
+kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel); }
+section.day { display: grid; gap: 14px; }
+section.day h2 { font-family: var(--display); font-weight: 600; font-size: 1.25rem; margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+section.day h2 span { font-family: var(--body); font-weight: 400; font-size: 0.9rem; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card h3 { font-family: var(--display); font-weight: 600; font-size: 1.12rem; margin: 0; }
+.topic { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); }
+.card p { margin: 0; font-size: 0.94rem; }
+.model { font-size: 0.92rem; padding: 8px 10px; border-radius: 8px; background: var(--code-bg); border-left: 3px solid var(--cobalt); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border-radius: 10px; font: 700 0.92rem var(--body); text-decoration: none; border: 1px solid var(--rule); color: var(--ink); background: var(--panel); }
+.btn.primary { background: var(--cobalt); border-color: var(--cobalt); color: var(--cobalt-ink); }
+.btn:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+.btn:hover { border-color: var(--cobalt); }
+footer { font-size: 0.86rem; color: var(--muted); display: grid; gap: 6px; max-width: 75ch; }
+footer p { margin: 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">AMD Lead C++ / EDA prep · step-through trainers</span>
+    <h1>Trainer Hub</h1>
+    <p class="lede">Every trainer in one place, grouped by the course day. Open one, step through it, then turn on Predict and call each move before it's revealed. The note link opens the matching mental-model file on GitHub.</p>
+    <ul class="howto" aria-label="How to use the trainers">
+      <li><strong>Step</strong> / <strong>Back</strong> buttons, or <kbd>→</kbd> <kbd>←</kbd></li>
+      <li><strong>Predict</strong>: answer first, then reveal</li>
+      <li>On a phone: landscape is more comfortable</li>
+    </ul>
+  </header>
+
+  <section class="day" aria-labelledby="d2">
+    <h2 id="d2">Day 2 <span>data structures and concurrency</span></h2>
+    <div class="cards">
+      <article class="card">
+        <span class="topic">Stacks</span>
+        <h3>Monotonic Stack</h3>
+        <p>The waiting room: who gets popped, and the two walls every pop reveals (next greater, histogram).</p>
+        <p class="model">Everyone waits until something beats them; one pop gives two walls.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/JAB87FxoYLCeC4qpcpTvNu" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/02-Patterns/MM01-Monotonic-Stack-Mental-Model.md" target="_blank" rel="noopener">Read MM01</a>
+        </div>
+      </article>
+      <article class="card">
+        <span class="topic">Linked lists</span>
+        <h3>Linked List Surgery</h3>
+        <p>Reverse, reverse in k-groups, Floyd's cycle start and an LRU cache, one pointer write at a time.</p>
+        <p class="model">Save next before you overwrite it.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/LXrKT9btnixMXiwLcGmKDP" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/02-Patterns/P04-Linked-List.md" target="_blank" rel="noopener">Read P04</a>
+        </div>
+      </article>
+      <article class="card">
+        <span class="topic">C++ concurrency</span>
+        <h3>Condition Variables</h3>
+        <p>You schedule the threads of a bounded queue, and replay the stolen wakeup and the lost wakeup with the exact interleaving that breaks them.</p>
+        <p class="model">Change state under the mutex; wait in a while loop.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/9cwSXWX3SN1dDLnUyeUEz3" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/03-Cpp-Deep/C3-Concurrency.md" target="_blank" rel="noopener">Read C3</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="day" aria-labelledby="d3">
+    <h2 id="d3">Day 3 <span>graphs, DP and EDA algorithms</span></h2>
+    <div class="cards">
+      <article class="card">
+        <span class="topic">Graphs · SCC</span>
+        <h3>Kosaraju</h3>
+        <p>Finish, Flip, Flood: why a flood that starts at the bottom can't leak, plus the two classic bugs.</p>
+        <p class="model">The last to finish is at the top; flipping puts it at the bottom.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/E8tWHKZa72pCtqrrK7VuQA" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/02-Patterns/MM04-SCC-Kosaraju-Mental-Model.md" target="_blank" rel="noopener">Read MM04</a>
+        </div>
+      </article>
+      <article class="card">
+        <span class="topic">Graphs · 2-coloring</span>
+        <h3>Bipartite</h3>
+        <p>BFS layers as alternating teams, the odd cycle a same-layer edge closes, and the missing-outer-loop bug.</p>
+        <p class="model">An edge inside one layer closes an odd cycle.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/2qVLs5X5t5AcGpuvdwr8Xy" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/02-Patterns/MM04-SCC-Kosaraju-Mental-Model.md#10-bipartite-two-teams-of-rivals" target="_blank" rel="noopener">Read MM04 §10</a>
+        </div>
+      </article>
+      <article class="card">
+        <span class="topic">Dynamic programming</span>
+        <h3>DP: top-down vs bottom-up</h3>
+        <p>The memoized recursion and the bottom-up loops fill the same table, across 9 problems and 7 patterns.</p>
+        <p class="model">Loops run from the base cases toward the root call.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/M9BQt75Ti8xCWvkMFmPZGK" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/02-Patterns/MM05-DP-Patterns-Top-Down.md" target="_blank" rel="noopener">Read MM05</a>
+        </div>
+      </article>
+      <article class="card">
+        <span class="topic">EDA · timing</span>
+        <h3>Static Timing</h3>
+        <p>Levelize a netlist, push arrival times forward, pull required times backward, then slack and the critical path.</p>
+        <p class="model">Timing is longest path: DP in topological order.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://claude.ai/artifact/5GUWhY6Bgn2MfkcvDyVDee" target="_blank" rel="noopener">Open trainer</a>
+          <a class="btn" href="https://github.com/apsy3677/Study/blob/master/AMD-CPP-EDA-Lead-Prep/04-EDA-Domain/E2-EDA-Algorithms.md" target="_blank" rel="noopener">Read E2</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    <p>The trainers are private to your Claude account: sign in with the same account on any device to open them. Use a page's Share menu to show one to someone else.</p>
+    <p>Source: <code>AMD-CPP-EDA-Lead-Prep/07-Revision/visualizers/</code> in the Study repo.</p>
+  </footer>
+</div>

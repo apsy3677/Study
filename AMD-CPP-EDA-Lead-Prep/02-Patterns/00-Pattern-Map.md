@@ -48,6 +48,7 @@ What is the INPUT?
 | If you read… | Think… |
 |---|---|
 | "subarray sum equals k", negatives allowed | prefix sum + `unordered_map<sum,count>` |
+| "sum/count over **all** subarrays (substrings, pairs) of min / max / something one element decides" | **flip (contribution)**: per element, count the objects it decides = left choices × right choices; blockers via monotonic stack ([MM03](MM03-Stuck-At-Brute-Force.md)) |
 | "longest/shortest substring with …" | sliding window (expand right, shrink left while invalid) |
 | "sorted array", "find pair", "3sum" | two pointers after sort |
 | "in O(log n)", "rotated", "peak", "first/last occurrence" | binary search (boundary of a predicate) |

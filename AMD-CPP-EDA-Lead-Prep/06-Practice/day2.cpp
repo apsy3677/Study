@@ -157,4 +157,15 @@ public:
     void put(int key, int value) {}
 };
 
+// ===== MM03 The flip (contribution technique) =====
+// ★ MM03-1  Sum of min(subarray) over all subarrays (LC 907, without the modulo).
+//   Suggested order: walls by walking (O(n^2)) → change the walk to jumps (O(n)) → optionally a stack.
+long long sumSubarrayMins(const VI& a) {
+    return 0;
+}
+// ★ MM03-2  Sum of (max - min) over all subarrays (LC 2104). Values may be negative.
+long long subArrayRanges(const VI& a) {
+    return 0;
+}
+
 #include "tests/day2_tests.h"

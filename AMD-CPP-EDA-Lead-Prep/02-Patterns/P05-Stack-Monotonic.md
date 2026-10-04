@@ -2,6 +2,7 @@
 
 > Practice file: `06-Practice/day2.cpp` · Striver: SDE Sheet (stack & queue days)
 > AMD reports: implement stack/queue, LL using stack, valid parentheses (classic screen), trapping rain water (stack version), sliding window max.
+> **Read first:** [MM01: the monotonic-stack mental model](MM01-Monotonic-Stack-Mental-Model.md) (waiting room, two walls per pop, five families), then practise with [the trainer](../07-Revision/visualizers/monotonic-stack-trainer.html) in predict mode.
 
 ---
 

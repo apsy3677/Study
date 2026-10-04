@@ -282,6 +282,44 @@ static void t_LRUCache() {
     CHECK_EQ(e.get(2), 2);
 }
 
+// ---------- MM03 ----------
+static ll bruteMins(const VI& a) {
+    ll t = 0;
+    for (size_t l = 0; l < a.size(); ++l) { int m = INT_MAX; for (size_t r = l; r < a.size(); ++r) { m = min(m, a[r]); t += m; } }
+    return t;
+}
+static ll bruteRanges(const VI& a) {
+    ll t = 0;
+    for (size_t l = 0; l < a.size(); ++l) { int mn = a[l], mx = a[l]; for (size_t r = l; r < a.size(); ++r) { mn = min(mn, a[r]); mx = max(mx, a[r]); t += mx - mn; } }
+    return t;
+}
+static VI randomArray(uint32_t& seed, int maxN, int lo, int hi) {
+    auto rnd = [&](int m) { seed = seed * 1103515245u + 12345u; return (int)((seed >> 8) % (uint32_t)m); };
+    VI a(1 + rnd(maxN));
+    for (int& x : a) x = lo + rnd(hi - lo + 1);
+    return a;
+}
+static void t_sumSubarrayMins() {
+    CHECK_EQ(sumSubarrayMins({3, 1, 2, 4}), 17LL);
+    CHECK_EQ(sumSubarrayMins({11, 81, 94, 43, 3}), 444LL);
+    CHECK_EQ(sumSubarrayMins({2, 2}), 6LL);                 // duplicates: [2] [2] [2,2]
+    CHECK_EQ(sumSubarrayMins({2, 5, 4, 6, 3}), bruteMins({2, 5, 4, 6, 3}));
+    uint32_t seed = 2024; bool ok = true;
+    for (int it = 0; it < 300 && ok; ++it) { VI a = randomArray(seed, 12, 1, 5); ok = sumSubarrayMins(a) == bruteMins(a); }
+    CHECK(ok);                                               // random arrays with many duplicates
+    VI big(5000); for (int i = 0; i < 5000; ++i) big[i] = (int)((i * 7919LL) % 100000) + 1;
+    CHECK_EQ(sumSubarrayMins(big), bruteMins(big));          // the total exceeds INT_MAX: catches int overflow in a[i]*(i-L)*(R-i)
+}
+static void t_subArrayRanges() {
+    CHECK_EQ(subArrayRanges({1, 2, 3}), 4LL);
+    CHECK_EQ(subArrayRanges({1, 3, 3}), 4LL);
+    CHECK_EQ(subArrayRanges({4, -2, -3, 4, 1}), 59LL);
+    CHECK_EQ(subArrayRanges({7}), 0LL);
+    uint32_t seed = 77; bool ok = true;
+    for (int it = 0; it < 300 && ok; ++it) { VI a = randomArray(seed, 12, -3, 3); ok = subArrayRanges(a) == bruteRanges(a); }
+    CHECK(ok);
+}
+
 int main(int argc, char** argv) {
     if (argc > 1) tst::filter = argv[1];
     SECTION(t_reverseKGroup);
@@ -316,5 +354,7 @@ int main(int argc, char** argv) {
     SECTION(t_buildTree);
     SECTION(t_invertTree);
     SECTION(t_LRUCache);
+    SECTION(t_sumSubarrayMins);
+    SECTION(t_subArrayRanges);
     return tst::summary("day2");
 }

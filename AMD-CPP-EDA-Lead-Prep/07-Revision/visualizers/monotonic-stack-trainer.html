@@ -1,0 +1,609 @@
+<title>Monotonic Stack Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: an instrument bench. The histogram is the instrument, the stack is the side readout,
+   narration and the live code sit underneath, and the ledger of walls and areas closes the page. */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --ink: #152030;
+  --muted: #5a6779;
+  --rule: #d5dbe4;
+  --cobalt: #2a55e0;
+  --cobalt-ink: #ffffff;
+  --wait: #9db0dc;
+  --spent: #cdd3dc;
+  --amber: #b9770a;
+  --amber-wash: rgba(232, 165, 40, 0.22);
+  --ok: #1d7f48;
+  --bad: #bf3434;
+  --code-bg: #f4f6fa;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+    --cobalt: #7d9bff; --cobalt-ink: #0d1218; --wait: #3e5890; --spent: #333e4e;
+    --amber: #f0b33f; --amber-wash: rgba(240, 179, 63, 0.2); --ok: #4cc584; --bad: #ef6b6b;
+    --code-bg: #10161e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+  --cobalt: #7d9bff; --cobalt-ink: #0d1218; --wait: #3e5890; --spent: #333e4e;
+  --amber: #f0b33f; --amber-wash: rgba(240, 179, 63, 0.2); --ok: #4cc584; --bad: #ef6b6b;
+  --code-bg: #10161e; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 32px); padding-block: 28px 48px; display: grid; gap: 20px; }
+
+header { display: grid; gap: 6px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 68ch; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 600 0.9rem var(--body); padding: 8px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--cobalt); color: var(--cobalt-ink); }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+input[type="text"], select { font: 0.95rem var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+input[type="text"] { width: min(260px, 100%); }
+.btn { font: 600 0.9rem var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--cobalt); color: var(--cobalt-ink); border-color: var(--cobalt); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.check { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; cursor: pointer; padding-bottom: 7px; }
+.check input { width: 18px; height: 18px; accent-color: var(--cobalt); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+.msg { font-size: 0.85rem; color: var(--bad); min-height: 1.2em; margin: 0; }
+
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; min-width: 0; }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 16px; }
+.chart-wrap { overflow-x: auto; }
+.chart-wrap svg { display: block; min-width: 320px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 0.82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid var(--rule); }
+.sw.cur { background: var(--cobalt); border-color: var(--cobalt); }
+.sw.wait { background: var(--wait); border-color: var(--wait); }
+.sw.spent { background: var(--spent); }
+.sw.terr { background: var(--amber-wash); border: 1.5px dashed var(--amber); }
+
+/* SVG */
+.bar { transition: fill 0.2s ease; }
+.bar.future { fill: var(--panel); stroke: var(--rule); stroke-width: 1.5; }
+.bar.wait { fill: var(--wait); }
+.bar.cur { fill: var(--cobalt); }
+.bar.spent { fill: var(--spent); }
+.bar.pickable { cursor: pointer; stroke: var(--cobalt); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.bar.pickable:hover { stroke-width: 3; }
+.bar.picked { stroke: var(--ink); stroke-width: 3.5; stroke-dasharray: none; }
+.val, .idx, .ans { font-family: var(--mono); font-size: 12px; text-anchor: middle; fill: var(--muted); }
+.idx { fill: var(--ink); }
+.ans { fill: var(--muted); font-size: 11px; }
+.ans.best { fill: var(--amber); font-weight: 600; }
+.terr { fill: var(--amber-wash); stroke: var(--amber); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.terr.best { stroke-dasharray: none; stroke-width: 2.5; }
+.base { stroke: var(--rule); stroke-width: 1.5; }
+.cut { stroke: var(--cobalt); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.sentinel { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.sentinel.on { fill: var(--cobalt); stroke: var(--cobalt); }
+.wall { font-family: var(--mono); font-size: 12px; font-weight: 600; text-anchor: middle; fill: var(--amber); }
+.arc { fill: none; stroke: var(--cobalt); stroke-width: 2; }
+.ahead { fill: var(--cobalt); }
+
+.stack-panel { display: grid; gap: 10px; align-content: start; }
+.stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 6px; min-height: 120px; justify-content: flex-start; }
+.chip { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.85rem; padding: 7px 10px; border-radius: 8px; background: var(--wait); color: var(--ink); }
+.chip.top { outline: 2px solid var(--cobalt); outline-offset: 1px; }
+.chip.top::after { content: "top"; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); opacity: 0.75; }
+.chip .ci { opacity: 0.8; }
+.chip .cv { font-weight: 600; }
+.stack .empty { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); padding: 7px 10px; border: 1px dashed var(--rule); border-radius: 8px; }
+.order-note { font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+.readouts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.narr { display: grid; gap: 12px; align-content: start; }
+.narr p.now { margin: 0; font-size: 1.02rem; max-width: 62ch; }
+.feedback { margin: 0; font-weight: 700; min-height: 1.4em; }
+.feedback.ok { color: var(--ok); }
+.feedback.bad { color: var(--bad); }
+.feedback.ask { color: var(--cobalt); }
+.playbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.counter { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+.score { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 0; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; }
+pre.code span { display: block; padding: 0 12px; white-space: pre; border-left: 3px solid transparent; }
+pre.code span.hl { background: var(--amber-wash); border-left-color: var(--amber); }
+
+.lower { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 600; color: var(--muted); font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; }
+tr.active td { background: var(--amber-wash); }
+tr.bestrow td { color: var(--amber); font-weight: 600; }
+td.blank { color: var(--muted); }
+.log { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); max-height: 280px; overflow-y: auto; }
+.log li:first-child { color: var(--ink); }
+
+.model { display: grid; gap: 10px; }
+.model ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; max-width: 75ch; }
+.model code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.keys { font-size: 0.82rem; color: var(--muted); margin: 0; }
+kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel); }
+
+@media (max-width: 820px) {
+  .bench, .readouts, .lower { grid-template-columns: minmax(0, 1fr); }
+  .stack { flex-direction: row-reverse; flex-wrap: wrap-reverse; justify-content: flex-end; min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .bar { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern trainer · monotonic stack</span>
+    <h1>Monotonic Stack Trainer</h1>
+    <p class="lede">Step through the stack and watch it find every bar's left and right walls. Turn on <strong>Predict</strong> to call each pop before it happens; that's what makes the pattern stick.</p>
+  </header>
+
+  <section class="controls" aria-label="Setup">
+    <div class="field">
+      <span class="eyebrow">Problem</span>
+      <div class="seg" role="group" aria-label="Problem">
+        <button type="button" id="modeHist" aria-pressed="true">Largest rectangle</button>
+        <button type="button" id="modeNge" aria-pressed="false">Next greater</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="vals">Values (0–99, up to 16)</label>
+      <input type="text" id="vals" value="2, 1, 5, 6, 2, 3" autocomplete="off" spellcheck="false">
+    </div>
+    <button type="button" class="btn" id="load">Load</button>
+    <div class="field">
+      <label for="preset">Examples</label>
+      <select id="preset"></select>
+    </div>
+    <button type="button" class="btn" id="random">Random</button>
+    <label class="check" for="predict"><input type="checkbox" id="predict"> Predict before reveal</label>
+  </section>
+  <p class="msg" id="inputMsg" role="status"></p>
+
+  <section class="bench">
+    <div class="panel">
+      <div class="chart-wrap" id="chart"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw cur"></i>arriving</span>
+        <span><i class="sw wait"></i>waiting in the stack</span>
+        <span><i class="sw spent"></i>answered (popped)</span>
+        <span id="legendTerr"><i class="sw terr"></i>territory between the walls</span>
+      </div>
+    </div>
+    <aside class="panel stack-panel" aria-label="Stack">
+      <h2>Stack</h2>
+      <ul class="stack" id="stack"></ul>
+      <p class="order-note" id="orderNote"></p>
+    </aside>
+  </section>
+
+  <section class="readouts">
+    <div class="panel narr" aria-live="polite">
+      <span class="eyebrow" id="evType">What just happened</span>
+      <p class="now" id="narr"></p>
+      <p class="feedback" id="feedback"></p>
+      <div class="playbar">
+        <button type="button" class="btn" id="back">Back</button>
+        <button type="button" class="btn primary" id="step">Step</button>
+        <button type="button" class="btn" id="play">Play</button>
+        <button type="button" class="btn" id="reset">Reset</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="score" id="score"></p>
+    </div>
+    <div class="panel">
+      <span class="eyebrow">The code, line by line</span>
+      <pre class="code" id="code" aria-label="C++ code with the current lines highlighted"></pre>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <h2 id="ledgerTitle">Walls and areas so far</h2>
+      <div class="table-wrap"><table id="ledger"></table></div>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ol class="log" id="log" reversed></ol>
+    </div>
+  </section>
+
+  <section class="panel model">
+    <h2>The model in four sentences</h2>
+    <ol id="modelList"></ol>
+    <p class="keys"><kbd>→</kbd> or <kbd>Space</kbd> step · <kbd>←</kbd> back. Each index is pushed once and popped at most once, so the whole scan is O(n).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const PRESETS = [
+    { label: "Classic · 2 1 5 6 2 3", v: [2, 1, 5, 6, 2, 3] },
+    { label: "Equal heights · 3 1 3 2 2", v: [3, 1, 3, 2, 2] },
+    { label: "LeetCode 84 · 6 2 5 4 5 1 6", v: [6, 2, 5, 4, 5, 1, 6] },
+    { label: "Rising · 1 2 3 4 5", v: [1, 2, 3, 4, 5] },
+    { label: "Falling · 5 4 3 2 1", v: [5, 4, 3, 2, 1] },
+    { label: "Temperatures · 73 74 75 71 69 72 76 73", v: [73, 74, 75, 71, 69, 72, 76, 73] },
+  ];
+
+  const CODE = {
+    hist: [
+      "for (int i = 0; i <= n; ++i) {",
+      "    int cur = (i == n) ? 0 : h[i];            // height-0 sentinel at the end",
+      "    while (!st.empty() && h[st.top()] > cur) {",
+      "        int j = st.top(); st.pop();           // j's RIGHT wall = i",
+      "        int left = st.empty() ? -1 : st.top(); // j's LEFT wall = bar under it",
+      "        best = max(best, h[j] * (i - left - 1));",
+      "    }",
+      "    st.push(i);                               // wait for a shorter bar",
+      "}",
+    ],
+    nge: [
+      "for (int i = 0; i < n; ++i) {",
+      "    while (!st.empty() && a[st.top()] < a[i]) {",
+      "        nge[st.top()] = a[i];   // answer is born at pop time",
+      "        st.pop();",
+      "    }",
+      "    st.push(i);                 // wait for something bigger",
+      "}",
+      "// still in the stack: no greater element, nge = -1",
+    ],
+  };
+  const HL = {
+    hist: { scan: [0, 1, 2], pop: [3, 4, 5], push: [7], done: [8] },
+    nge: { scan: [0, 1], pop: [2, 3], push: [5], done: [7] },
+  };
+  const MODEL = {
+    hist: [
+      "A bar waits in the stack until a <strong>shorter</strong> bar arrives on its right.",
+      "That shorter newcomer is the popped bar's <strong>right wall</strong>; the bar left <strong>under</strong> it in the stack is its <strong>left wall</strong>.",
+      "Area = height × (right − left − 1): the widest rectangle in which that bar is the shortest.",
+      "A height-0 sentinel at the end forces every remaining bar out, so every bar gets its walls. Heights in the stack are always increasing.",
+    ],
+    nge: [
+      "Every element waits in the stack until a <strong>bigger</strong> one arrives.",
+      "The newcomer is the next greater element for <strong>every</strong> smaller element it pops, top first.",
+      "Whatever is still waiting can't be beaten by anything after it, so the stack is always <strong>decreasing</strong>.",
+      "Elements left at the end never met a bigger one, so their answer is −1. Read the top after popping and you get the <em>previous</em> greater-or-equal for free.",
+    ],
+  };
+
+  const S = { mode: "hist", a: PRESETS[0].v.slice(), ev: [], k: 0, predict: false, sel: new Set(), checked: new Map(), score: { ok: 0, total: 0 }, timer: null };
+  const $ = (id) => document.getElementById(id);
+  const fmt = (x) => (x < 0 ? "−" + Math.abs(x) : String(x));
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const listIdx = (arr) => arr.slice().sort((p, q) => q - p).join(", ");
+
+  function build() {
+    const a = S.a, n = a.length, ev = [], st = [];
+    if (S.mode === "hist") {
+      for (let i = 0; i <= n; i++) {
+        const cur = i === n ? 0 : a[i];
+        const scan = { t: "scan", i, cur, stack: st.slice(), pops: [] };
+        ev.push(scan);
+        while (st.length && a[st[st.length - 1]] > cur) {
+          const j = st.pop();
+          const left = st.length ? st[st.length - 1] : -1;
+          const width = i - left - 1;
+          ev.push({ t: "pop", i, j, left, right: i, width, area: a[j] * width, stack: st.slice() });
+          scan.pops.push(j);
+        }
+        if (i < n) { st.push(i); ev.push({ t: "push", i, stack: st.slice() }); }
+      }
+      ev.push({ t: "done", stack: [] });
+    } else {
+      for (let i = 0; i < n; i++) {
+        const scan = { t: "scan", i, cur: a[i], stack: st.slice(), pops: [] };
+        ev.push(scan);
+        while (st.length && a[st[st.length - 1]] < a[i]) {
+          const j = st.pop();
+          ev.push({ t: "pop", i, j, ans: a[i], dist: i - j, stack: st.slice() });
+          scan.pops.push(j);
+        }
+        st.push(i);
+        ev.push({ t: "push", i, stack: st.slice() });
+      }
+      ev.push({ t: "done", stack: st.slice() });
+    }
+    S.ev = ev; S.k = 0; S.sel.clear(); S.checked = new Map(); S.score = { ok: 0, total: 0 };
+  }
+
+  function derive() {
+    const d = { res: {}, best: null, curI: -1, resolved: new Set(), log: [] };
+    for (let q = 0; q <= S.k; q++) {
+      const e = S.ev[q];
+      if (e.t === "scan") d.curI = e.i;
+      if (e.t === "pop") {
+        d.res[e.j] = e; d.resolved.add(e.j);
+        if (S.mode === "hist" && (!d.best || e.area > d.best.area)) d.best = e;
+      }
+      d.log.push(logLine(e, d));
+    }
+    return d;
+  }
+
+  const isPending = () => S.predict && S.ev[S.k].t === "scan" && !S.checked.has(S.k);
+
+  function logLine(e, d) {
+    const a = S.a, n = a.length, hist = S.mode === "hist";
+    if (e.t === "scan") return e.i === n ? "end sentinel (0) arrives" : `${hist ? "bar" : "element"} ${e.i} (${e.cur}) arrives`;
+    if (e.t === "pop") return hist
+      ? `pop bar ${e.j}: walls ${fmt(e.left)} | ${e.right}, width ${e.width}, area ${e.area}`
+      : `pop ${e.j}: next greater ${e.ans} (distance ${e.dist})`;
+    if (e.t === "push") return `push ${e.i}`;
+    return hist ? `done: max area ${d.best ? d.best.area : 0}` : "done: leftovers get −1";
+  }
+
+  function narrate(e, d) {
+    const a = S.a, n = a.length;
+    if (S.mode === "hist") {
+      if (e.t === "scan") return e.i === n
+        ? `The end sentinel (height 0) arrives. Every bar still waiting is taller, so they all leave now, top first. Their right wall is the end, index ${n}.`
+        : `Bar ${e.i} (height ${e.cur}) arrives. It is the right wall for every waiting bar taller than ${e.cur}.`;
+      if (e.t === "pop") {
+        const L = e.left < 0 ? "the left edge (stack is empty, index −1)" : `bar ${e.left} (height ${a[e.left]}), the one now under it`;
+        const R = e.right === n ? `the end (index ${n})` : `bar ${e.right} (height ${a[e.right]})`;
+        return `Bar ${e.j} (height ${a[e.j]}) leaves. Right wall: ${R}. Left wall: ${L}. Width = ${e.right} − ${e.left < 0 ? "(−1)" : e.left} − 1 = ${e.width}, area = ${a[e.j]} × ${e.width} = ${e.area}.`;
+      }
+      if (e.t === "push") return `Bar ${e.i} joins the stack and waits for a shorter bar on its right. Heights in the stack stay increasing.`;
+      const b = d.best;
+      return b ? `Done. The largest rectangle has area ${b.area}: bar ${b.j} is its shortest bar, and it spans bars ${b.left + 1} to ${b.right - 1}.` : "Done.";
+    }
+    if (e.t === "scan") return `Element ${e.i} (value ${e.cur}) arrives. It is the next greater element for every waiting element smaller than ${e.cur}.`;
+    if (e.t === "pop") return `Element ${e.j} (value ${a[e.j]}) leaves. Its next greater element is ${e.ans} at index ${e.i}, ${e.dist} step${e.dist === 1 ? "" : "s"} away.`;
+    if (e.t === "push") return `Element ${e.i} waits for something bigger. Values in the stack stay decreasing.`;
+    const left = e.stack.length;
+    return `Done. ${left} element${left === 1 ? "" : "s"} never met a bigger one, so ${left === 1 ? "its answer is" : "their answer is"} −1.`;
+  }
+
+  function chart(d) {
+    const a = S.a, n = a.length, hist = S.mode === "hist", e = S.ev[S.k];
+    const slots = n + (hist ? 1 : 0);
+    const slot = 52, bw = 38, padX = 22, top = 46, plotH = 170, bottom = 62;
+    const maxV = Math.max(1, ...a), unit = plotH / maxV;
+    const W = padX * 2 + (slots - 1) * slot + bw, H = top + plotH + bottom, base = top + plotH;
+    const X = (k) => padX + k * slot;
+    const Y = (v) => base - (v === 0 ? 0 : Math.max(v * unit, 3));
+    const inStack = new Set(e.stack);
+    const pending = isPending();
+    const aria = `Values ${a.join(", ")}. Stack holds ${e.stack.length ? e.stack.join(", ") : "nothing"}.`;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${aria}">`;
+    s += `<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahead" d="M0,0 L10,5 L0,10 z"></path></marker></defs>`;
+
+    const terr = (p, cls) => {
+      const x0 = X(p.left + 1) - 5, x1 = X(p.right - 1) + bw + 5, y = Y(a[p.j]);
+      return `<rect class="${cls}" x="${x0}" y="${y}" width="${x1 - x0}" height="${base - y}" rx="4"></rect>`;
+    };
+    if (hist && e.t === "pop") s += terr(e, "terr");
+    if (hist && e.t === "done" && d.best) s += terr(d.best, "terr best");
+
+    if (e.t === "scan" && !pending) {
+      const y = base - e.cur * unit;
+      s += `<line class="cut" x1="${padX - 10}" x2="${X(e.i) + bw + 6}" y1="${y}" y2="${y}"></line>`;
+    }
+    s += `<line class="base" x1="${padX - 12}" x2="${W - padX + 12}" y1="${base}" y2="${base}"></line>`;
+
+    for (let k = 0; k < n; k++) {
+      let st;
+      if (e.t !== "done" && k === d.curI) st = "cur";
+      else if (inStack.has(k)) st = "wait";
+      else if (d.resolved.has(k)) st = "spent";
+      else st = "future";
+      let cls = "bar " + st;
+      if (pending && inStack.has(k)) cls += " pickable";
+      if (S.sel.has(k)) cls += " picked";
+      const y = Y(a[k]);
+      s += `<rect class="${cls}" data-k="${k}" x="${X(k)}" y="${y}" width="${bw}" height="${base - y}" rx="3"><title>index ${k}, value ${a[k]}</title></rect>`;
+      s += `<text class="val" x="${X(k) + bw / 2}" y="${y - 7}">${a[k]}</text>`;
+      s += `<text class="idx" x="${X(k) + bw / 2}" y="${base + 17}">${k}</text>`;
+      const r = d.res[k];
+      if (r) {
+        const isBest = hist && e.t === "done" && d.best && d.best.j === k;
+        s += `<text class="ans${isBest ? " best" : ""}" x="${X(k) + bw / 2}" y="${base + 52}">${hist ? r.area : r.ans}</text>`;
+      } else if (!hist && e.t === "done") {
+        s += `<text class="ans best" x="${X(k) + bw / 2}" y="${base + 52}">−1</text>`;
+      }
+    }
+    if (hist) {
+      const sx = X(n);
+      s += `<rect class="sentinel${e.t !== "done" && d.curI === n ? " on" : ""}" x="${sx}" y="${base - 6}" width="${bw}" height="6" rx="2"></rect>`;
+      s += `<text class="idx" x="${sx + bw / 2}" y="${base + 17}">end</text>`;
+    }
+
+    if (hist && e.t === "pop") {
+      const lx = e.left < 0 ? padX - 12 : X(e.left) + bw / 2;
+      const rx = X(e.right) + bw / 2;
+      s += `<text class="wall" x="${lx}" y="${base + 34}">L</text>`;
+      s += `<text class="wall" x="${rx}" y="${base + 34}">R</text>`;
+    }
+    if (!hist && e.t === "pop") {
+      const x1 = X(e.j) + bw / 2, y1 = Y(a[e.j]) - 18, x2 = X(e.i) + bw / 2, y2 = Y(a[e.i]) - 18;
+      const cy = Math.max(6, Math.min(y1, y2) - 34);
+      s += `<path class="arc" d="M${x1},${y1} Q${(x1 + x2) / 2},${cy} ${x2},${y2}" marker-end="url(#ah)"></path>`;
+    }
+    s += `</svg>`;
+    return s;
+  }
+
+  function renderStack(e) {
+    const el = $("stack");
+    if (!e.stack.length) { el.innerHTML = `<li class="empty">empty</li>`; return; }
+    el.innerHTML = e.stack.map((k, pos) =>
+      `<li class="chip${pos === e.stack.length - 1 ? " top" : ""}"><span class="ci">i ${k}</span><span class="cv">${S.a[k]}</span></li>`).join("");
+  }
+
+  function renderLedger(d, e) {
+    const a = S.a, n = a.length, hist = S.mode === "hist";
+    let h = hist
+      ? "<thead><tr><th>bar</th><th>height</th><th>left wall</th><th>right wall</th><th>width</th><th>area</th></tr></thead><tbody>"
+      : "<thead><tr><th>index</th><th>value</th><th>next greater</th><th>distance</th></tr></thead><tbody>";
+    for (let k = 0; k < n; k++) {
+      const r = d.res[k];
+      let cls = "";
+      if (e.t === "pop" && e.j === k) cls = "active";
+      if (hist && e.t === "done" && d.best && d.best.j === k) cls = "bestrow";
+      if (hist) {
+        h += r
+          ? `<tr class="${cls}"><td>${k}</td><td>${a[k]}</td><td>${fmt(r.left)}</td><td>${r.right === n ? n + " (end)" : r.right}</td><td>${r.width}</td><td>${r.area}</td></tr>`
+          : `<tr><td>${k}</td><td>${a[k]}</td><td class="blank">·</td><td class="blank">·</td><td class="blank">·</td><td class="blank">·</td></tr>`;
+      } else {
+        const leftover = e.t === "done" && !r;
+        h += r
+          ? `<tr class="${cls}"><td>${k}</td><td>${a[k]}</td><td>${r.ans}</td><td>${r.dist}</td></tr>`
+          : `<tr><td>${k}</td><td>${a[k]}</td><td class="${leftover ? "" : "blank"}">${leftover ? "−1" : "·"}</td><td class="blank">·</td></tr>`;
+      }
+    }
+    $("ledger").innerHTML = h + "</tbody>";
+  }
+
+  function render() {
+    const e = S.ev[S.k], d = derive(), hist = S.mode === "hist", pending = isPending();
+    $("chart").innerHTML = chart(d);
+    renderStack(e);
+    $("orderNote").textContent = hist
+      ? "Heights increase from bottom to top. A shorter arrival pops from the top."
+      : "Values decrease from bottom to top. A bigger arrival pops from the top.";
+    $("legendTerr").hidden = !hist;
+    $("evType").textContent = { scan: "Arrival", pop: "Pop: an answer is born", push: "Push", done: "Finished" }[e.t];
+
+    let text = narrate(e, d);
+    const fb = $("feedback");
+    fb.className = "feedback"; fb.textContent = "";
+    if (e.t === "scan" && S.predict) {
+      const chk = S.checked.get(S.k);
+      const who = hist ? "bars" : "elements";
+      if (!chk) {
+        text = e.i === S.a.length && hist
+          ? "The end sentinel (height 0) is about to arrive."
+          : `${hist ? "Bar" : "Element"} ${e.i} (value ${e.cur}) is about to arrive.`;
+        fb.className = "feedback ask";
+        fb.textContent = e.stack.length
+          ? `Predict: which waiting ${who} leave? Click them in the chart (or none), then press Check.`
+          : "The stack is empty, so nobody can leave. Press Check to confirm.";
+      } else if (chk.ok) {
+        fb.className = "feedback ok";
+        fb.textContent = chk.want.length ? `Correct: ${listIdx(chk.want)} leave${chk.want.length === 1 ? "s" : ""}, top first.` : "Correct: nobody leaves.";
+      } else {
+        fb.className = "feedback bad";
+        fb.textContent = `Not quite. You picked ${chk.picked.length ? listIdx(chk.picked) : "none"}; the ones that leave are ${chk.want.length ? listIdx(chk.want) : "none"}. Every waiting ${hist ? "bar taller than" : "element smaller than"} ${e.cur} leaves.`;
+      }
+    }
+    $("narr").textContent = text;
+
+    $("code").innerHTML = CODE[S.mode].map((ln, i) =>
+      `<span class="${HL[S.mode][e.t].includes(i) && !pending ? "hl" : ""}">${esc(ln)}</span>`).join("");
+    renderLedger(d, e);
+    $("ledgerTitle").textContent = hist ? "Walls and areas so far" : "Answers so far";
+    $("log").innerHTML = d.log.slice().reverse().slice(0, 14).map((l) => `<li>${esc(l)}</li>`).join("");
+    $("log").start = d.log.length;
+    $("modelList").innerHTML = MODEL[S.mode].map((m) => `<li>${m}</li>`).join("");
+
+    $("counter").textContent = `step ${S.k + 1} of ${S.ev.length}`;
+    $("back").disabled = S.k === 0;
+    $("step").textContent = pending ? "Check" : "Step";
+    $("step").disabled = !pending && S.k >= S.ev.length - 1;
+    $("play").disabled = S.predict;
+    $("play").textContent = S.timer ? "Pause" : "Play";
+    $("score").textContent = S.predict || S.score.total
+      ? `Predictions: ${S.score.ok} of ${S.score.total} right`
+      : "Tip: turn on Predict and call each pop yourself.";
+    $("modeHist").setAttribute("aria-pressed", String(hist));
+    $("modeNge").setAttribute("aria-pressed", String(!hist));
+  }
+
+  function check() {
+    const e = S.ev[S.k];
+    const want = e.pops.slice(), picked = [...S.sel];
+    const ok = want.length === picked.length && want.every((x) => S.sel.has(x));
+    S.checked.set(S.k, { ok, want, picked });
+    S.score.total++; if (ok) S.score.ok++;
+    render();
+  }
+  function step() {
+    if (isPending()) { check(); return; }
+    if (S.k < S.ev.length - 1) { S.k++; S.sel.clear(); render(); }
+    else stopPlay();
+  }
+  function back() { if (S.k > 0) { S.k--; S.sel.clear(); render(); } }
+  function stopPlay() { if (S.timer) { clearInterval(S.timer); S.timer = null; } render(); }
+  function togglePlay() {
+    if (S.timer) { stopPlay(); return; }
+    if (S.k >= S.ev.length - 1) { S.k = 0; }
+    S.timer = setInterval(() => { if (S.k >= S.ev.length - 1) stopPlay(); else step(); }, 950);
+    render();
+  }
+  function reset() { if (S.timer) { clearInterval(S.timer); S.timer = null; } build(); render(); }
+
+  function loadValues(arr, fromPreset) {
+    S.a = arr; $("vals").value = arr.join(", ");
+    if (!fromPreset) $("preset").value = "custom";
+    $("inputMsg").textContent = "";
+    reset();
+  }
+  function parseInput() {
+    const parts = $("vals").value.split(/[\s,]+/).filter(Boolean);
+    const nums = parts.map(Number);
+    if (!parts.length || parts.length > 16 || nums.some((x) => !Number.isInteger(x) || x < 0 || x > 99)) {
+      $("inputMsg").textContent = "Enter 1 to 16 whole numbers between 0 and 99, separated by commas or spaces.";
+      return;
+    }
+    loadValues(nums, false);
+  }
+
+  // wiring
+  const sel = $("preset");
+  sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join("") + `<option value="custom">Your values</option>`;
+  sel.value = "0";
+  sel.addEventListener("change", () => { if (sel.value !== "custom") loadValues(PRESETS[+sel.value].v.slice(), true); });
+  $("load").addEventListener("click", parseInput);
+  $("vals").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); parseInput(); } });
+  $("random").addEventListener("click", () => {
+    const n = 6 + Math.floor(Math.random() * 4);
+    loadValues(Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 9)), false);
+  });
+  $("modeHist").addEventListener("click", () => { if (S.mode !== "hist") { S.mode = "hist"; reset(); } });
+  $("modeNge").addEventListener("click", () => { if (S.mode !== "nge") { S.mode = "nge"; reset(); } });
+  $("predict").addEventListener("change", (ev) => { S.predict = ev.target.checked; if (S.predict && S.timer) { clearInterval(S.timer); S.timer = null; } S.sel.clear(); render(); });
+  $("step").addEventListener("click", step);
+  $("back").addEventListener("click", back);
+  $("play").addEventListener("click", togglePlay);
+  $("reset").addEventListener("click", reset);
+  $("chart").addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-k]");
+    if (!t || !isPending()) return;
+    const k = +t.getAttribute("data-k");
+    if (!S.ev[S.k].stack.includes(k)) return;
+    if (S.sel.has(k)) S.sel.delete(k); else S.sel.add(k);
+    render();
+  });
+  document.addEventListener("keydown", (ev) => {
+    const tag = (ev.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea") return;
+    if (tag === "button" && ev.key === " ") return;   // the button's own click handles Space
+    if (ev.key === "ArrowRight" || ev.key === " ") { ev.preventDefault(); step(); }
+    else if (ev.key === "ArrowLeft") { ev.preventDefault(); back(); }
+  });
+
+  build();
+  render();
+})();
+</script>

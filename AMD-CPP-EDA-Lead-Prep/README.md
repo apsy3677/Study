@@ -32,7 +32,7 @@ Every day has a **MUST** core of about 5–6 hours, and **SHOULD** blocks if you
 | MUST | 90m | C++ object model, vtable, special members, slicing, UB | [03-Cpp-Deep/C1-Object-Model.md](03-Cpp-Deep/C1-Object-Model.md) |
 | MUST | 60m | Modern C++: move, smart pointers, RAII, STL internals | [03-Cpp-Deep/C2-Modern-Cpp-and-STL.md](03-Cpp-Deep/C2-Modern-Cpp-and-STL.md) |
 | MUST | 60m | **Speed playbook**, then type the toolkit from memory | [01-Speed-Cpp/Speed-Coding-Playbook.md](01-Speed-Cpp/Speed-Coding-Playbook.md) |
-| MUST | 30m | Pattern map (the decision tree) | [02-Patterns/00-Pattern-Map.md](02-Patterns/00-Pattern-Map.md) |
+| MUST | 30m | Pattern map (the decision tree) + **mental-models atlas** (one picture per pattern) | [00-Pattern-Map.md](02-Patterns/00-Pattern-Map.md), [MM02-Mental-Models-Atlas.md](02-Patterns/MM02-Mental-Models-Atlas.md) |
 | MUST | 90m | P01 Arrays/Hashing/Prefix, P02 Two-pointer/Window, P03 Binary Search | `02-Patterns/P01..P03` |
 | MUST | 60m | Code the ★ problems in `06-Practice/day1.cpp` (timed: 12–15 min each) | [06-Practice](06-Practice/README.md) |
 | SHOULD | 30m | Tricky snippets 1–13 | [03-Cpp-Deep/C6-Tricky-Snippets.md](03-Cpp-Deep/C6-Tricky-Snippets.md) |
@@ -43,7 +43,7 @@ Every day has a **MUST** core of about 5–6 hours, and **SHOULD** blocks if you
 |---|---|---|---|
 | MUST | 15m | Spaced review: Day 1 flashcards (C++ + P01–P03) | [07-Revision/Flashcards.md](07-Revision/Flashcards.md) |
 | MUST | 60m | P04 Linked List (AMD asks these **a lot**) | `02-Patterns/P04` |
-| MUST | 45m | P05 Stack / Monotonic, P06 Heap / Intervals / Sweep | `02-Patterns/P05, P06` |
+| MUST | 45m | P05 Stack / Monotonic (start with the **MM01 mental model** + the trainer in predict mode), P06 Heap / Intervals / Sweep | [MM01](02-Patterns/MM01-Monotonic-Stack-Mental-Model.md), [trainer](07-Revision/visualizers/monotonic-stack-trainer.html), `02-Patterns/P05, P06` |
 | MUST | 60m | P07 Trees & BST | `02-Patterns/P07` |
 | MUST | 45m | P12 Design DS: **LRU**, ring buffer, `shared_ptr`, pool allocator | `02-Patterns/P12` |
 | MUST | 90m | Concurrency + memory model; code a thread-safe queue from memory | [03-Cpp-Deep/C3-Concurrency.md](03-Cpp-Deep/C3-Concurrency.md) |
@@ -113,12 +113,15 @@ AMD-CPP-EDA-Lead-Prep/
 ├── PROGRESS.md              ← your tracker (Claude updates it too)
 ├── 00-Intel/                ← what AMD asks: sourced question bank, ranked by probability
 ├── 01-Speed-Cpp/            ← speed playbook + cpp_toolkit.cpp (type-from-memory reference)
-├── 02-Patterns/             ← P01..P12 DSA patterns as 5-part cards + hint-ladder problems
+├── 02-Patterns/             ← P01..P12 DSA patterns as 5-part cards + hint-ladder problems;
+│                              MM01 monotonic-stack mental model, MM02 mental-models atlas (pictures → code),
+│                              MM03 stuck-at-brute-force escape routes (the flip / contribution technique)
 ├── 03-Cpp-Deep/             ← C1..C6 theory: object model, modern C++, concurrency, perf/Linux, OS, tricky snippets
 ├── 04-EDA-Domain/           ← E1 primer, E2 algorithms, E3 EDA system design
 ├── 05-Tests/                ← diagnostic, daily quizzes (answers separate), mocks, coach prompt
 ├── 06-Practice/             ← compile-and-run problem files with tests (+ spoiler solutions)
-├── 07-Revision/             ← flashcards (+Anki), one-page recall, interview-day checklist
+├── 07-Revision/             ← flashcards (+Anki), one-page recall, interview-day checklist,
+│                              visualizers/monotonic-stack-trainer.html (open in a browser)
 └── 08-Lead-and-Projects/    ← lead/behavioral + project deep-dive (secondary)
 ```
 

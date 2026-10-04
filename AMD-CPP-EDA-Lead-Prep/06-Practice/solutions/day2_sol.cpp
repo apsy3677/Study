@@ -390,4 +390,24 @@ private:
     unordered_map<int, list<PII>::iterator> pos_;
 };
 
+// ===== MM03 =====
+// Walls by "walk with jumps": left[i] = previous strictly smaller, right[i] = next smaller-or-equal.
+long long sumSubarrayMins(const VI& a) {
+    int n = (int)a.size(); VI left(n), right(n);
+    for (int i = 0; i < n; ++i) { int L = i - 1; while (L >= 0 && a[L] >= a[i]) L = left[L]; left[i] = L; }
+    for (int i = n - 1; i >= 0; --i) { int R = i + 1; while (R < n && a[R] > a[i]) R = right[R]; right[i] = R; }
+    long long total = 0;
+    for (int i = 0; i < n; ++i) total += (long long)a[i] * (i - left[i]) * (right[i] - i);
+    return total;
+}
+static long long sumSubarrayMaxs(const VI& a) {                // same, comparisons flipped
+    int n = (int)a.size(); VI left(n), right(n);
+    for (int i = 0; i < n; ++i) { int L = i - 1; while (L >= 0 && a[L] <= a[i]) L = left[L]; left[i] = L; }
+    for (int i = n - 1; i >= 0; --i) { int R = i + 1; while (R < n && a[R] < a[i]) R = right[R]; right[i] = R; }
+    long long total = 0;
+    for (int i = 0; i < n; ++i) total += (long long)a[i] * (i - left[i]) * (right[i] - i);
+    return total;
+}
+long long subArrayRanges(const VI& a) { return sumSubarrayMaxs(a) - sumSubarrayMins(a); }
+
 #include "../tests/day2_tests.h"

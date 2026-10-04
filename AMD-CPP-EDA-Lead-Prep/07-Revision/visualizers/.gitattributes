@@ -1,0 +1,2 @@
+# build.sh must keep LF line endings, or bash fails with "$'': command not found"
+*.sh text eol=lf

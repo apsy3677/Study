@@ -1,0 +1,664 @@
+<title>Linked List Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<!-- @kit:css -->
+<style>
+/* Linked-list surgery: boxes are nodes, arrows are next (and prev) pointers, tags are the
+   pointer variables in the code. The arrow just rewritten is drawn thick. */
+.lnode rect { fill: var(--panel); stroke: var(--ink); stroke-width: 1.8; }
+.lnode text { font: 600 14px var(--mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); pointer-events: none; }
+.lnode.dummy rect, .lnode.sentinel rect { fill: var(--code-bg); stroke-dasharray: 4 3; }
+.lnode.focus rect { stroke: var(--cobalt); stroke-width: 3.2; }
+.lnode.cyc rect { fill: color-mix(in srgb, var(--c2) 12%, var(--panel)); }
+.lnode.gone rect { stroke: var(--bad); stroke-dasharray: 3 3; }
+.lnode.pickable { cursor: pointer; }
+.lnode.pickable rect { stroke: var(--cobalt); stroke-dasharray: 4 3; }
+.lnode.pickable:hover rect { stroke-width: 3.5; }
+.lnode.picked rect { stroke: var(--ink); stroke-width: 4; stroke-dasharray: none; }
+.ptr { fill: none; stroke: var(--muted); stroke-width: 1.8; }
+.ptr.prevp { stroke: var(--c4); stroke-dasharray: 2 0; }
+.ptr.hot { stroke: var(--cobalt); stroke-width: 3.4; }
+.ptr.was { stroke: var(--bad); stroke-width: 1.6; stroke-dasharray: 4 4; opacity: 0.8; }
+.nul { font: 600 12px var(--mono); text-anchor: middle; fill: var(--muted); }
+.tag rect { stroke: none; }
+.tag text { font: 600 11px var(--mono); text-anchor: middle; dominant-baseline: central; fill: #fff; pointer-events: none; }
+.tagline { stroke-width: 1.6; }
+.mapchip rect { fill: var(--code-bg); stroke: var(--rule); }
+.mapchip text { font: 600 12px var(--mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.mapchip.hot rect { stroke: var(--cobalt); stroke-width: 2.6; }
+.maplink { fill: none; stroke: var(--rule); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.maplink.hot { stroke: var(--cobalt); stroke-width: 2; }
+.lbl { font: 600 11px var(--mono); fill: var(--muted); }
+.vars { display: grid; gap: 4px; font-family: var(--mono); font-size: 0.85rem; }
+.vars div { display: flex; gap: 8px; align-items: center; }
+.vars i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.ops { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.ops li { font: 600 0.8rem var(--mono); padding: 3px 7px; border-radius: 6px; border: 1px solid var(--rule); }
+.ops li.now { border-color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 14%, var(--panel)); }
+.ops li.done { color: var(--muted); }
+.sw.hot { border: 0; border-top: 3.4px solid var(--cobalt); width: 22px; height: 0; border-radius: 0; background: none; }
+.sw.was { border: 0; border-top: 2px dashed var(--bad); width: 22px; height: 0; border-radius: 0; background: none; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern trainer · linked lists</span>
+    <h1>Linked List Trainer</h1>
+    <p class="lede"><strong>Pointer surgery, one arrow at a time.</strong> Boxes are nodes, arrows are <code class="inl">next</code> pointers, colored tags are the pointer variables in the code. The arrow you just rewrote turns thick blue, and its old target shows as a dashed red ghost. Turn on <strong>Predict</strong> to call each rewiring before it happens.</p>
+  </header>
+
+  <section class="controls" aria-label="Setup">
+    <div class="field">
+      <label for="problem">Problem</label>
+      <select id="problem"></select>
+    </div>
+    <label class="check" for="predict"><input type="checkbox" id="predict"> Predict before reveal</label>
+  </section>
+
+  <section class="bench">
+    <div class="panel stage">
+      <p class="note" id="note"></p>
+      <div class="chart-wrap" id="chart"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw" style="border-color: var(--ink)"></i>node</span>
+        <span><i class="sw" style="border-style: dashed"></i>dummy / sentinel</span>
+        <span><i class="sw line"></i>next pointer</span>
+        <span><i class="sw hot"></i>just rewritten</span>
+        <span><i class="sw was"></i>where it pointed before</span>
+        <span>∅ = null</span>
+      </div>
+    </div>
+    <aside class="panel side">
+      <section>
+        <h2>Pointer variables</h2>
+        <div class="vars" id="vars"></div>
+      </section>
+      <section id="extraBox">
+        <h2 id="extraTitle">List now</h2>
+        <div id="extra"></div>
+      </section>
+    </aside>
+  </section>
+
+  <section class="readouts">
+    <div class="panel narr" aria-live="polite">
+      <span class="eyebrow" id="evType">What just happened</span>
+      <p class="now" id="narr"></p>
+      <p class="feedback" id="feedback"></p>
+      <div class="choices" id="choices" hidden>
+        <button type="button" class="btn" id="pickNull">null</button>
+      </div>
+      <div class="playbar">
+        <button type="button" class="btn" id="back">Back</button>
+        <button type="button" class="btn primary" id="step">Step</button>
+        <button type="button" class="btn" id="play">Play</button>
+        <button type="button" class="btn" id="reset">Reset</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="score" id="score"></p>
+    </div>
+    <div class="panel codebox">
+      <span class="eyebrow">The code, line by line</span>
+      <pre class="code" id="code" aria-label="C++ code with the current lines highlighted"></pre>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel model">
+      <h2 id="modelTitle">The model</h2>
+      <ol id="model"></ol>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ol class="log" id="log" reversed></ol>
+    </div>
+  </section>
+  <p class="keys"><kbd>→</kbd> or <kbd>Space</kbd> step · <kbd>←</kbd> back.</p>
+</div>
+
+<!-- @kit:js -->
+<script>
+(() => {
+  const { $, esc } = TK;
+  const VARCOL = { head: "var(--muted)", prev: "var(--c0)", cur: "var(--cobalt)", nxt: "var(--c4)", dummy: "var(--muted)",
+    groupPrev: "var(--c2)", kth: "var(--c3)", groupNext: "var(--c5)", first: "var(--c6)", slow: "var(--c1)", fast: "var(--c3)",
+    node: "var(--cobalt)", lru: "var(--bad)" };
+
+  // ---------- recorder: every event is a full snapshot ----------
+  function recorder() {
+    const st = { next: {}, prev: {}, vars: {}, alive: null, map: null, extra: null };
+    const ev = [];
+    const snap = (o) => ev.push(Object.assign({
+      next: { ...st.next }, prev: { ...st.prev }, vars: { ...st.vars },
+      alive: st.alive ? [...st.alive] : null, map: st.map ? { ...st.map } : null, extra: st.extra ? JSON.parse(JSON.stringify(st.extra)) : null,
+    }, o));
+    return { st, ev, snap };
+  }
+  const walk = (next, start, labelOf, limit) => {
+    const out = [];
+    let x = start, g = 0;
+    while (x !== null && x !== undefined && g++ < (limit || 30)) { out.push(labelOf(x)); x = next[x]; }
+    return out;
+  };
+
+  // ---------- 1. reverse a list ----------
+  function genReverse() {
+    const vals = [1, 2, 3, 4, 5], n = vals.length;
+    const nodes = vals.map((v, i) => ({ id: i, label: String(v), x: 70 + i * 100, y: 120 }));
+    const lab = (id) => (id === null ? "null" : String(vals[id]));
+    const R = recorder(), st = R.st;
+    vals.forEach((_, i) => { st.next[i] = i + 1 < n ? i + 1 : null; });
+    st.vars = { head: 0 };
+    R.snap({ t: "intro", text: "A list 1 → 2 → 3 → 4 → 5. Goal: turn every arrow around, one at a time, without losing the rest of the list.", hl: [0] });
+    st.vars.prev = null; st.vars.cur = 0;
+    R.snap({ t: "init", text: "prev = null (the reversed part is empty), cur = head (the first node still to turn).", hl: [1, 2] });
+    while (st.vars.cur !== null) {
+      const cur = st.vars.cur;
+      st.vars.nxt = st.next[cur];
+      R.snap({ t: "save", focus: cur, text: `Save nxt = cur->next (${lab(st.vars.nxt)}) first. The next line overwrites that arrow, and without nxt the rest of the list would be lost.`, hl: [4] });
+      const old = st.next[cur];
+      st.next[cur] = st.vars.prev;
+      R.snap({ t: "rewire", focus: cur, edge: { from: cur, to: st.vars.prev, old }, text: `Turn the arrow around: ${lab(cur)}->next = prev (${lab(st.vars.prev)}).`, hl: [5],
+        ask: { from: cur, answer: st.vars.prev, prompt: `Where will ${lab(cur)}->next point after this line?`, hide: true } });
+      st.vars.prev = cur;
+      R.snap({ t: "advance", focus: cur, text: `prev = cur: the reversed part now starts at ${lab(cur)}.`, hl: [6] });
+      st.vars.cur = st.vars.nxt;
+      R.snap({ t: "advance", focus: st.vars.cur, text: `cur = nxt (${lab(st.vars.cur)}): move on to the saved rest of the list.`, hl: [7] });
+    }
+    const result = walk(st.next, st.vars.prev, lab);
+    R.snap({ t: "done", text: `cur is null, so every arrow is turned. Return prev: the old tail ${lab(st.vars.prev)} is the new head. List: ${result.join(" → ")}.`, hl: [9], result });
+    return { nodes, ev: R.ev, layout: "row", lab };
+  }
+
+  // ---------- 2. reverse in groups of k ----------
+  function genKGroup() {
+    const vals = [1, 2, 3, 4, 5, 6, 7, 8], n = vals.length, k = 3, D = 100;
+    const nodes = [{ id: D, label: "dummy", x: 40, y: 140, kind: "dummy" }].concat(vals.map((v, i) => ({ id: i, label: String(v), x: 140 + i * 86, y: 140 })));
+    const lab = (id) => (id === null ? "null" : id === D ? "dummy" : String(vals[id]));
+    const R = recorder(), st = R.st;
+    vals.forEach((_, i) => { st.next[i] = i + 1 < n ? i + 1 : null; });
+    st.next[D] = null;
+    st.vars = { head: 0 };
+    R.snap({ t: "intro", text: `Reverse every group of k = ${k} nodes; a last group shorter than k stays as it is. Expected: 3 2 1 6 5 4 7 8.`, hl: [0] });
+    st.next[D] = 0; st.vars.groupPrev = D;
+    R.snap({ t: "init", edge: { from: D, to: 0, old: null }, text: "A dummy node points at the head, so the first group has a node before it just like every other group. groupPrev = the node before the current group.", hl: [1, 2] });
+    for (;;) {
+      for (const v of ["kth", "groupNext", "prev", "cur", "nxt", "first"]) delete st.vars[v];
+      st.vars.kth = st.vars.groupPrev;
+      R.snap({ t: "find", focus: st.vars.kth, text: `Find the group's last node: start kth at groupPrev (${lab(st.vars.kth)}) and take k = ${k} steps.`, hl: [4, 5] });
+      let i = 0;
+      while (i < k && st.vars.kth !== null) {
+        st.vars.kth = st.next[st.vars.kth]; i++;
+        R.snap({ t: "find", focus: st.vars.kth, text: st.vars.kth === null ? `kth fell off the end after ${i} step${i === 1 ? "" : "s"}.` : `Step ${i} of ${k}: kth = ${lab(st.vars.kth)}.`, hl: [5] });
+      }
+      if (st.vars.kth === null) {
+        R.snap({ t: "stop", text: `Fewer than ${k} nodes are left, so leave them as they are and stop.`, hl: [6] });
+        break;
+      }
+      st.vars.groupNext = st.next[st.vars.kth];
+      R.snap({ t: "mark", focus: st.vars.groupNext, text: `groupNext = kth->next (${lab(st.vars.groupNext)}): the first node after this group. Remember it before the group is turned around.`, hl: [7] });
+      st.vars.prev = st.vars.groupNext; st.vars.cur = st.next[st.vars.groupPrev];
+      R.snap({ t: "mark", focus: st.vars.cur, text: `Reverse the group the usual way, but start prev at groupNext (${lab(st.vars.prev)}) instead of null, so the group's new tail already points at the rest of the list.`, hl: [8, 9] });
+      while (st.vars.cur !== st.vars.groupNext) {
+        const cur = st.vars.cur;
+        st.vars.nxt = st.next[cur];
+        R.snap({ t: "save", focus: cur, text: `Save nxt = ${lab(cur)}->next (${lab(st.vars.nxt)}).`, hl: [11] });
+        const old = st.next[cur];
+        st.next[cur] = st.vars.prev;
+        R.snap({ t: "rewire", focus: cur, edge: { from: cur, to: st.vars.prev, old }, text: `${lab(cur)}->next = prev (${lab(st.vars.prev)}).`, hl: [12],
+          ask: { from: cur, answer: st.vars.prev, prompt: `Where will ${lab(cur)}->next point after this line?`, hide: true } });
+        st.vars.prev = cur; st.vars.cur = st.vars.nxt;
+        R.snap({ t: "advance", focus: st.vars.cur, text: `prev = ${lab(cur)}, cur = ${lab(st.vars.cur)}.`, hl: [13, 14] });
+      }
+      st.vars.first = st.next[st.vars.groupPrev];
+      R.snap({ t: "mark", focus: st.vars.first, text: `The group is turned around, but groupPrev (${lab(st.vars.groupPrev)}) still points at the old first node ${lab(st.vars.first)}, which is now the group's tail. Save it as first.`, hl: [16] });
+      const old = st.next[st.vars.groupPrev];
+      st.next[st.vars.groupPrev] = st.vars.kth;
+      R.snap({ t: "rewire", focus: st.vars.groupPrev, edge: { from: st.vars.groupPrev, to: st.vars.kth, old }, text: `Connect the node before the group to its new first node: ${lab(st.vars.groupPrev)}->next = kth (${lab(st.vars.kth)}).`, hl: [17],
+        ask: { from: st.vars.groupPrev, answer: st.vars.kth, prompt: `Where will ${lab(st.vars.groupPrev)}->next point after this line?`, hide: true } });
+      st.vars.groupPrev = st.vars.first;
+      R.snap({ t: "advance", focus: st.vars.groupPrev, text: `groupPrev = first (${lab(st.vars.first)}): the end of this group is the node before the next group.`, hl: [18] });
+    }
+    const result = walk(st.next, st.next[D], lab);
+    R.snap({ t: "done", text: `Return dummy->next. List: ${result.join(" → ")}.`, hl: [20], result });
+    return { nodes, ev: R.ev, layout: "row", lab };
+  }
+
+  // ---------- 3. Floyd: find the cycle's first node ----------
+  function genFloyd() {
+    const n = 9, start = 3;
+    const pos = [[50, 150], [135, 150], [220, 150]];
+    const cx = 415, cy = 150, rad = 110, ang = [180, 120, 60, 0, -60, -120];
+    ang.forEach((a) => pos.push([Math.round(cx + rad * Math.cos(a * Math.PI / 180)), Math.round(cy - rad * Math.sin(a * Math.PI / 180))]));
+    const nodes = pos.map(([x, y], i) => ({ id: i, label: String(i), x, y, kind: i >= start ? "cyc" : "" }));
+    const lab = (id) => (id === null ? "null" : String(id));
+    const R = recorder(), st = R.st;
+    for (let i = 0; i < n; i++) st.next[i] = i + 1 < n ? i + 1 : start;
+    st.vars = { head: 0 };
+    const meet1 = (() => { let s = 0, f = 0; do { s = st.next[s]; f = st.next[st.next[f]]; } while (s !== f); return s; })();
+    st.extra = { "slow steps": 0, "fast steps": 0 };
+    R.snap({ t: "intro", text: "A list whose last node points back into the middle: 0 → 1 → 2 → 3 → … → 8 → 3. Which node starts the cycle? Floyd uses two pointers and O(1) memory.", hl: [0],
+      ask: { kind: "node", answer: meet1, prompt: "Predict: slow moves 1 step, fast moves 2. On which node will they first meet?" } });
+    st.vars.slow = 0; st.vars.fast = 0;
+    R.snap({ t: "init", text: "slow and fast both start at the head.", hl: [1] });
+    let t = 0;
+    for (;;) {
+      st.vars.slow = st.next[st.vars.slow];
+      st.vars.fast = st.next[st.next[st.vars.fast]];
+      t++; st.extra = { "slow steps": t, "fast steps": 2 * t };
+      if (st.vars.slow === st.vars.fast) break;
+      R.snap({ t: "move", text: `Step ${t}: slow → ${st.vars.slow}, fast → ${st.vars.fast}. Once both are in the cycle, fast gains one node per step, so it must catch slow.`, hl: [3, 4] });
+    }
+    R.snap({ t: "meet", focus: st.vars.slow, text: `Step ${t}: they meet at node ${st.vars.slow}. slow walked ${t} steps, fast walked ${2 * t}. The difference, ${t}, is a whole number of laps (the cycle has 6 nodes).`, hl: [5] });
+    st.vars.slow = 0;
+    st.extra = { "a (head → start)": start, "cycle length": 6 };
+    R.snap({ t: "phase2", text: "Phase 2: put slow back at the head and leave fast at the meeting point. Now both move 1 step at a time.", hl: [6],
+      ask: { kind: "node", answer: start, prompt: "Predict: walking 1 step each, where will slow and fast meet now?" } });
+    let u = 0;
+    while (st.vars.slow !== st.vars.fast) {
+      st.vars.slow = st.next[st.vars.slow]; st.vars.fast = st.next[st.vars.fast]; u++;
+      if (st.vars.slow !== st.vars.fast) R.snap({ t: "move", text: `Phase 2, step ${u}: slow → ${st.vars.slow}, fast → ${st.vars.fast}.`, hl: [7] });
+    }
+    R.snap({ t: "done", focus: st.vars.slow, text: `They meet at node ${st.vars.slow}: the cycle's first node. Why: slow had walked d = a + b (a = ${start} to the cycle, b into it) and fast 2d, so d is whole laps. From the meeting point, a more steps adds up to d + a ≡ a (mod laps): exactly the cycle start, which is also a steps from the head.`, hl: [8], result: [String(st.vars.slow)] });
+    return { nodes, ev: R.ev, layout: "free", lab };
+  }
+
+  // ---------- 4. LRU cache ----------
+  function genLRU() {
+    const H = 100, T = 101, cap = 2;
+    const ops = [["put", 1, 1], ["put", 2, 2], ["get", 1], ["put", 3, 3], ["get", 2], ["put", 4, 4], ["get", 1], ["get", 3], ["get", 4]];
+    const info = {};                                      // id → {key, val}
+    const R = recorder(), st = R.st;
+    st.alive = [H, T]; st.map = {}; st.next[H] = T; st.prev[T] = H; st.next[T] = null; st.prev[H] = null;
+    const lab = (id) => (id === null ? "null" : id === H ? "head" : id === T ? "tail" : `${info[id].key}:${info[id].val}`);
+    const outputs = [];
+    const opText = (o) => (o[0] === "put" ? `put(${o[1]}, ${o[2]})` : `get(${o[1]})`);
+    st.extra = { ops: ops.map(opText), at: -1, out: [] };
+    let nextId = 0;
+    const unlink = (id) => { const p = st.prev[id], q = st.next[id]; st.next[p] = q; st.prev[q] = p; return [p, q]; };
+    const pushFront = (id) => { const f = st.next[H]; st.next[id] = f; st.prev[id] = H; st.prev[f] = id; st.next[H] = id; return f; };
+    R.snap({ t: "intro", text: `An LRU cache with capacity ${cap}: a hash map from key to node, plus a doubly linked list ordered from most recent (next to head) to least recent (next to tail). Sentinels head and tail mean no null checks.`, hl: [] });
+    ops.forEach((o, idx) => {
+      st.extra.at = idx;
+      const [kind, key] = o;
+      if (kind === "get") {
+        const id = st.map[key];
+        if (id === undefined) {
+          outputs.push(-1); st.extra.out = outputs.slice();
+          R.snap({ t: "miss", mapKey: key, text: `${opText(o)}: key ${key} is not in the map, so return -1.`, hl: [1, 2] });
+          return;
+        }
+        st.vars = { node: id };
+        R.snap({ t: "lookup", mapKey: key, focus: id, text: `${opText(o)}: the map finds node ${lab(id)} in O(1), wherever it sits in the list.`, hl: [1, 3] });
+        const [p, q] = unlink(id);
+        R.snap({ t: "unlink", focus: id, edges: [{ from: p, to: q, field: "next" }, { from: q, to: p, field: "prev" }], text: `Unlink it: ${lab(p)}->next = ${lab(q)} and ${lab(q)}->prev = ${lab(p)}. The node itself still points at its old neighbors; that's fine, they're overwritten next.`, hl: [4, 15] });
+        const f = pushFront(id);
+        R.snap({ t: "front", focus: id, edges: [{ from: id, to: f, field: "next" }, { from: id, to: H, field: "prev" }, { from: f, to: id, field: "prev" }, { from: H, to: id, field: "next" }], text: `Push it to the front (most recent): 4 pointer writes, the node's two first, then its new neighbors'.`, hl: [5, 16] });
+        outputs.push(info[id].val); st.extra.out = outputs.slice();
+        R.snap({ t: "ret", focus: id, text: `Return ${info[id].val}.`, hl: [6] });
+        st.vars = {};
+        return;
+      }
+      const val = o[2];
+      if (st.map[key] !== undefined) {
+        const id = st.map[key]; info[id].val = val;
+        unlink(id); pushFront(id);
+        R.snap({ t: "front", focus: id, text: `${opText(o)}: key ${key} exists, so update its value and move it to the front.`, hl: [9] });
+        return;
+      }
+      if (Object.keys(st.map).length === cap) {
+        const lru = st.prev[T];
+        st.vars = { lru };
+        R.snap({ t: "full", focus: lru, text: `${opText(o)}: the cache is full (${cap} keys). Evict the least recent node: tail->prev.`, hl: [10, 11],
+          ask: { kind: "node", answer: lru, prompt: "Predict: which node gets evicted?", hide: false } });
+        const [p, q] = unlink(lru);
+        R.snap({ t: "unlink", focus: lru, edges: [{ from: p, to: q, field: "next" }, { from: q, to: p, field: "prev" }], text: `Unlink ${lab(lru)}: ${lab(p)}->next = tail, tail->prev = ${lab(p)}.`, hl: [12, 15] });
+        delete st.map[info[lru].key];
+        st.alive = st.alive.filter((x) => x !== lru);
+        st.vars = {};
+        R.snap({ t: "evict", mapKey: info[lru].key, text: `Erase key ${info[lru].key} from the map and delete the node. (That's why each node stores its key: to find its map entry when evicted.)`, hl: [12] });
+      }
+      const id = nextId++;
+      info[id] = { key, val };
+      st.alive.push(id); st.vars = { node: id };
+      R.snap({ t: "new", focus: id, text: `Create node ${key}:${val}.`, hl: [13] });
+      st.map[key] = id;
+      const f = pushFront(id);
+      R.snap({ t: "front", focus: id, mapKey: key, edges: [{ from: id, to: f, field: "next" }, { from: id, to: H, field: "prev" }, { from: f, to: id, field: "prev" }, { from: H, to: id, field: "next" }], text: `map[${key}] = node, and push it to the front.`, hl: [14, 16] });
+      st.vars = {};
+    });
+    st.extra.at = ops.length;
+    const result = walk(st.next, st.next[H], lab).filter((x) => x !== "tail");
+    R.snap({ t: "done", text: `Done. The get calls returned ${outputs.join(", ")} (LeetCode 146's example). Most recent first: ${result.join(" → ")}. Every operation was O(1): one map lookup and a constant number of pointer writes.`, hl: [], result, outputs });
+    return { nodes: null, ev: R.ev, layout: "lru", lab, info, H, T };
+  }
+
+  const PROBLEMS = [
+    { id: "reverse", label: "Reverse a list (LC 206)", gen: genReverse,
+      note: "The one rule: save next before you overwrite it.",
+      model: ["Three pointers: prev (the reversed part), cur (the node being turned), nxt (the rest).", "Save nxt first, because the next line destroys cur->next.", "Turn one arrow: cur->next = prev.", "Step both forward: prev = cur, cur = nxt. When cur is null, prev is the new head."],
+      code: [
+        "ListNode* reverseList(ListNode* head) {",
+        "    ListNode* prev = nullptr;",
+        "    ListNode* cur = head;",
+        "    while (cur) {",
+        "        ListNode* nxt = cur->next;   // 1. save the rest",
+        "        cur->next = prev;            // 2. turn the arrow around",
+        "        prev = cur;                  // 3. step prev forward",
+        "        cur = nxt;                   // 4. step cur forward",
+        "    }",
+        "    return prev;                     // the old tail is the new head",
+        "}",
+      ] },
+    { id: "kgroup", label: "Reverse in groups of k (LC 25)", gen: genKGroup,
+      note: "Reverse each group with the plain reversal, but start prev at the node AFTER the group, then reconnect the node BEFORE it.",
+      model: ["A dummy before the head makes the first group like every other group.", "kth = the group's last node (k steps from groupPrev); if it doesn't exist, stop.", "Reverse the group with prev starting at groupNext, so its new tail already points onward.", "Reconnect: groupPrev->next = kth, then groupPrev = the old first node (now the group's tail)."],
+      code: [
+        "ListNode* reverseKGroup(ListNode* head, int k) {",
+        "    ListNode dummy(0, head);",
+        "    ListNode* groupPrev = &dummy;",
+        "    while (true) {",
+        "        ListNode* kth = groupPrev;                  // find the group's last node",
+        "        for (int i = 0; i < k && kth; ++i) kth = kth->next;",
+        "        if (!kth) break;                            // fewer than k left",
+        "        ListNode* groupNext = kth->next;",
+        "        ListNode* prev = groupNext;                 // the group's tail will point here",
+        "        ListNode* cur = groupPrev->next;",
+        "        while (cur != groupNext) {",
+        "            ListNode* nxt = cur->next;",
+        "            cur->next = prev;",
+        "            prev = cur;",
+        "            cur = nxt;",
+        "        }",
+        "        ListNode* first = groupPrev->next;          // old first = new tail",
+        "        groupPrev->next = kth;                      // connect to the new first",
+        "        groupPrev = first;",
+        "    }",
+        "    return dummy.next;",
+        "}",
+      ] },
+    { id: "floyd", label: "Find the cycle's first node (Floyd, LC 142)", gen: genFloyd,
+      note: "Phase 1: fast gains one node per step, so it catches slow inside the cycle. Phase 2: from the head and from the meeting point, both walk the same distance to the cycle's start.",
+      model: ["slow moves 1, fast moves 2. With no cycle, fast falls off the end.", "Inside the cycle the gap shrinks by 1 per step, so they must meet.", "At the meeting point slow has walked d, fast 2d, so d is a whole number of laps.", "Restart slow at the head and walk both 1 step: they meet exactly at the cycle's first node."],
+      code: [
+        "ListNode* detectCycle(ListNode* head) {",
+        "    ListNode *slow = head, *fast = head;",
+        "    while (fast && fast->next) {",
+        "        slow = slow->next;                 // 1 step",
+        "        fast = fast->next->next;           // 2 steps",
+        "        if (slow == fast) {                // met inside the cycle",
+        "            slow = head;                   // phase 2",
+        "            while (slow != fast) { slow = slow->next; fast = fast->next; }",
+        "            return slow;                   // the cycle's first node",
+        "        }",
+        "    }",
+        "    return nullptr;                        // no cycle",
+        "}",
+      ] },
+    { id: "lru", label: "LRU cache (LC 146)", gen: genLRU,
+      note: "The map finds any node in O(1); the doubly linked list reorders it in O(1). Front = most recent, back = next to evict.",
+      model: ["Map: key → node pointer, for O(1) lookup.", "Doubly linked list with head and tail sentinels: no null checks at the ends.", "get / put of an existing key: unlink the node and push it to the front.", "put of a new key when full: evict tail->prev, erase its key from the map (the node stores its key for this)."],
+      code: [
+        "int get(int key) {",
+        "    auto it = pos.find(key);",
+        "    if (it == pos.end()) return -1;          // miss",
+        "    Node* n = it->second;",
+        "    unlink(n);                               // take it out...",
+        "    pushFront(n);                            // ...make it most recent",
+        "    return n->val;",
+        "}",
+        "void put(int key, int val) {",
+        "    if (pos.count(key)) { Node* n = pos[key]; n->val = val; unlink(n); pushFront(n); return; }",
+        "    if ((int)pos.size() == cap) {            // full: evict the least recent",
+        "        Node* lru = tail->prev;",
+        "        unlink(lru); pos.erase(lru->key); delete lru;   }",
+        "    Node* n = new Node(key, val);",
+        "    pos[key] = n; pushFront(n);   }",
+        "void unlink(Node* n)    { n->prev->next = n->next; n->next->prev = n->prev; }",
+        "void pushFront(Node* n) { n->next = head->next; n->prev = head; head->next->prev = n; head->next = n; }",
+      ] },
+  ];
+
+  // ---------- state ----------
+  const S = { P: null, G: null, predict: false, sel: null, checked: new Map(), score: { ok: 0, total: 0 } };
+  const NW = 50, NH = 34;
+  const isPending = () => { const e = S.G.ev[PL.k]; return S.predict && !!e.ask && !S.checked.has(PL.k); };
+
+  // ---------- layout ----------
+  function positions(e) {
+    if (S.G.layout !== "lru") {
+      const m = {};
+      for (const nd of S.G.nodes) m[nd.id] = { x: nd.x, y: nd.y, label: nd.label, kind: nd.kind || "" };
+      return m;
+    }
+    const { H, T } = S.G, m = {};
+    const chain = [];
+    let x = H, g = 0;
+    while (x !== null && x !== undefined && g++ < 20) { chain.push(x); if (x === T) break; x = e.next[x]; }
+    chain.forEach((id, i) => { m[id] = { x: 60 + i * 110, y: 190, label: S.G.lab(id), kind: id === H || id === T ? "sentinel" : "" }; });
+    let dx = 0;
+    for (const id of e.alive) if (!(id in m)) { m[id] = { x: 115 + dx, y: 105, label: S.G.lab(id), kind: "" }; dx += 110; }
+    return m;
+  }
+  function ptrPath(a, b, pos, layout, field) {
+    const A = pos[a], B = pos[b];
+    if (layout === "lru") {
+      const off = field === "prev" ? 8 : -8;
+      if (Math.abs(A.y - B.y) < 2 && Math.abs(Math.abs(A.x - B.x) - 110) < 2) {
+        const dir = Math.sign(B.x - A.x);
+        return `M${A.x + dir * NW / 2},${A.y + off} L${B.x - dir * (NW / 2 + 2)},${B.y + off}`;
+      }
+      const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2 + (field === "prev" ? 40 : -40);
+      return `M${A.x},${A.y + (field === "prev" ? NH / 2 : -NH / 2)} Q${mx},${my} ${B.x},${B.y + (field === "prev" ? NH / 2 + 2 : -NH / 2 - 2)}`;
+    }
+    if (layout === "free") {
+      const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const ra = Math.abs(ux) * NW / 2 > Math.abs(uy) * NH / 2 ? NW / 2 / Math.abs(ux || 1e-9) : NH / 2 / Math.abs(uy || 1e-9);
+      const r = Math.min(ra, 40);
+      return `M${TK.r1(A.x + ux * r)},${TK.r1(A.y + uy * r)} L${TK.r1(B.x - ux * (r + 3))},${TK.r1(B.y - uy * (r + 3))}`;
+    }
+    const gap = B.x - A.x;
+    const step = S.P.id === "kgroup" ? 86 : 100;
+    if (gap > 0 && Math.abs(gap - step) < 2 && A.x !== 40) return `M${A.x + NW / 2},${A.y} L${B.x - NW / 2 - 3},${B.y}`;
+    if (gap > 0 && A.x === 40 && Math.abs(gap - 100) < 2) return `M${A.x + NW / 2 + 6},${A.y} L${B.x - NW / 2 - 3},${B.y}`;
+    if (gap > 0) { const h = 26 + Math.min(60, gap / 5); return `M${A.x + 8},${A.y - NH / 2} C${A.x + 20},${A.y - NH / 2 - h} ${B.x - 20},${B.y - NH / 2 - h} ${B.x - 6},${B.y - NH / 2 - 2}`; }
+    const h = 22 + Math.min(70, -gap / 4);
+    return `M${A.x - 8},${A.y + NH / 2} C${A.x - 20},${A.y + NH / 2 + h} ${B.x + 20},${B.y + NH / 2 + h} ${B.x + 6},${B.y + NH / 2 + 2}`;
+  }
+
+  function chart(e, view, pending) {
+    const G = S.G, pos = positions(view), ids = Object.keys(pos).map(Number);
+    const xs = ids.map((i) => pos[i].x), ys = ids.map((i) => pos[i].y);
+    const lru = G.layout === "lru";                       // the LRU frame stays fixed while nodes move
+    const minX = lru ? 0 : Math.min(...xs) - 50, maxX = lru ? 460 : Math.max(...xs) + 50;
+    const minY = lru ? 0 : Math.min(...ys) - 110, maxY = lru ? 255 : Math.max(...ys) + 100;
+    let s = `<svg viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}" role="img" aria-label="Linked list">`;
+    s += TK.markers([["mk-n", "var(--muted)"], ["mk-p", "var(--c4)"], ["mk-hot", "var(--cobalt)"], ["mk-was", "var(--bad)"]]);
+    const hot = new Set(), edgesDrawn = [];
+    const showEffect = !pending;
+    if (showEffect && e.edge) hot.add(`${e.edge.from}>${e.edge.to}>next`);
+    if (showEffect && e.edges) for (const x of e.edges) hot.add(`${x.from}>${x.to}>${x.field}`);
+    // the map row (LRU)
+    if (G.layout === "lru" && view.map) {
+      const keys = Object.keys(view.map).map(Number).sort((a, b) => a - b);
+      s += `<text class="lbl" x="${minX + 8}" y="${minY + 22}">map (key → node)</text>`;
+      keys.forEach((k, i) => {
+        const x = 115 + i * 110, y = minY + 50, target = pos[view.map[k]];
+        const isHot = e.mapKey === k;
+        if (target) s += `<path class="maplink${isHot ? " hot" : ""}" d="M${x},${y + 13} C${x},${y + 60} ${target.x},${target.y - 70} ${target.x},${target.y - NH / 2 - 2}"></path>`;
+        s += `<g class="mapchip${isHot ? " hot" : ""}"><rect x="${x - 22}" y="${y - 13}" width="44" height="26" rx="6"></rect><text x="${x}" y="${y}">${k}</text></g>`;
+      });
+      if (e.t === "miss" || e.t === "evict") s += `<text class="lbl" x="${115 + keys.length * 110 - 20}" y="${minY + 54}">${e.t === "miss" ? `key ${e.mapKey}: not found` : `key ${e.mapKey}: erased`}</text>`;
+    }
+    // pointers
+    const drawField = (field, map) => {
+      for (const a of ids) {
+        const b = map[a];
+        if (b === undefined) continue;
+        if (field === "prev" && G.layout !== "lru") continue;
+        if (b === null) {
+          if (field === "next" && pos[a].kind !== "sentinel") s += `<path class="ptr" d="M${pos[a].x},${pos[a].y + NH / 2} L${pos[a].x},${pos[a].y + NH / 2 + 18}" marker-end="url(#mk-n)"></path><text class="nul" x="${pos[a].x}" y="${pos[a].y + NH / 2 + 34}">∅</text>`;
+          continue;
+        }
+        if (!(b in pos)) continue;
+        const isHot = hot.has(`${a}>${b}>${field}`);
+        const cls = "ptr" + (field === "prev" ? " prevp" : "") + (isHot ? " hot" : "");
+        const mk = isHot ? "mk-hot" : field === "prev" ? "mk-p" : "mk-n";
+        edgesDrawn.push({ hot: isHot, d: `<path class="${cls}" d="${ptrPath(a, b, pos, G.layout, field)}" marker-end="url(#${mk})"></path>` });
+      }
+    };
+    drawField("next", view.next);
+    drawField("prev", view.prev);
+    if (showEffect && e.edge && e.edge.old !== undefined && e.edge.old !== null && e.edge.old !== e.edge.to && e.edge.old in pos) {
+      edgesDrawn.push({ hot: false, d: `<path class="ptr was" d="${ptrPath(e.edge.from, e.edge.old, pos, G.layout, "next")}" marker-end="url(#mk-was)"></path>` });
+    }
+    s += edgesDrawn.filter((x) => !x.hot).map((x) => x.d).join("") + edgesDrawn.filter((x) => x.hot).map((x) => x.d).join("");
+    // nodes
+    for (const id of ids) {
+      const p = pos[id];
+      let cls = "lnode" + (p.kind ? " " + p.kind : "");
+      if (view.focus === id || (!pending && e.focus === id)) cls += " focus";
+      if (pending && e.ask && (e.ask.kind === "node" ? id < 100 || G.layout === "lru" : true)) cls += " pickable";
+      if (S.sel === id) cls += " picked";
+      s += `<g class="${cls}" data-id="${id}"><rect x="${p.x - NW / 2}" y="${p.y - NH / 2}" width="${NW}" height="${NH}" rx="7"></rect><text x="${p.x}" y="${p.y}">${esc(p.label)}</text></g>`;
+    }
+    // variable tags
+    const at = {};
+    for (const [name, id] of Object.entries(view.vars)) if (id !== null && id !== undefined && id in pos) (at[id] = at[id] || []).push(name);
+    for (const [id, names] of Object.entries(at)) {
+      const p = pos[id];
+      names.forEach((nm, i) => {
+        const w = nm.length * 7.4 + 12, y = p.y - NH / 2 - 16 - i * 21;
+        const col = VARCOL[nm] || "var(--ink)";
+        if (i === 0) s += `<line class="tagline" x1="${p.x}" y1="${y + 8}" x2="${p.x}" y2="${p.y - NH / 2}" style="stroke: ${col}"></line>`;
+        s += `<g class="tag"><rect x="${p.x - w / 2}" y="${y - 9}" width="${w}" height="18" rx="5" style="fill: ${col}"></rect><text x="${p.x}" y="${y}">${esc(nm)}</text></g>`;
+      });
+    }
+    return s + "</svg>";
+  }
+
+  function renderSide(view) {
+    const rows = Object.entries(view.vars).filter(([, id]) => id !== undefined);
+    $("vars").innerHTML = rows.length
+      ? rows.map(([nm, id]) => `<div><i style="background: ${VARCOL[nm] || "var(--ink)"}"></i>${esc(nm)} → ${esc(S.G.lab(id))}</div>`).join("")
+      : `<div class="side-note">none in scope</div>`;
+    if (S.G.layout === "lru") {
+      $("extraTitle").textContent = "Operations";
+      const x = view.extra;
+      $("extra").innerHTML = `<ul class="ops">${x.ops.map((o, i) => `<li class="${i === x.at ? "now" : i < x.at ? "done" : ""}">${esc(o)}</li>`).join("")}</ul><p class="side-note">get returned: ${x.out.length ? x.out.join(", ") : "nothing yet"}</p>`;
+    } else if (view.extra) {
+      $("extraTitle").textContent = "Counters";
+      $("extra").innerHTML = `<dl class="stats">${Object.entries(view.extra).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>`;
+    } else {
+      $("extraTitle").textContent = "List now";
+      const start = S.P.id === "kgroup" && view.next[100] !== null ? view.next[100] : view.vars.head;
+      const listNow = S.P.id === "reverse" ? listFromHeads(view) : TK.esc(walkFrom(view, start));
+      $("extra").innerHTML = `<p class="side-note">${listNow}</p>`;
+    }
+  }
+  const walkFrom = (view, start) => walk(view.next, start, S.G.lab, 20).join(" → ") || "empty";
+  function listFromHeads(view) {
+    const rest = view.vars.nxt !== undefined ? view.vars.nxt : view.vars.cur;   // the saved rest of the list
+    const a = view.vars.prev !== undefined && view.vars.prev !== null ? `reversed (from prev): ${walkFrom(view, view.vars.prev)}` : "reversed (from prev): empty";
+    const b = rest !== undefined && rest !== null ? `rest (from ${view.vars.nxt !== undefined ? "nxt" : "cur"}): ${walkFrom(view, rest)}` : "rest: empty";
+    return esc(a) + "<br>" + esc(b);
+  }
+
+  function render() {
+    const ev = S.G.ev, e = ev[PL.k], pending = isPending();
+    const view = pending && e.ask.hide && PL.k > 0 ? Object.assign({}, ev[PL.k - 1], { focus: e.ask.from }) : e;
+    $("chart").innerHTML = chart(e, view, pending);
+    renderSide(view);
+    $("note").textContent = S.P.note;
+    $("evType").textContent = e.t === "intro" ? "Setup" : e.t === "done" ? "Finished" : e.ask ? "A pointer decision" : "Step";
+    let text = e.text;
+    const fb = $("feedback");
+    fb.className = "feedback"; fb.textContent = "";
+    $("choices").hidden = true;
+    if (S.predict && e.ask) {
+      const chk = S.checked.get(PL.k);
+      if (!chk) {
+        if (e.ask.hide) text = "Next line rewrites a pointer.";
+        fb.className = "feedback ask";
+        fb.textContent = e.ask.prompt + (e.ask.kind === "node" ? " Click the node, then Check." : " Click the target node (or null), then Check.");
+        $("choices").hidden = e.ask.kind === "node";
+      } else {
+        fb.className = "feedback " + (chk.ok ? "ok" : "bad");
+        fb.textContent = chk.ok ? `Correct: ${S.G.lab(e.ask.answer)}.` : `Not quite: you picked ${S.G.lab(chk.pick)}; the answer is ${S.G.lab(e.ask.answer)}.`;
+      }
+    }
+    $("narr").textContent = text;
+    TK.renderCode($("code"), S.P.code, pending ? [] : e.hl);
+    $("modelTitle").textContent = "The model: " + S.P.label;
+    $("model").innerHTML = S.P.model.map((m) => `<li>${esc(m)}</li>`).join("");
+    const lines = [];
+    for (let q = 0; q <= PL.k; q++) lines.push(ev[q].text.split(/[.:]/)[0]);
+    TK.renderLog($("log"), lines);
+    PL.sync(pending, "Check");
+    $("score").textContent = TK.scoreText(S.score, S.predict, "Tip: turn on Predict and call each rewiring yourself.");
+  }
+
+  function check() {
+    const e = S.G.ev[PL.k];
+    if (S.sel === undefined) { $("feedback").textContent = "Click a node (or null) first."; return; }
+    const ok = S.sel === e.ask.answer;
+    S.checked.set(PL.k, { ok, pick: S.sel });
+    S.score.total++; if (ok) S.score.ok++;
+    S.sel = undefined;
+    render();
+  }
+  function build() { S.G = S.P.gen(); S.checked = new Map(); S.score = { ok: 0, total: 0 }; S.sel = undefined; }
+  const PL = TK.player({ count: () => S.G.ev.length, render, pending: isPending, check, rebuild: build, delay: 1000 });
+
+  // ---------- wiring ----------
+  const sel = $("problem");
+  sel.innerHTML = PROBLEMS.map((p, i) => `<option value="${i}">${esc(p.label)}</option>`).join("");
+  sel.addEventListener("change", () => { S.P = PROBLEMS[+sel.value]; PL.reset(); });
+  $("predict").addEventListener("change", (ev) => { S.predict = ev.target.checked; S.sel = undefined; render(); });
+  $("pickNull").addEventListener("click", () => { if (isPending()) { S.sel = null; check(); } });
+  $("chart").addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-id]");
+    if (!t || !isPending()) return;
+    S.sel = +t.getAttribute("data-id");
+    render();
+  });
+  S.P = PROBLEMS[1];
+  sel.value = "1";
+  PL.reset();
+
+  // ---------- self-test (open with #selftest) ----------
+  TK.selftest(() => {
+    const R = [];
+    const exp = { reverse: "5 4 3 2 1", kgroup: "3 2 1 6 5 4 7 8", floyd: "3", lru: "4:4 3:3" };
+    for (const P of PROBLEMS) {
+      const G = P.gen(), last = G.ev[G.ev.length - 1];
+      R.push([`${P.id}: result ${last.result.join(" ")}`, last.result.join(" ") === exp[P.id]]);
+      R.push([`${P.id}: every ask has an answer`, G.ev.every((e) => !e.ask || e.ask.answer !== undefined)]);
+    }
+    const lru = genLRU(), lo = lru.ev[lru.ev.length - 1].outputs;
+    R.push([`lru: get outputs ${lo.join(",")}`, lo.join(",") === "1,-1,-1,3,4"]);
+    // drive the UI to the end of every problem
+    PROBLEMS.forEach((P, i) => {
+      sel.value = String(i); sel.dispatchEvent(new Event("change"));
+      let g = 0;
+      while (!$("step").disabled && g++ < 500) $("step").click();
+      R.push([`UI ${P.id}: reached the end`, $("evType").textContent === "Finished"]);
+    });
+    // predictions on reverse: right, then wrong (null button)
+    sel.value = "0"; sel.dispatchEvent(new Event("change"));
+    $("predict").click();
+    let g = 0;
+    while (!isPending() && g++ < 50) $("step").click();
+    const a1 = S.G.ev[PL.k].ask.answer;
+    S.sel = a1; $("step").click();
+    R.push(["predict: right pick accepted", $("feedback").textContent.startsWith("Correct")]);
+    $("step").click();
+    while (!isPending() && g++ < 100) $("step").click();
+    $("pickNull").click();
+    R.push(["predict: null pick graded", $("feedback").textContent.length > 0 && S.score.total === 2]);
+    $("predict").click();
+    return R;
+  });
+})();
+</script>

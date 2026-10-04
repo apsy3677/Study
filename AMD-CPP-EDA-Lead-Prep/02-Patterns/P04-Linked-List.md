@@ -2,6 +2,7 @@
 
 > Practice file: `06-Practice/day2.cpp` · Striver: SDE Sheet days 5–6 (linked list)
 > AMD reports: **reverse in K-groups**, **rotate by k**, **merge two sorted without extra space**, middle, remove duplicates (sorted), remove element, palindrome LL, add two numbers, LL using stack.
+> **See it move:** [the linked-list trainer](../07-Revision/visualizers/linked-list-trainer.html) steps through reverse, reverse in k-groups, Floyd's cycle start and the LRU cache one pointer write at a time. Turn on Predict to call each rewiring.
 
 ---
 

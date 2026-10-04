@@ -1,7 +1,7 @@
 # MM02: Mental Models Atlas (one picture, one sentence, a few decisions per pattern)
 
 > The P01–P12 files are the full reference. This atlas is the **compressed visual layer** you redraw from memory.
-> Monotonic stack has its own deep file: [MM01](MM01-Monotonic-Stack-Mental-Model.md). So do SCC (Kosaraju, Tarjan) and bipartite: [MM04](MM04-SCC-Kosaraju-Mental-Model.md).
+> Monotonic stack has its own deep file: [MM01](MM01-Monotonic-Stack-Mental-Model.md). So do SCC (Kosaraju, Tarjan) and bipartite: [MM04](MM04-SCC-Kosaraju-Mental-Model.md), and DP, top-down first: [MM05](MM05-DP-Patterns-Top-Down.md).
 
 ---
 

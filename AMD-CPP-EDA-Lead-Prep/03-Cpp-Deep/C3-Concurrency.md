@@ -2,6 +2,7 @@
 
 > JD: "modern concurrent programming and threading APIs". AMD ★★★: mutex vs semaphore, **thread-safe queue**, multithreading rounds, race-condition debugging.
 > Practice: `06-Practice/day4.cpp` (`BlockingQueue`, `printAlternately`, `parallelSum`). Your own old folder `..\MultiThreading-C++` has thread/condvar exercises too.
+> **See it move:** [the condition-variable trainer](../07-Revision/visualizers/cv-queue-trainer.html) lets you schedule the threads of a bounded queue line by line, and replays the stolen wakeup (`if` instead of `while`) and the lost wakeup (state changed without the mutex) with the exact interleaving that breaks them.
 
 ---
 

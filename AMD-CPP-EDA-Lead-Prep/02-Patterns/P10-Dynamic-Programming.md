@@ -2,6 +2,7 @@
 
 > Practice file: `06-Practice/day3.cpp` · Striver: `DP-Problems.pdf`
 > AMD reports: **Coin Change** (C++ Developer R1, TechPrep), Climbing Stairs, "HLD + LLD + 2 DP questions" (senior loop), stock problems.
+> **Read first:** [MM05: DP, top-down first](MM05-DP-Patterns-Top-Down.md): the 12 patterns in one sentence each, and the 7 rules that turn your memoized recursion into a table. Then watch both fill the same table in [the DP trainer](../07-Revision/visualizers/dp-trainer.html).
 
 ---
 

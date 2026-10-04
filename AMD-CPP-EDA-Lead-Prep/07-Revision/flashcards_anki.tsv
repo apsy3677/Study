@@ -111,6 +111,9 @@ Coin change combinations vs permutations?	Coins outer = combinations; amount out
 0/1 knapsack 1D loop?	Items outer, capacity descending.	dp
 LIS n log n?	tails[k] = min tail of inc. subsequence of length k+1; lower_bound replace/append.	dp
 Edit distance recurrence?	Match: diag; else 1 + min(replace diag, delete up, insert left); base dp[i][0]=i, dp[0][j]=j.	dp
+Top-down to bottom-up: which way do the loops run?	From the base cases toward the root call, the opposite way the calls point. Calls go to smaller i: loop i upward. Bigger masks: loop down. Shorter intervals: loop by length.	dp
+0/1 vs unbounded knapsack: the one difference?	Taking an item calls f(i-1, …) in 0/1 but f(i, …) in unbounded (the item stays available). In 1D: capacity descending vs ascending.	dp
+Why does tree DP need no memo?	Each node is visited once and returns a pair (best with me, best without me), so no child is ever re-solved. The post-order recursion is already the bottom-up order.	dp
 x & (x−1) and x & −x?	Drop lowest set bit; isolate lowest set bit.	dsa
 Fast power mod?	Square-and-multiply: while b: if b&1 r=r*a%m; a=a*a%m; b>>=1. Reduce a%=m first.	dsa
 Setup vs hold check?	Setup: data arrives before capture edge − setup (max delay). Hold: data stable after capture edge + hold (min delay).	eda

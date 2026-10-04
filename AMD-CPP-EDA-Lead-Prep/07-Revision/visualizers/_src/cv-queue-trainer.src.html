@@ -1,0 +1,508 @@
+<title>Condition Variable Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<!-- @kit:css -->
+<style>
+/* Threads as cards (code + program counter), the shared state on the side: the bounded queue,
+   who holds the mutex, and who sleeps on which condition variable. */
+.threads { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+.thread { border: 1px solid var(--rule); border-radius: 10px; padding: 10px; display: grid; gap: 8px; min-width: 0; background: var(--panel); }
+.thread.just { border-color: var(--cobalt); box-shadow: 0 0 0 2px var(--cobalt) inset; }
+.thread.clickable { cursor: pointer; }
+.thread.clickable:hover { border-color: var(--cobalt); }
+.thread h3 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.thread .who { font-family: var(--mono); }
+.pill { font: 600 0.72rem var(--mono); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); white-space: nowrap; }
+.pill.ready { color: var(--ink); }
+.pill.blockedM { color: var(--amber); border-color: var(--amber); }
+.pill.waiting { color: var(--c2); border-color: var(--c2); }
+.pill.woken { color: var(--c4); border-color: var(--c4); }
+.pill.done { color: var(--ok); border-color: var(--ok); }
+.pill.crashed, .pill.hung { color: #fff; background: var(--bad); border-color: var(--bad); }
+.thread pre.code { font-size: 0.72rem; }
+.thread .got { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.slots { display: flex; gap: 6px; }
+.slot { width: 40px; height: 36px; border-radius: 8px; border: 2px solid var(--rule); display: grid; place-items: center; font: 600 0.95rem var(--mono); }
+.slot.full { border-color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 12%, var(--panel)); }
+.kv { display: grid; gap: 6px; font-size: 0.88rem; }
+.kv div { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.kv b { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.04em; color: var(--muted); min-width: 70px; text-transform: uppercase; }
+.badge { font: 600 0.8rem var(--mono); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--rule); }
+.badge.held { border-color: var(--amber); color: var(--amber); }
+.badge.sleep { border-color: var(--c2); color: var(--c2); }
+.timeline { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; }
+.timeline li { font: 600 0.72rem var(--mono); padding: 2px 6px; border-radius: 5px; border: 1px solid var(--rule); }
+.timeline li.last { border-color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 12%, var(--panel)); }
+.alarm { margin: 0; font-weight: 700; color: var(--bad); }
+.seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern trainer · C++ concurrency</span>
+    <h1>Condition Variable Trainer</h1>
+    <p class="lede"><strong>You are the scheduler.</strong> Each step runs one line of one thread on a bounded queue guarded by a mutex and two condition variables. Watch a correct handoff, then replay the two classic bugs with the exact interleaving that breaks them, and fix them. In <strong>Free play</strong>, click a thread to run its next line.</p>
+  </header>
+
+  <section class="controls" aria-label="Setup">
+    <div class="field">
+      <label for="scenario">Scenario</label>
+      <select id="scenario"></select>
+    </div>
+    <div class="field">
+      <span class="eyebrow">Version</span>
+      <div class="seg" role="group" aria-label="Code version">
+        <button type="button" id="verBug" class="bugbtn" aria-pressed="true">Buggy</button>
+        <button type="button" id="verFix" aria-pressed="false">Fixed</button>
+      </div>
+    </div>
+    <label class="check" for="predict"><input type="checkbox" id="predict"> Predict before reveal</label>
+  </section>
+
+  <section class="bench">
+    <div class="panel stage">
+      <p class="note" id="note"></p>
+      <div class="threads" id="threads"></div>
+    </div>
+    <aside class="panel side">
+      <section>
+        <h2>Queue</h2>
+        <div class="slots" id="slots"></div>
+      </section>
+      <section>
+        <h2>Mutex and condition variables</h2>
+        <div class="kv" id="kv"></div>
+      </section>
+      <p class="alarm" id="alarm"></p>
+    </aside>
+  </section>
+
+  <section class="readouts">
+    <div class="panel narr" aria-live="polite">
+      <span class="eyebrow" id="evType">What just happened</span>
+      <p class="now" id="narr"></p>
+      <p class="feedback" id="feedback"></p>
+      <div class="choices" id="choices" hidden></div>
+      <div class="playbar">
+        <button type="button" class="btn" id="back">Back</button>
+        <button type="button" class="btn primary" id="step">Step</button>
+        <button type="button" class="btn" id="play">Play</button>
+        <button type="button" class="btn" id="reset">Reset</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="score" id="score"></p>
+    </div>
+    <div class="panel">
+      <h2>The interleaving so far</h2>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel model">
+      <h2>The model in five sentences</h2>
+      <ol>
+        <li>The <strong>mutex</strong> makes "check the condition, then sleep" one indivisible step: nobody can change the queue in between.</li>
+        <li><code class="inl">cv.wait(lk)</code> <strong>releases the lock and sleeps atomically</strong>; when woken, it re-acquires the lock before returning.</li>
+        <li>Being woken is a <strong>hint, not a promise</strong>: another thread can take the item first (or the wakeup is spurious). So always re-check in a <strong>while</strong> loop, which <code class="inl">wait(lk, pred)</code> does for you.</li>
+        <li>Change the shared state <strong>only while holding the mutex</strong>, even if you notify after unlocking. Otherwise a notify can land between a waiter's check and its sleep: a <strong>lost wakeup</strong>.</li>
+        <li>A bounded queue needs <strong>two</strong> condition variables: producers sleep on notFull, consumers on notEmpty, and each side notifies the other.</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ol class="log" id="log" reversed></ol>
+    </div>
+  </section>
+  <p class="keys"><kbd>→</kbd> or <kbd>Space</kbd> step · <kbd>←</kbd> back. In Free play, Step runs the next runnable thread in turn.</p>
+</div>
+
+<!-- @kit:js -->
+<script>
+(() => {
+  const { $, esc } = TK;
+
+  // ---------- programs: each op knows its code line ----------
+  const CODE = {
+    prod: [
+      "void produce(int x) {",
+      "    unique_lock<mutex> lk(m);",
+      "    notFull.wait(lk, [&] { return q.size() < cap; });",
+      "    q.push(x);",
+      "    lk.unlock();",
+      "    notEmpty.notify_one();",
+      "}",
+    ],
+    prodNoLock: [
+      "void produce(int x) {",
+      "    q.push(x);            // BUG: no lock",
+      "    notEmpty.notify_one();",
+      "}",
+    ],
+    cons: [
+      "int consume() {",
+      "    unique_lock<mutex> lk(m);",
+      "    notEmpty.wait(lk, [&] { return !q.empty(); });",
+      "    int x = q.front(); q.pop();",
+      "    lk.unlock();",
+      "    notFull.notify_one();",
+      "    return x;",
+      "}",
+    ],
+    consIf: [
+      "int consume() {",
+      "    unique_lock<mutex> lk(m);",
+      "    if (q.empty()) notEmpty.wait(lk);  // BUG: if",
+      "    int x = q.front(); q.pop();  // EMPTY?",
+      "    lk.unlock();",
+      "    notFull.notify_one();",
+      "    return x;",
+      "}",
+    ],
+  };
+  function producer(vals, nolock) {
+    const ops = [];
+    for (const val of vals) {
+      const b = ops.length;
+      if (nolock) ops.push({ op: "push", ln: 1, val, nolock: true }, { op: "notify", ln: 2, cv: "notEmpty" });
+      else ops.push({ op: "lock", ln: 1 }, { op: "check", ln: 2, pred: "notFull", yes: b + 3, no: b + 2 }, { op: "sleep", ln: 2, cv: "notFull", after: b + 1 },
+        { op: "push", ln: 3, val }, { op: "unlock", ln: 4 }, { op: "notify", ln: 5, cv: "notEmpty" });
+    }
+    ops.push({ op: "done", ln: nolock ? 3 : 6 });
+    return ops;
+  }
+  function consumer(count, useIf) {
+    const ops = [];
+    for (let i = 0; i < count; i++) {
+      const b = ops.length;
+      ops.push({ op: "lock", ln: 1 }, { op: "check", ln: 2, pred: "notEmpty", yes: b + 3, no: b + 2 },
+        { op: "sleep", ln: 2, cv: "notEmpty", after: useIf ? b + 3 : b + 1 },
+        { op: "pop", ln: 3 }, { op: "unlock", ln: 4 }, { op: "notify", ln: 5, cv: "notFull" });
+    }
+    ops.push({ op: "done", ln: 6 });
+    return ops;
+  }
+
+  // ---------- scenarios ----------
+  const SCENARIOS = [
+    { id: "handoff", label: "Correct handoff · capacity 1", versions: false, cap: 1,
+      note: "P1 produces 1 then 2 into a queue that holds one item; C1 consumes twice. Watch P1 sleep on notFull and C1 wake it.",
+      threads: () => [{ id: "P1", role: "producer", code: CODE.prod, ops: producer([1, 2]) }, { id: "C1", role: "consumer", code: CODE.cons, ops: consumer(2) }],
+      script: () => "P1 P1 P1 P1 P1 P1 P1 P1 C1 C1 C1 C1 C1 P1 P1 P1 P1 P1 P1 C1 C1 C1 C1 C1 C1".split(" "),
+      asks: () => ({
+        6: { prompt: "P1 checks q.size() < cap, but the queue is full. What does it do?", options: ["push anyway", "sleep on notFull (releasing m)"], answer: 1 },
+        12: { prompt: "C1 calls notFull.notify_one(). Who wakes up?", options: ["nobody", "P1"], answer: 1 },
+        13: { prompt: "P1 has m again. What does it run next?", options: ["the push", "the size check again (wait's built-in loop)"], answer: 1 },
+      }) },
+    { id: "ifwhile", label: "Bug: if instead of while · a stolen wakeup", versions: true, cap: 1,
+      note: "C1 sleeps on an empty queue. P1 pushes and wakes C1, but C2 grabs the lock first and takes the item. What does C1 do when it finally runs?",
+      threads: (fixed) => [{ id: "P1", role: "producer", code: CODE.prod, ops: producer([1]) },
+        { id: "C1", role: "consumer", code: fixed ? CODE.cons : CODE.consIf, ops: consumer(1, !fixed) },
+        { id: "C2", role: "consumer", code: fixed ? CODE.cons : CODE.consIf, ops: consumer(1, !fixed) }],
+      script: () => "C1 C1 C1 P1 P1 P1 P1 P1 P1 C2 C2 C2 C2 C2 C2 C1 C1 C1".split(" "),
+      asks: (fixed) => ({
+        9: { prompt: "P1 woke C1, but the scheduler runs C2 first. Can C2 take the item?", options: ["no, C1 was woken for it", "yes: a wakeup doesn't reserve anything"], answer: 1 },
+        15: { prompt: "C1 finally runs and gets m back. What does it run next?", options: ["the pop", "the empty-queue check again"], answer: fixed ? 1 : 0 },
+      }) },
+    { id: "lost", label: "Bug: push without the lock · a lost wakeup", versions: true, cap: 1,
+      note: "C1 checks the queue (empty) and is about to sleep. Can P1 slip in between the check and the sleep?",
+      threads: (fixed) => [{ id: "P1", role: "producer", code: fixed ? CODE.prod : CODE.prodNoLock, ops: producer([1], !fixed) },
+        { id: "C1", role: "consumer", code: CODE.cons, ops: consumer(1) }],
+      script: (fixed) => (fixed ? "C1 C1 P1 C1 P1 P1 P1 P1 P1 P1 C1 C1 C1 C1 C1 C1" : "C1 C1 P1 P1 P1 C1").split(" "),
+      asks: (fixed) => (fixed
+        ? { 2: { prompt: "P1 wants to push right now. Can it?", options: ["yes", "no: C1 holds m between its check and its sleep"], answer: 1 } }
+        : { 3: { prompt: "P1 calls notEmpty.notify_one(). Who wakes up?", options: ["C1", "nobody: C1 hasn't started sleeping yet"], answer: 1 },
+            5: { prompt: "C1 now goes to sleep. Will it ever wake up?", options: ["yes, P1 notified", "no: that notification is already gone"], answer: 1 } }) },
+    { id: "free", label: "Free play · 2 producers, 2 consumers", versions: false, cap: 1, free: true,
+      note: "Correct code. Click a thread card to run its next line, in any order you like. Try to make a consumer pop an empty queue: you can't.",
+      threads: () => [{ id: "P1", role: "producer", code: CODE.prod, ops: producer([1]) }, { id: "P2", role: "producer", code: CODE.prod, ops: producer([2]) },
+        { id: "C1", role: "consumer", code: CODE.cons, ops: consumer(1) }, { id: "C2", role: "consumer", code: CODE.cons, ops: consumer(1) }],
+      script: () => [], asks: () => ({}) },
+  ];
+
+  // ---------- the simulator ----------
+  function newSim(threads, cap) {
+    const th = {};
+    for (const t of threads) th[t.id] = { pc: 0, status: "ready", got: [] };
+    return { q: [], cap, owner: null, cv: { notEmpty: [], notFull: [] }, th, lostNotify: false, crashed: null };
+  }
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  function stepThread(sim, threads, id) {
+    const T = threads.find((t) => t.id === id), st = sim.th[id];
+    if (st.status === "done") return { text: `${id} has already returned.`, ln: null, idle: true };
+    if (st.status === "crashed") return { text: `${id} has crashed.`, ln: null, idle: true };
+    if (st.status === "waiting") return { text: `${id} is asleep on ${sleepingOn(sim, id)}; it can't run until someone notifies it.`, ln: null, idle: true };
+    if (st.status === "woken") {
+      const sleepOp = T.ops[st.pc];
+      if (sim.owner === null) {
+        sim.owner = id; st.status = "ready"; st.pc = sleepOp.after;
+        const next = T.ops[st.pc];
+        return { text: `${id} wakes up inside wait() and re-acquires m before returning. ${next.op === "check" ? "wait's built-in loop re-checks the condition next." : "With if instead of while, nothing re-checks: it goes straight to the pop."}`, ln: sleepOp.ln };
+      }
+      return { text: `${id} is awake but m is held by ${sim.owner}, so it waits for the lock.`, ln: sleepOp.ln, idle: true };
+    }
+    const o = T.ops[st.pc];
+    switch (o.op) {
+      case "lock":
+        if (sim.owner === null) { sim.owner = id; st.status = "ready"; st.pc++; return { text: `${id} locks m.`, ln: o.ln }; }
+        st.status = "blockedM";
+        return { text: `${id} tries to lock m, but ${sim.owner} holds it: ${id} blocks.`, ln: o.ln, idle: true };
+      case "check": {
+        const ok = o.pred === "notFull" ? sim.q.length < sim.cap : sim.q.length > 0;
+        st.pc = ok ? o.yes : o.no;
+        const what = o.pred === "notFull" ? `q.size() < cap (${sim.q.length} < ${sim.cap})` : `!q.empty() (size ${sim.q.length})`;
+        return { text: `${id} checks ${what} while holding m: ${ok ? "true, so it goes on." : "false, so it has to wait."}`, ln: o.ln };
+      }
+      case "sleep":
+        if (sim.owner === id) sim.owner = null;
+        sim.cv[o.cv].push(id); st.status = "waiting";
+        return { text: `${id} calls wait: it releases m and sleeps on ${o.cv}, in one atomic step.${o.cv === "notEmpty" && sim.q.length > 0 ? " But the queue is NOT empty: it is sleeping on a condition that's already true." : ""}`, ln: o.ln };
+      case "push":
+        sim.q.push(o.val); st.pc++;
+        return { text: o.nolock ? `${id} pushes ${o.val} WITHOUT holding m. That's a data race, and it can land between a consumer's check and its sleep.` : `${id} pushes ${o.val}. Queue: [${sim.q.join(", ")}].`, ln: o.ln };
+      case "pop":
+        if (!sim.q.length) { st.status = "crashed"; sim.crashed = id; return { text: `${id} pops from an EMPTY queue: undefined behavior, a crash in practice. It was woken, but by the time it ran, the item was gone, and an if never re-checks.`, ln: o.ln }; }
+        { const x = sim.q.shift(); st.got.push(x); st.pc++; return { text: `${id} pops ${x}. Queue: [${sim.q.join(", ")}].`, ln: o.ln }; }
+      case "unlock":
+        if (sim.owner === id) sim.owner = null;
+        st.pc++;
+        return { text: `${id} unlocks m.`, ln: o.ln };
+      case "notify": {
+        st.pc++;
+        const w = sim.cv[o.cv];
+        if (w.length) { const who = w.shift(); sim.th[who].status = "woken"; return { text: `${id} calls ${o.cv}.notify_one(): ${who} wakes up. It still needs m before it can run.`, ln: o.ln }; }
+        const someoneWillSleep = Object.entries(sim.th).some(([k, s]) => k !== id && s.status === "ready" && threads.find((t) => t.id === k).ops[s.pc].op === "sleep");
+        if (someoneWillSleep) sim.lostNotify = true;
+        return { text: `${id} calls ${o.cv}.notify_one(), but nobody is sleeping on ${o.cv}, so it does nothing.${someoneWillSleep ? " Someone is about to sleep, though: this wakeup is LOST." : ""}`, ln: o.ln };
+      }
+      case "done":
+        st.status = "done"; st.pc = T.ops.length - 1;
+        return { text: `${id} returns${T.role === "consumer" && st.got.length ? ` with ${st.got[st.got.length - 1]}` : ""}.`, ln: o.ln };
+    }
+    return { text: "", ln: null };
+  }
+  const sleepingOn = (sim, id) => Object.keys(sim.cv).find((c) => sim.cv[c].includes(id)) || "a condition variable";
+  function verdict(sim) {
+    if (sim.crashed) return `${sim.crashed} crashed: popped an empty queue.`;
+    const hung = Object.entries(sim.th).filter(([k, s]) => s.status === "waiting" && sim.cv.notEmpty.includes(k) && sim.q.length > 0).map(([k]) => k);
+    if (hung.length) return `${hung.join(", ")} sleeps forever while the queue holds ${sim.q.join(", ")}: a lost wakeup.`;
+    return "";
+  }
+
+  // ---------- events ----------
+  const S = { sc: SCENARIOS[0], fixed: false, threads: [], ev: [], predict: false, checked: new Map(), score: { ok: 0, total: 0 }, rr: 0 };
+  // A crash shows at once; "sleeps forever" is only certain once the schedule has ended.
+  function snapshot(sim, extra) { return Object.assign({ sim: clone(sim), alarm: sim.crashed || extra.t === "done" ? verdict(sim) : "" }, extra); }
+  function build() {
+    const sc = S.sc;
+    S.threads = sc.threads(S.fixed);
+    const sim = newSim(S.threads, sc.cap);
+    S.ev = [snapshot(sim, { t: "intro", text: sc.note, who: null, trail: [] })];
+    S.checked = new Map(); S.score = { ok: 0, total: 0 }; S.rr = 0;
+    if (sc.free) return;
+    const asks = sc.asks(S.fixed), script = sc.script(S.fixed), trail = [];
+    script.forEach((id, i) => {
+      if (sim.crashed) return;
+      const r = stepThread(sim, S.threads, id);
+      trail.push(trailLabel(id, r));
+      S.ev.push(snapshot(sim, { t: "step", text: r.text, who: id, ln: r.ln, trail: trail.slice(), ask: asks[i] || null }));
+    });
+    S.ev.push(snapshot(sim, { t: "done", who: null, trail: trail.slice(), text: verdict(sim) || `Done: ${Object.entries(sim.th).map(([k, s]) => (s.got.length ? `${k} got ${s.got.join(", ")}` : `${k} ${s.status === "waiting" ? "is waiting (correctly: no item for it)" : "returned"}`)).join("; ")}. No crash, no lost item.` }));
+  }
+  const trailLabel = (id, r) => `${id} ${r.idle ? "(stuck)" : r.ln === null ? "·" : opName(id, r)}`;
+  function opName(id, r) {
+    const T = S.threads.find((t) => t.id === id);
+    const line = r.ln !== null ? T.code[r.ln] : "";
+    if (/lock\(m\)|lk\(m\)/.test(line)) return "lock";
+    if (/wait/.test(line)) return /wakes|re-acquires/.test(r.text) ? "relock" : /checks/.test(r.text) ? "check" : "sleep";
+    if (/push/.test(line)) return "push";
+    if (/pop/.test(line)) return "pop";
+    if (/unlock/.test(line)) return "unlock";
+    if (/notify/.test(line)) return "notify";
+    return "return";
+  }
+  function runFree(id) {
+    // continue from the state shown, dropping any later history
+    S.ev = S.ev.slice(0, PL.k + 1);
+    const cur = S.ev[S.ev.length - 1];
+    const sim = clone(cur.sim);
+    const r = stepThread(sim, S.threads, id);
+    const trail = cur.trail.concat([trailLabel(id, r)]);
+    S.ev.push(snapshot(sim, { t: "step", text: r.text, who: id, ln: r.ln, trail }));
+    PL.k = S.ev.length - 1;
+    render();
+  }
+  function canRun(sim, id) {                      // would running this thread make progress?
+    const st = sim.th[id];
+    if (st.status === "ready" || st.status === "blockedM") return !(S.threads.find((t) => t.id === id).ops[st.pc].op === "lock" && sim.owner !== null && sim.owner !== id);
+    return st.status === "woken" && sim.owner === null;
+  }
+  function nextRunnable(sim) {                    // round robin over the threads that can make progress
+    const ids = S.threads.map((t) => t.id);
+    for (let j = 0; j < ids.length; j++) {
+      const id = ids[(S.rr + j) % ids.length];
+      if (canRun(sim, id)) { S.rr = (S.rr + j + 1) % ids.length; return id; }
+    }
+    return null;
+  }
+
+  // ---------- render ----------
+  const isPending = () => { const e = S.ev[PL.k]; return S.predict && !!e.ask && !S.checked.has(PL.k); };
+  const STATUS = { ready: "ready", blockedM: "blocked on m", waiting: "asleep", woken: "woken, needs m", done: "returned", crashed: "CRASHED", hung: "asleep forever" };
+  function render() {
+    const e = S.ev[PL.k], pending = isPending();
+    const view = pending && PL.k > 0 ? S.ev[PL.k - 1] : e;
+    const sim = view.sim;
+    $("note").textContent = S.sc.note;
+    // threads
+    $("threads").innerHTML = S.threads.map((T) => {
+      const st = sim.th[T.id];
+      let status = st.status;
+      if (status === "waiting" && sim.cv.notEmpty.includes(T.id) && sim.q.length > 0 && e.t === "done") status = "hung";
+      const label = status === "waiting" ? `asleep on ${sleepingOn(sim, T.id)}` : STATUS[status];
+      const just = !pending && e.who === T.id;
+      const ln = st.status === "done" ? null : T.ops[st.pc] ? T.ops[st.pc].ln : null;
+      return `<div class="thread${just ? " just" : ""}${S.sc.free ? " clickable" : ""}" data-id="${T.id}" ${S.sc.free ? `role="button" tabindex="0" aria-label="Run ${T.id}'s next line"` : ""}>
+        <h3><span class="who">${T.id} · ${T.role}</span><span class="pill ${status}">${esc(label)}</span></h3>
+        <pre class="code" id="code-${T.id}"></pre>
+        <p class="got">${T.role === "consumer" ? `got: ${st.got.length ? st.got.join(", ") : "nothing yet"}` : ""}</p></div>`;
+    }).join("");
+    for (const T of S.threads) {
+      const st = sim.th[T.id];
+      const ln = st.status === "done" ? [] : T.ops[st.pc] ? [T.ops[st.pc].ln] : [];
+      TK.renderCode($(`code-${T.id}`), T.code, ln);
+    }
+    // shared state
+    $("slots").innerHTML = Array.from({ length: S.sc.cap }, (_, i) => `<div class="slot${i < sim.q.length ? " full" : ""}">${i < sim.q.length ? sim.q[i] : ""}</div>`).join("") + (sim.q.length > S.sc.cap ? `<span class="alarm">overflow</span>` : "");
+    $("kv").innerHTML = `<div><b>mutex m</b>${sim.owner ? `<span class="badge held">held by ${sim.owner}</span>` : `<span class="badge">free</span>`}</div>` +
+      Object.keys(sim.cv).map((c) => `<div><b>${c}</b>${sim.cv[c].length ? sim.cv[c].map((x) => `<span class="badge sleep">${x} asleep</span>`).join("") : `<span class="badge">nobody waiting</span>`}</div>`).join("");
+    $("alarm").textContent = pending ? "" : e.alarm;
+    // narration
+    $("evType").textContent = e.t === "intro" ? "Setup" : e.t === "done" ? "Finished" : e.who ? `${e.who} runs one line` : "Step";
+    let text = e.text;
+    const fb = $("feedback");
+    fb.className = "feedback"; fb.textContent = "";
+    const ch = $("choices");
+    ch.hidden = true; ch.innerHTML = "";
+    if (S.predict && e.ask) {
+      const chk = S.checked.get(PL.k);
+      if (!chk) {
+        text = `Next: ${e.who} runs.`;
+        fb.className = "feedback ask"; fb.textContent = e.ask.prompt;
+        ch.hidden = false;
+        ch.innerHTML = e.ask.options.map((o, i) => `<button type="button" class="btn" data-opt="${i}">${esc(o)}</button>`).join("");
+      } else {
+        fb.className = "feedback " + (chk.ok ? "ok" : "bad");
+        fb.textContent = chk.ok ? `Correct: ${e.ask.options[e.ask.answer]}.` : `Not quite: ${e.ask.options[e.ask.answer]}.`;
+      }
+    }
+    $("narr").textContent = text;
+    $("timeline").innerHTML = view.trail.map((x, i) => `<li class="${i === view.trail.length - 1 ? "last" : ""}">${esc(x)}</li>`).join("") || `<li>nothing yet</li>`;
+    TK.renderLog($("log"), S.ev.slice(0, PL.k + 1).map((x) => x.text.split(/[.:]/)[0]));
+    const freeStuck = S.sc.free && PL.k === S.ev.length - 1 && !S.threads.some((T) => canRun(e.sim, T.id));
+    PL.sync(pending, "Pick an answer", pending ? true : S.sc.free ? freeStuck : PL.k >= S.ev.length - 1);
+    $("score").textContent = TK.scoreText(S.score, S.predict, S.sc.free ? "Free play: click thread cards, or press Step for the next runnable thread." : "Tip: turn on Predict and call the key moments yourself.");
+    $("verBug").disabled = $("verFix").disabled = !S.sc.versions;
+    $("verBug").setAttribute("aria-pressed", String(S.sc.versions && !S.fixed));
+    $("verFix").setAttribute("aria-pressed", String(!S.sc.versions || S.fixed));
+  }
+  function choose(i) {
+    const e = S.ev[PL.k];
+    const ok = i === e.ask.answer;
+    S.checked.set(PL.k, { ok });
+    S.score.total++; if (ok) S.score.ok++;
+    render();
+  }
+  const PL = TK.player({
+    count: () => S.ev.length, render, pending: isPending, rebuild: build, delay: 1100,
+    check: () => {},
+  });
+  // In free play, Step (button or arrow key) runs the next runnable thread when you're at the newest event.
+  const freeStep = () => {
+    if (!S.sc.free || PL.k < S.ev.length - 1) return false;
+    const id = nextRunnable(S.ev[PL.k].sim);
+    if (id) runFree(id);
+    return true;
+  };
+  $("step").addEventListener("click", (ev) => { if (freeStep()) ev.stopImmediatePropagation(); }, true);
+  const baseStep = PL.step;
+  PL.step = () => { if (!freeStep()) baseStep(); };
+
+  // ---------- wiring ----------
+  const sel = $("scenario");
+  sel.innerHTML = SCENARIOS.map((s, i) => `<option value="${i}">${esc(s.label)}</option>`).join("");
+  sel.addEventListener("change", () => { S.sc = SCENARIOS[+sel.value]; S.fixed = false; PL.reset(); });
+  $("verBug").addEventListener("click", () => { if (S.sc.versions && S.fixed) { S.fixed = false; PL.reset(); } });
+  $("verFix").addEventListener("click", () => { if (S.sc.versions && !S.fixed) { S.fixed = true; PL.reset(); } });
+  $("predict").addEventListener("change", (ev) => { S.predict = ev.target.checked; render(); });
+  $("choices").addEventListener("click", (ev) => { const b = ev.target.closest("[data-opt]"); if (b && isPending()) choose(+b.getAttribute("data-opt")); });
+  $("threads").addEventListener("click", (ev) => { const t = ev.target.closest("[data-id]"); if (t && S.sc.free) runFree(t.getAttribute("data-id")); });
+  $("threads").addEventListener("keydown", (ev) => { const t = ev.target.closest("[data-id]"); if (t && S.sc.free && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); ev.stopPropagation(); runFree(t.getAttribute("data-id")); } });
+  sel.value = "1";
+  S.sc = SCENARIOS[1];
+  PL.reset();
+
+  // ---------- self-test (open with #selftest) ----------
+  TK.selftest(() => {
+    const R = [];
+    const runScenario = (i, fixed) => { S.sc = SCENARIOS[i]; S.fixed = fixed; build(); return S.ev[S.ev.length - 1].sim; };
+    let sim = runScenario(0, false);
+    R.push([`handoff: C1 got ${sim.th.C1.got.join(",")}`, sim.th.C1.got.join(",") === "1,2" && sim.th.P1.status === "done" && sim.th.C1.status === "done" && !sim.crashed]);
+    sim = runScenario(1, false);
+    R.push([`if-bug: crash = ${sim.crashed}`, sim.crashed === "C1" && sim.th.C2.got.join(",") === "1"]);
+    sim = runScenario(1, true);
+    R.push([`if-fixed: no crash, C1 ${sim.th.C1.status}`, !sim.crashed && sim.th.C1.status === "waiting" && sim.q.length === 0]);
+    sim = runScenario(2, false);
+    R.push([`lost-bug: C1 asleep with queue [${sim.q.join(",")}]`, sim.th.C1.status === "waiting" && sim.q.length === 1]);
+    sim = runScenario(2, true);
+    R.push([`lost-fixed: C1 got ${sim.th.C1.got.join(",")}`, sim.th.C1.got.join(",") === "1" && sim.th.P1.status === "done"]);
+    // every ask lands on a real step
+    let asksOk = true;
+    SCENARIOS.forEach((sc, i) => [false, true].forEach((f) => {
+      if (!sc.versions && f) return;
+      S.sc = sc; S.fixed = f; build();
+      const n = S.ev.filter((e) => e.ask).length, want = Object.keys(sc.asks(f)).length;
+      if (n !== want) asksOk = false;
+    }));
+    R.push(["every scripted question appears once", asksOk]);
+    // random fair schedules on the correct code never crash and always finish
+    let fine = true, detail = "";
+    for (let t = 0; t < 300 && fine; t++) {
+      S.sc = SCENARIOS[3]; S.fixed = false; build();
+      const s = clone(S.ev[0].sim);
+      for (let g = 0; g < 400; g++) {
+        const ids = S.threads.map((x) => x.id).filter((id) => ["ready", "blockedM", "woken"].includes(s.th[id].status));
+        if (!ids.length) break;
+        stepThread(s, S.threads, ids[Math.floor(Math.random() * ids.length)]);
+        if (s.crashed) break;
+      }
+      const allDone = Object.values(s.th).every((x) => x.status === "done");
+      const got = Object.values(s.th).flatMap((x) => x.got).sort().join(",");
+      if (s.crashed || !allDone || got !== "1,2") { fine = false; detail = JSON.stringify({ crashed: s.crashed, got }); }
+    }
+    R.push(["free play: 300 random schedules finish with items 1 and 2, no crash", fine, detail]);
+    // UI: drive scenarios to the end, then a free-play click
+    [0, 1, 2].forEach((i) => {
+      sel.value = String(i); sel.dispatchEvent(new Event("change"));
+      let g = 0;
+      while (!$("step").disabled && g++ < 300) $("step").click();
+      R.push([`UI ${SCENARIOS[i].id}: reached the end`, $("evType").textContent === "Finished"]);
+    });
+    sel.value = "1"; sel.dispatchEvent(new Event("change"));
+    $("predict").click();
+    let g = 0;
+    while (!isPending() && g++ < 50) $("step").click();
+    const right = S.ev[PL.k].ask.answer;
+    $("choices").querySelector(`[data-opt="${right}"]`).click();
+    R.push(["predict: right option accepted", $("feedback").textContent.startsWith("Correct")]);
+    $("predict").click();
+    sel.value = "3"; sel.dispatchEvent(new Event("change"));
+    document.querySelector('.thread[data-id="C1"]').click();
+    R.push(["free play: clicking C1 runs its first line", S.ev.length === 2 && S.ev[1].who === "C1"]);
+    $("step").click();
+    R.push(["free play: Step runs another thread", S.ev.length === 3]);
+    return R;
+  });
+})();
+</script>

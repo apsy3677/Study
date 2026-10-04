@@ -1,0 +1,455 @@
+<title>Static Timing Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<!-- @kit:css -->
+<style>
+/* A netlist as a DAG: boxes are pins/cells, arrows are timing arcs with delays.
+   Each node carries its numbers underneath: indegree / level while levelizing, then A (arrival),
+   R (required) and S (slack). */
+.arc { fill: none; stroke: var(--muted); stroke-width: 1.8; }
+.arc.hot { stroke: var(--cobalt); stroke-width: 3.2; }
+.arc.best { stroke: var(--amber); stroke-width: 3; }
+.arc.crit { stroke: var(--bad); stroke-width: 3.6; }
+.arc.loop { stroke: var(--bad); stroke-width: 2.6; stroke-dasharray: 6 4; }
+.dly { font: 600 11.5px var(--mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 5px; stroke-linejoin: round; }
+.gate rect { fill: var(--panel); stroke: var(--ink); stroke-width: 1.8; }
+.gate.pi rect { fill: var(--code-bg); stroke-dasharray: 4 3; }
+.gate.po rect { stroke-width: 3.2; }
+.gate text.nm { font: 600 13px var(--mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); pointer-events: none; }
+.gate.cur rect { fill: var(--cobalt); stroke: var(--cobalt); }
+.gate.cur text.nm { fill: var(--cobalt-ink); }
+.gate.inq rect { stroke: var(--cobalt); stroke-width: 3; }
+.gate.done rect { fill: color-mix(in srgb, var(--cobalt) 10%, var(--panel)); }
+.gate.stuck rect { stroke: var(--bad); stroke-width: 3; stroke-dasharray: 5 3; }
+.gate.crit rect { stroke: var(--bad); stroke-width: 3.6; }
+.gate.neg rect { fill: color-mix(in srgb, var(--bad) 16%, var(--panel)); }
+.gate.zero rect { fill: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+.gate.pos rect { fill: color-mix(in srgb, var(--ok) 14%, var(--panel)); }
+.gate.pickable { cursor: pointer; }
+.gate.pickable rect { stroke: var(--cobalt); stroke-dasharray: 4 3; }
+.gate.picked rect { stroke: var(--ink); stroke-width: 4; stroke-dasharray: none; }
+.bdg { font: 600 11px var(--mono); text-anchor: middle; fill: var(--muted); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; }
+.bdg.a { fill: var(--cobalt); }
+.bdg.r { fill: var(--c2); }
+.bdg.s-neg { fill: var(--bad); }
+.bdg.s-zero { fill: var(--amber); }
+.bdg.s-pos { fill: var(--ok); }
+.phase { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 26px; }
+.phase li { position: relative; font: 600 0.78rem var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); }
+.phase li + li::before { content: "→"; position: absolute; left: -19px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.phase li.now { background: var(--cobalt); border-color: var(--cobalt); color: var(--cobalt-ink); }
+.phase li.past { color: var(--ink); }
+#tval { width: 90px; }
+#guess { width: 110px; }
+.sw.pi { border-style: dashed; background: var(--code-bg); }
+.sw.po { border-width: 3px; border-color: var(--ink); }
+.sw.neg { background: color-mix(in srgb, var(--bad) 16%, var(--panel)); }
+.sw.zero { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+.sw.pos { background: color-mix(in srgb, var(--ok) 14%, var(--panel)); }
+.sw.line.crit { border-top: 3.6px solid var(--bad); }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern trainer · EDA · static timing analysis</span>
+    <h1>Static Timing Trainer</h1>
+    <p class="lede"><strong>Timing is DP on a DAG.</strong> Levelize the netlist (Kahn), push <strong>arrival</strong> times forward with max, pull <strong>required</strong> times backward with min, and read the <strong>slack</strong>. The critical path is just the predecessor trail of the worst output. Turn on <strong>Predict</strong> to compute every arrival and required time yourself.</p>
+  </header>
+
+  <section class="controls" aria-label="Setup">
+    <div class="field">
+      <label for="preset">Netlist</label>
+      <select id="preset"></select>
+    </div>
+    <div class="field">
+      <label for="tval">Clock period T</label>
+      <input type="number" id="tval" min="1" max="99">
+    </div>
+    <button type="button" class="btn" id="load">Apply T</button>
+    <label class="check" for="predict"><input type="checkbox" id="predict"> Predict each time</label>
+  </section>
+  <p class="msg" id="inputMsg" role="status"></p>
+
+  <section class="bench">
+    <div class="panel stage">
+      <ol class="phase" id="phases" aria-label="Phases">
+        <li data-p="1">1 · Levelize</li><li data-p="2">2 · Arrival</li><li data-p="3">3 · Required</li><li data-p="4">4 · Slack + path</li>
+      </ol>
+      <p class="note" id="note"></p>
+      <div class="chart-wrap" id="chart"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw pi"></i>primary input</span>
+        <span><i class="sw po"></i>primary output</span>
+        <span>arrow label = delay</span>
+        <span><i class="sw neg"></i>negative slack</span>
+        <span><i class="sw zero"></i>zero slack</span>
+        <span><i class="sw pos"></i>positive slack</span>
+        <span><i class="sw line crit"></i>critical path</span>
+        <span>A arrival · R required · S slack</span>
+      </div>
+    </div>
+    <aside class="panel side">
+      <section>
+        <h2 id="qTitle">Kahn queue</h2>
+        <ul class="chips" id="queue"></ul>
+      </section>
+      <section>
+        <h2>Topological order</h2>
+        <p class="side-note" id="topo"></p>
+      </section>
+      <section>
+        <h2>Summary</h2>
+        <dl class="stats" id="stats"></dl>
+      </section>
+    </aside>
+  </section>
+
+  <section class="readouts">
+    <div class="panel narr" aria-live="polite">
+      <span class="eyebrow" id="evType">What just happened</span>
+      <p class="now" id="narr"></p>
+      <p class="feedback" id="feedback"></p>
+      <div class="choices" id="predictBox" hidden>
+        <label for="guess">Your value</label>
+        <input type="number" id="guess">
+      </div>
+      <div class="playbar">
+        <button type="button" class="btn" id="back">Back</button>
+        <button type="button" class="btn primary" id="step">Step</button>
+        <button type="button" class="btn" id="play">Play</button>
+        <button type="button" class="btn" id="reset">Reset</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="score" id="score"></p>
+    </div>
+    <div class="panel codebox">
+      <span class="eyebrow">The code, line by line</span>
+      <pre class="code" id="code" aria-label="C++ code with the current lines highlighted"></pre>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel model">
+      <h2>The model in five sentences</h2>
+      <ol>
+        <li>A combinational netlist is a <strong>DAG</strong>: pins are nodes, timing arcs are weighted edges. Registers cut every loop.</li>
+        <li><strong>Levelize</strong> with Kahn: a node is ready once all its inputs are done. Leftover nodes mean a combinational loop (find it with SCC).</li>
+        <li><strong>Arrival</strong> = the latest a signal can get here: <code class="inl">max</code> over inputs of (input arrival + delay). That's longest path, which is DP in topological order.</li>
+        <li><strong>Required</strong> = the latest a signal may leave and still reach every output by T: <code class="inl">min</code> over outputs of (output required − delay), in reverse order.</li>
+        <li><strong>Slack</strong> = required − arrival. Negative means a timing violation; the <strong>critical path</strong> is the predecessor trail of the worst output.</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ol class="log" id="log" reversed></ol>
+    </div>
+  </section>
+  <p class="keys"><kbd>→</kbd> or <kbd>Space</kbd> step · <kbd>←</kbd> back. Every pass touches each arc once: O(V + E).</p>
+</div>
+
+<!-- @kit:js -->
+<script>
+(() => {
+  const { $, esc } = TK;
+  const PRESETS = [
+    { label: "Small netlist · one output", T: 10,
+      note: "Two inputs reconverge at the output. Which path is the slowest?",
+      nodes: [["in0", 60, 70], ["in1", 60, 230], ["g1", 210, 150], ["g2", 370, 70], ["g3", 370, 230], ["out", 530, 150]],
+      arcs: [[0, 2, 3], [1, 2, 1], [2, 3, 4], [2, 4, 2], [1, 4, 6], [3, 5, 2], [4, 5, 1]] },
+    { label: "Two outputs · a violation", T: 4,
+      note: "Two outputs share the input. The required time T applies to both; one of them misses it.",
+      nodes: [["in0", 60, 140], ["out_a", 380, 60], ["g1", 220, 220], ["out_b", 380, 220]],
+      arcs: [[0, 1, 5], [0, 2, 2], [2, 3, 1]] },
+    { label: "Reconvergent fanout · 9 pins", T: 10,
+      note: "Three inputs, four gates, two outputs, and a long arc g1 → out1. Find the path that breaks T.",
+      nodes: [["in0", 60, 50], ["in1", 60, 165], ["in2", 60, 280], ["g1", 220, 90], ["g2", 220, 250], ["g3", 380, 90], ["g4", 380, 250], ["out0", 540, 110], ["out1", 540, 260]],
+      arcs: [[0, 3, 2], [1, 3, 3], [1, 4, 1], [2, 4, 4], [3, 5, 3], [4, 5, 2], [4, 6, 5], [5, 7, 2], [6, 7, 1], [6, 8, 2], [3, 8, 6]] },
+    { label: "Combinational loop · Kahn gets stuck", T: 10,
+      note: "g1 → g2 → g3 → g1 is a loop with no register. Levelization can't finish, so timing is undefined.",
+      nodes: [["in0", 60, 150], ["g1", 210, 150], ["g2", 360, 70], ["g3", 360, 230], ["out", 520, 230]],
+      arcs: [[0, 1, 2], [1, 2, 3], [2, 3, 1], [3, 1, 2], [3, 4, 4]] },
+  ];
+  const CODE = [
+    "// 1. levelize (Kahn): a node is ready when all its inputs are done",
+    "for (auto [u, v, d] : arcs) ++indeg[v];",
+    "for (int v = 0; v < n; ++v) if (indeg[v] == 0) q.push(v);   // primary inputs",
+    "while (!q.empty()) {",
+    "    int u = q.front(); q.pop(); topo.push_back(u);",
+    "    for (auto [v, d] : out[u]) {",
+    "        level[v] = max(level[v], level[u] + 1);",
+    "        if (--indeg[v] == 0) q.push(v);",
+    "    }",
+    "}",
+    "if ((int)topo.size() < n) { /* combinational loop: find it with SCC */ }",
+    "// 2. arrival: forward in topological order (longest path = DP on a DAG)",
+    "for (int v : topo)",
+    "    for (auto [u, d] : in[v])",
+    "        if (arr[u] + d > arr[v]) { arr[v] = arr[u] + d; pred[v] = u; }",
+    "// 3. required: backward; every primary output must be ready by T",
+    "for (int v : outputs) req[v] = T;",
+    "for (int i = n - 1; i >= 0; --i)",
+    "    for (auto [v, d] : out[topo[i]]) req[topo[i]] = min(req[topo[i]], req[v] - d);",
+    "// 4. slack = required − arrival (negative = violation)",
+    "for (int v = 0; v < n; ++v) slack[v] = req[v] - arr[v];",
+    "// 5. critical path: from the worst output, follow pred back",
+  ];
+
+  const S = { P: null, T: 10, ev: [], predict: false, sel: undefined, checked: new Map(), score: { ok: 0, total: 0 } };
+
+  // ---------- run STA once, recording snapshots ----------
+  function run(P, T) {
+    const n = P.nodes.length, name = (v) => P.nodes[v][0];
+    const out = Array.from({ length: n }, () => []), inn = Array.from({ length: n }, () => []);
+    for (const [u, v, d] of P.arcs) { out[u].push([v, d]); inn[v].push([u, d]); }
+    const indeg = inn.map((x) => x.length), level = Array(n).fill(0);
+    const isPI = (v) => inn[v].length === 0, isPO = (v) => out[v].length === 0;
+    let q = [], topo = [], arr = Array(n).fill(null), req = Array(n).fill(null), pred = Array(n).fill(-1), slack = Array(n).fill(null);
+    let phase = 1, crit = [], stuck = [];
+    const ev = [];
+    const snap = (o) => ev.push(Object.assign({ phase, indeg: indeg.slice(), level: level.slice(), q: q.slice(), topo: topo.slice(),
+      arr: arr.slice(), req: req.slice(), pred: pred.slice(), slack: slack.slice(), crit: crit.slice(), stuck: stuck.slice() }, o));
+
+    snap({ t: "intro", text: `${n} pins and ${P.arcs.length} timing arcs; clock period T = ${T}. ${P.note}`, hl: [] });
+    for (let v = 0; v < n; v++) if (indeg[v] === 0) q.push(v);
+    snap({ t: "kinit", text: `Count each pin's inputs (the small "in" numbers). Pins with none are primary inputs: ${q.map(name).join(", ")}. They start in the queue at level 0.`, hl: [1, 2] });
+    while (q.length) {
+      const u = q.shift();
+      topo.push(u);
+      snap({ t: "pop", u, text: `Take ${name(u)} (level ${level[u]}): all of its inputs are done. It's #${topo.length} in topological order.`, hl: [3, 4] });
+      for (const [v, d] of out[u]) {
+        level[v] = Math.max(level[v], level[u] + 1);
+        indeg[v]--;
+        if (indeg[v] === 0) q.push(v);
+        snap({ t: "dec", u, v, arc: [u, v], text: indeg[v] === 0
+          ? `Arc ${name(u)} → ${name(v)}: ${name(v)} has no inputs left to wait for, so it's ready: level ${level[v]}, into the queue.`
+          : `Arc ${name(u)} → ${name(v)}: ${name(v)} now waits for ${indeg[v]} more input${indeg[v] === 1 ? "" : "s"}.`, hl: [5, 6, 7] });
+      }
+    }
+    if (topo.length < n) {
+      stuck = [...Array(n).keys()].filter((v) => !topo.includes(v));
+      snap({ t: "stuck", text: `The queue is empty but ${stuck.map(name).join(", ")} never became ready: each still waits on an input inside a cycle. That's a combinational loop, so arrival times are undefined (longest path in a cyclic graph has no answer). An EDA tool reports it, found with SCC, and stops timing here.`, hl: [10] });
+      snap({ t: "done", text: `Stopped: combinational loop through ${stuck.filter((v) => !isPO(v)).map(name).join(" → ")}. Fix the design (add a register) or break the loop before timing.`, hl: [10], result: { loop: stuck.map(name) } });
+      return ev;
+    }
+    phase = 2;
+    for (const v of topo) if (isPI(v)) arr[v] = 0;
+    snap({ t: "pi", text: `Arrival pass, in topological order. Primary inputs arrive at time 0: ${topo.filter(isPI).map(name).join(", ")}.`, hl: [11] });
+    for (const v of topo) {
+      if (isPI(v)) continue;
+      let best = -Infinity, from = -1;
+      for (const [u, d] of inn[v]) if (arr[u] + d > best) { best = arr[u] + d; from = u; }
+      arr[v] = best; pred[v] = from;
+      const terms = inn[v].map(([u, d]) => `${name(u)} ${arr[u]} + ${d}`);
+      snap({ t: "arr", v, arcs: inn[v].map(([u]) => [u, v]), best: [from, v], val: best,
+        text: `arrival[${name(v)}] = max(${terms.join(", ")}) = ${best}. The latest input decides it: ${name(from)}.`, hl: [12, 13, 14],
+        ask: { kind: "num", answer: best, prompt: `Predict arrival[${name(v)}].` } });
+    }
+    phase = 3;
+    for (let v = 0; v < n; v++) if (isPO(v)) req[v] = T;
+    snap({ t: "po", text: `Required pass, in reverse topological order. Every primary output must be ready by T = ${T}: ${[...Array(n).keys()].filter(isPO).map(name).join(", ")}.`, hl: [15, 16] });
+    for (let i = n - 1; i >= 0; i--) {
+      const u = topo[i];
+      if (isPO(u)) continue;
+      const vals = out[u].map(([v, d]) => req[v] - d);
+      req[u] = Math.min(...vals);
+      const terms = out[u].map(([v, d]) => `${name(v)} ${req[v]} − ${d}`);
+      snap({ t: "req", v: u, arcs: out[u].map(([v]) => [u, v]), val: req[u],
+        text: `required[${name(u)}] = min(${terms.join(", ")}) = ${req[u]}. The tightest output decides it.`, hl: [17, 18],
+        ask: { kind: "num", answer: req[u], prompt: `Predict required[${name(u)}].` } });
+    }
+    phase = 4;
+    for (let v = 0; v < n; v++) slack[v] = req[v] - arr[v];
+    const pos = [...Array(n).keys()].filter(isPO);
+    const worstOut = pos.reduce((a, b) => (slack[b] < slack[a] ? b : a));
+    const worst = Math.min(...slack);
+    snap({ t: "slack", text: `slack = required − arrival for every pin. Worst slack: ${worst}${worst < 0 ? " (a timing violation)" : ""}. The worst output is ${name(worstOut)}.`, hl: [19, 20],
+      ask: pos.length > 1 ? { kind: "node", answer: worstOut, prompt: "Predict: which primary output has the worst slack? Click it." } : null });
+    for (let v = worstOut; v !== -1; v = pred[v]) crit.unshift(v);
+    const total = crit.slice(1).reduce((s, v, i) => s + P.arcs.find(([a, b]) => a === crit[i] && b === v)[2], 0);
+    snap({ t: "crit", text: `Critical path: follow pred back from ${name(worstOut)}: ${crit.map(name).join(" → ")}, total delay ${total}. Every pin on it has the same, worst slack; speeding up any arc on it is the only way to fix the violation.`, hl: [21] });
+    snap({ t: "done", text: `Done. Worst slack ${worst} at ${name(worstOut)}; critical path ${crit.map(name).join(" → ")}. Try a smaller T to watch slacks go negative.`, hl: [], result: { worst, crit: crit.map(name) } });
+    return ev;
+  }
+
+  // ---------- drawing ----------
+  const NW = 64, NH = 32;
+  function arcPath(A, B) {
+    const [ax, ay] = A, [bx, by] = B;
+    if (bx < ax) {                                        // a back arc (only in loops): curve below
+      const mx = (ax + bx) / 2, my = Math.max(ay, by) + 80;
+      return { d: `M${ax - 10},${ay + NH / 2} Q${mx},${my} ${bx + 10},${by + NH / 2 + 2}`, mx, my: my - 30 };
+    }
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    const cut = (u) => Math.min(Math.abs(u.x) > 1e-9 ? NW / 2 / Math.abs(u.x) : 1e9, Math.abs(u.y) > 1e-9 ? NH / 2 / Math.abs(u.y) : 1e9);
+    const r = cut({ x: ux, y: uy });
+    return { d: `M${TK.r1(ax + ux * r)},${TK.r1(ay + uy * r)} L${TK.r1(bx - ux * (r + 3))},${TK.r1(by - uy * (r + 3))}`, mx: (ax + bx) / 2, my: (ay + by) / 2 };
+  }
+  function chart(e, pending) {
+    const P = S.P, n = P.nodes.length;
+    const xs = P.nodes.map((x) => x[1]), ys = P.nodes.map((x) => x[2]);
+    const minX = Math.min(...xs) - 50, maxX = Math.max(...xs) + 50, minY = Math.min(...ys) - 40, maxY = Math.max(...ys) + 120;
+    let s = `<svg viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}" role="img" aria-label="Netlist DAG">`;
+    s += TK.markers([["mk-a", "var(--muted)"], ["mk-hot", "var(--cobalt)"], ["mk-best", "var(--amber)"], ["mk-crit", "var(--bad)"]]);
+    const key = (a, b) => a + ">" + b;
+    const hot = new Set((e.arcs || []).map(([a, b]) => key(a, b)));
+    if (e.arc) hot.add(key(e.arc[0], e.arc[1]));
+    const best = e.best && !pending ? key(e.best[0], e.best[1]) : null;
+    const critSet = new Set();
+    for (let i = 1; i < e.crit.length; i++) critSet.add(key(e.crit[i - 1], e.crit[i]));
+    const stuck = new Set(e.stuck);
+    const parts = [];
+    for (const [u, v, d] of P.arcs) {
+      const k = key(u, v), A = [P.nodes[u][1], P.nodes[u][2]], B = [P.nodes[v][1], P.nodes[v][2]];
+      let cls = "arc", mk = "mk-a";
+      if (stuck.has(u) && stuck.has(v) && e.t !== "intro") { cls += " loop"; mk = "mk-crit"; }
+      if (critSet.has(k)) { cls = "arc crit"; mk = "mk-crit"; }
+      else if (k === best) { cls = "arc best"; mk = "mk-best"; }
+      else if (hot.has(k)) { cls = "arc hot"; mk = "mk-hot"; }
+      const g = arcPath(A, B);
+      parts.push({ z: cls === "arc" ? 0 : 1, s: `<path class="${cls}" d="${g.d}" marker-end="url(#${mk})"></path><text class="dly" x="${TK.r1(g.mx)}" y="${TK.r1(g.my)}">${d}</text>` });
+    }
+    s += parts.filter((p) => !p.z).map((p) => p.s).join("") + parts.filter((p) => p.z).map((p) => p.s).join("");
+    const inQ = new Set(e.q), done = new Set(e.topo);
+    for (let v = 0; v < n; v++) {
+      const [nm, x, y] = P.nodes[v];
+      const pi = !P.arcs.some(([, b]) => b === v), po = !P.arcs.some(([a]) => a === v);
+      let cls = "gate" + (pi ? " pi" : "") + (po ? " po" : "");
+      if (e.phase === 4 && e.slack[v] !== null && e.t !== "intro") cls += e.slack[v] < 0 ? " neg" : e.slack[v] === 0 ? " zero" : " pos";
+      else if (done.has(v) && e.phase === 1) cls += " done";
+      if (inQ.has(v)) cls += " inq";
+      if (stuck.has(v)) cls += " stuck";
+      if (e.crit.includes(v)) cls += " crit";
+      if ((e.u === v || e.v === v) && !(pending && e.ask && e.ask.kind === "node")) cls += " cur";
+      if (pending && e.ask && e.ask.kind === "node") cls += " pickable";
+      if (S.sel === v) cls += " picked";
+      s += `<g class="${cls}" data-id="${v}"><rect x="${x - NW / 2}" y="${y - NH / 2}" width="${NW}" height="${NH}" rx="7"></rect><text class="nm" x="${x}" y="${y}">${esc(nm)}</text></g>`;
+      // numbers under the pin
+      const lines = [];
+      if (e.phase === 1) {
+        if (e.t !== "intro") lines.push(["", `in ${e.indeg[v]}${done.has(v) || inQ.has(v) ? ` · L${e.level[v]}` : ""}`]);
+      } else {
+        const hide = pending && e.v === v;
+        if (e.arr[v] !== null) lines.push(["a", `A ${hide && e.t === "arr" ? "?" : e.arr[v]}`]);
+        if (e.req[v] !== null) lines.push(["r", `R ${hide && e.t === "req" ? "?" : e.req[v]}`]);
+        if (e.slack[v] !== null) lines.push([e.slack[v] < 0 ? "s-neg" : e.slack[v] === 0 ? "s-zero" : "s-pos", `S ${e.slack[v]}`]);
+      }
+      lines.forEach(([c, t], i) => { s += `<text class="bdg ${c}" x="${x}" y="${y + NH / 2 + 15 + i * 14}">${esc(t)}</text>`; });
+    }
+    return s + "</svg>";
+  }
+
+  // ---------- render ----------
+  const isPending = () => { const e = S.ev[PL.k]; return S.predict && !!e.ask && !S.checked.has(PL.k); };
+  const name = (v) => S.P.nodes[v][0];
+  function render() {
+    const e = S.ev[PL.k], pending = isPending();
+    for (const li of $("phases").children) { const p = +li.dataset.p; li.className = p === e.phase ? "now" : p < e.phase ? "past" : ""; }
+    $("note").textContent = S.P.note;
+    $("chart").innerHTML = chart(e, pending);
+    $("queue").innerHTML = e.q.length ? e.q.map((v, i) => `<li class="chip${i === 0 ? " top" : ""}"><span>${esc(name(v))}</span></li>`).join("") : `<li class="empty">empty</li>`;
+    $("topo").textContent = e.topo.length ? e.topo.map(name).join(" → ") : "not started";
+    const worst = e.slack.some((x) => x !== null) ? Math.min(...e.slack.filter((x) => x !== null)) : null;
+    $("stats").innerHTML = `<dt>clock T</dt><dd>${S.T}</dd><dt>worst slack</dt><dd>${worst === null ? "—" : worst}</dd><dt>critical path</dt><dd>${e.crit.length ? esc(e.crit.map(name).join(" → ")) : "—"}</dd>`;
+    $("evType").textContent = { intro: "Setup", kinit: "Levelize", pop: "Levelize", dec: "Levelize", stuck: "Combinational loop", pi: "Arrival", arr: "Arrival", po: "Required", req: "Required", slack: "Slack", crit: "Critical path", done: "Finished" }[e.t];
+    let text = e.text;
+    const fb = $("feedback");
+    fb.className = "feedback"; fb.textContent = "";
+    $("predictBox").hidden = true;
+    if (S.predict && e.ask) {
+      const chk = S.checked.get(PL.k);
+      if (!chk) {
+        text = e.ask.kind === "num" ? `${e.t === "arr" ? "Arrival" : "Required"} time for ${name(e.v)}, from the highlighted arcs.` : "Every pin now has its slack.";
+        fb.className = "feedback ask";
+        fb.textContent = e.ask.prompt + (e.ask.kind === "num" ? " Type it, then Check (or Enter)." : " Then Check.");
+        $("predictBox").hidden = e.ask.kind !== "num";
+      } else {
+        fb.className = "feedback " + (chk.ok ? "ok" : "bad");
+        fb.textContent = chk.ok ? "Correct." : `Not quite (you said ${chk.guess}): the answer is ${e.ask.kind === "num" ? e.ask.answer : name(e.ask.answer)}.`;
+      }
+    }
+    $("narr").textContent = text;
+    TK.renderCode($("code"), CODE, pending ? [] : e.hl);
+    const lines = [];
+    for (let q = 0; q <= PL.k; q++) lines.push(S.ev[q].text.split(/[.:]/)[0]);
+    TK.renderLog($("log"), lines);
+    PL.sync(pending, "Check");
+    $("score").textContent = TK.scoreText(S.score, S.predict, "Tip: turn on Predict and compute each arrival and required time.");
+    if (pending && e.ask.kind === "num") setTimeout(() => { const g = $("guess"); if (document.activeElement !== g) g.focus({ preventScroll: true }); }, 0);
+  }
+  function check() {
+    const e = S.ev[PL.k];
+    let ok, guess;
+    if (e.ask.kind === "num") {
+      const raw = $("guess").value.trim();
+      if (raw === "" || !Number.isFinite(+raw)) { $("feedback").textContent = "Type a number first."; return; }
+      guess = raw; ok = +raw === e.ask.answer; $("guess").value = "";
+    } else {
+      if (S.sel === undefined) { $("feedback").textContent = "Click an output first."; return; }
+      guess = name(S.sel); ok = S.sel === e.ask.answer; S.sel = undefined;
+    }
+    S.checked.set(PL.k, { ok, guess });
+    S.score.total++; if (ok) S.score.ok++;
+    render();
+  }
+  function build() { S.ev = run(S.P, S.T); S.checked = new Map(); S.score = { ok: 0, total: 0 }; S.sel = undefined; }
+  const PL = TK.player({ count: () => S.ev.length, render, pending: isPending, check, rebuild: build, delay: 1000 });
+
+  const sel = $("preset");
+  sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${esc(p.label)}</option>`).join("");
+  function loadPreset(i) { S.P = PRESETS[i]; S.T = S.P.T; $("tval").value = S.T; $("inputMsg").textContent = ""; PL.reset(); }
+  sel.addEventListener("change", () => loadPreset(+sel.value));
+  const applyT = () => {
+    const t = +$("tval").value;
+    if (!Number.isInteger(t) || t < 1 || t > 99) { $("inputMsg").textContent = "Enter a whole number from 1 to 99 for T."; return; }
+    S.T = t; $("inputMsg").textContent = ""; PL.reset();
+  };
+  $("load").addEventListener("click", applyT);
+  $("tval").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); applyT(); } });
+  $("guess").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); if (isPending()) check(); } });
+  $("predict").addEventListener("change", (ev) => { S.predict = ev.target.checked; S.sel = undefined; render(); });
+  $("chart").addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-id]");
+    if (!t || !isPending() || S.ev[PL.k].ask.kind !== "node") return;
+    S.sel = +t.getAttribute("data-id");
+    render();
+  });
+  sel.value = "2";
+  loadPreset(2);
+
+  // ---------- self-test (open with #selftest) ----------
+  TK.selftest(() => {
+    const R = [];
+    const res = (i, T) => { const ev = run(PRESETS[i], T); return ev[ev.length - 1].result; };
+    const r0 = res(0, 10);
+    R.push([`small: worst slack ${r0.worst}, path ${r0.crit.join(" ")}`, r0.worst === 1 && r0.crit.join(" ") === "in0 g1 g2 out"]);
+    R.push([`small with T = 8: worst slack ${res(0, 8).worst}`, res(0, 8).worst === -1]);
+    const r1 = res(1, 4);
+    R.push([`two outputs: worst slack ${r1.worst}`, r1.worst === -1 && r1.crit.join(" ") === "in0 out_a"]);
+    const r2 = res(2, 10);
+    R.push([`reconvergent: worst slack ${r2.worst}, path ${r2.crit.join(" ")}`, r2.worst === -1 && r2.crit.join(" ") === "in2 g2 g4 out1"]);
+    const r3 = res(3, 10);
+    R.push([`loop: stuck pins ${r3.loop.join(" ")}`, r3.loop.join(" ") === "g1 g2 g3 out"]);
+    PRESETS.forEach((p, i) => {
+      sel.value = String(i); sel.dispatchEvent(new Event("change"));
+      let g = 0;
+      while (!$("step").disabled && g++ < 500) $("step").click();
+      R.push([`UI ${p.label}: reached the end`, $("evType").textContent === "Finished"]);
+    });
+    sel.value = "0"; sel.dispatchEvent(new Event("change"));
+    $("predict").click();
+    let g = 0;
+    while (!isPending() && g++ < 100) $("step").click();
+    $("guess").value = String(S.ev[PL.k].ask.answer); $("step").click();
+    R.push(["predict: right number accepted", $("feedback").textContent.startsWith("Correct")]);
+    $("step").click();
+    while (!isPending() && g++ < 200) $("step").click();
+    $("guess").value = String(S.ev[PL.k].ask.answer + 5); $("step").click();
+    R.push(["predict: wrong number flagged", $("feedback").textContent.startsWith("Not quite")]);
+    $("predict").click();
+    $("tval").value = "0"; $("load").click();
+    R.push(["bad T shows a message", $("inputMsg").textContent.length > 0]);
+    return R;
+  });
+})();
+</script>

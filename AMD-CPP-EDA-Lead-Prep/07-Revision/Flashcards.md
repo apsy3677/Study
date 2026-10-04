@@ -339,7 +339,7 @@
 15. **Where do bipartite graphs show up?**
    <details><summary>answer</summary>Splitting conflicts into two groups (LC 886, two exam slots, double-patterning masks in EDA), and two-kind graphs: matching (jobs ↔ machines, pin assignment), netlists as cells ↔ nets, users ↔ hotels.</details>
 
-## Dynamic programming (5)
+## Dynamic programming (8)
 
 1. **DP 5 steps?**
    <details><summary>answer</summary>State (in words) → transition (last choice) → base → order → answer location.</details>
@@ -355,6 +355,15 @@
 
 5. **Edit distance recurrence?**
    <details><summary>answer</summary>Match: diag; else 1 + min(replace diag, delete up, insert left); base dp[i][0]=i, dp[0][j]=j.</details>
+
+6. **Top-down to bottom-up: which way do the loops run?**
+   <details><summary>answer</summary>From the base cases toward the root call, the opposite way the calls point. Calls go to smaller i: loop i upward. Bigger masks: loop down. Shorter intervals: loop by length.</details>
+
+7. **0/1 vs unbounded knapsack: the one difference?**
+   <details><summary>answer</summary>Taking an item calls f(i-1, …) in 0/1 but f(i, …) in unbounded (the item stays available). In 1D: capacity descending vs ascending.</details>
+
+8. **Why does tree DP need no memo?**
+   <details><summary>answer</summary>Each node is visited once and returns a pair (best with me, best without me), so no child is ever re-solved. The post-order recursion is already the bottom-up order.</details>
 
 ## EDA / FPGA / Vivado (18)
 

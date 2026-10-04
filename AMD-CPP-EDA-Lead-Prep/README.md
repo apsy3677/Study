@@ -42,11 +42,11 @@ Every day has a **MUST** core of about 5–6 hours, and **SHOULD** blocks if you
 | Block | Time | What | File |
 |---|---|---|---|
 | MUST | 15m | Spaced review: Day 1 flashcards (C++ + P01–P03) | [07-Revision/Flashcards.md](07-Revision/Flashcards.md) |
-| MUST | 60m | P04 Linked List (AMD asks these **a lot**) | `02-Patterns/P04` |
+| MUST | 60m | P04 Linked List (AMD asks these **a lot**), with the linked-list trainer in predict mode | `02-Patterns/P04`, [trainer](07-Revision/visualizers/linked-list-trainer.html) |
 | MUST | 45m | P05 Stack / Monotonic (start with the **MM01 mental model** + the trainer in predict mode), P06 Heap / Intervals / Sweep | [MM01](02-Patterns/MM01-Monotonic-Stack-Mental-Model.md), [trainer](07-Revision/visualizers/monotonic-stack-trainer.html), `02-Patterns/P05, P06` |
 | MUST | 60m | P07 Trees & BST | `02-Patterns/P07` |
 | MUST | 45m | P12 Design DS: **LRU**, ring buffer, `shared_ptr`, pool allocator | `02-Patterns/P12` |
-| MUST | 90m | Concurrency + memory model; code a thread-safe queue from memory | [03-Cpp-Deep/C3-Concurrency.md](03-Cpp-Deep/C3-Concurrency.md) |
+| MUST | 90m | Concurrency + memory model; replay the two condition-variable bugs in the trainer, then code a thread-safe queue from memory | [03-Cpp-Deep/C3-Concurrency.md](03-Cpp-Deep/C3-Concurrency.md), [trainer](07-Revision/visualizers/cv-queue-trainer.html) |
 | MUST | 60m | Code the ★ problems in `06-Practice/day2.cpp` | |
 | SHOULD | 30m | Tricky snippets 14–28 | C6 |
 | MUST | 20m | Day 2 quiz | [05-Tests/Day2-Quiz.md](05-Tests/Day2-Quiz.md) |
@@ -56,10 +56,10 @@ Every day has a **MUST** core of about 5–6 hours, and **SHOULD** blocks if you
 |---|---|---|---|
 | MUST | 15m | Spaced review: Day 2 flashcards, plus Day 1 quiz misses | |
 | MUST | 90m | P08 Graphs: BFS/DFS/Topo/Dijkstra/DSU/Bipartite/SCC (for SCC + bipartite, start with the **MM04 mental model** + the two trainers in predict mode) | `02-Patterns/P08`, [MM04](02-Patterns/MM04-SCC-Kosaraju-Mental-Model.md), [Kosaraju trainer](07-Revision/visualizers/kosaraju-trainer.html), [bipartite trainer](07-Revision/visualizers/bipartite-trainer.html) |
-| MUST | 75m | P10 DP (coin change, LIS, LCS, knapsack, edit distance) | `02-Patterns/P10` |
+| MUST | 75m | P10 DP (coin change, LIS, LCS, knapsack, edit distance); start with **MM05** (12 patterns, top-down → bottom-up) + the DP trainer | `02-Patterns/P10`, [MM05](02-Patterns/MM05-DP-Patterns-Top-Down.md), [trainer](07-Revision/visualizers/dp-trainer.html) |
 | SHOULD | 30m | P09 Backtracking, P11 Trie/Bits/Math | `02-Patterns/P09, P11` |
 | MUST | 45m | EDA/FPGA/Vivado primer (the vocabulary) | [04-EDA-Domain/E1-EDA-FPGA-Vivado-Primer.md](04-EDA-Domain/E1-EDA-FPGA-Vivado-Primer.md) |
-| MUST | 75m | EDA algorithms: STA on DAG, partitioning, placement, routing, geometry | [04-EDA-Domain/E2-EDA-Algorithms.md](04-EDA-Domain/E2-EDA-Algorithms.md) |
+| MUST | 75m | EDA algorithms: STA on DAG (watch it in the timing trainer), partitioning, placement, routing, geometry | [04-EDA-Domain/E2-EDA-Algorithms.md](04-EDA-Domain/E2-EDA-Algorithms.md), [trainer](07-Revision/visualizers/sta-trainer.html) |
 | MUST | 60m | Code the ★ problems in `06-Practice/day3.cpp` | |
 | MUST | 20m | Day 3 quiz | [05-Tests/Day3-Quiz.md](05-Tests/Day3-Quiz.md) |
 
@@ -116,13 +116,15 @@ AMD-CPP-EDA-Lead-Prep/
 ├── 02-Patterns/             ← P01..P12 DSA patterns as 5-part cards + hint-ladder problems;
 │                              MM01 monotonic-stack mental model, MM02 mental-models atlas (pictures → code),
 │                              MM03 stuck-at-brute-force escape routes (the flip / contribution technique),
-│                              MM04 SCC (Kosaraju "Finish, Flip, Flood", Tarjan) + bipartite mental model
+│                              MM04 SCC (Kosaraju "Finish, Flip, Flood", Tarjan) + bipartite mental model,
+│                              MM05 DP: 12 patterns in one sentence each, top-down first, then the table
 ├── 03-Cpp-Deep/             ← C1..C6 theory: object model, modern C++, concurrency, perf/Linux, OS, tricky snippets
 ├── 04-EDA-Domain/           ← E1 primer, E2 algorithms, E3 EDA system design
 ├── 05-Tests/                ← diagnostic, daily quizzes (answers separate), mocks, coach prompt
 ├── 06-Practice/             ← compile-and-run problem files with tests (+ spoiler solutions)
 ├── 07-Revision/             ← flashcards (+Anki), one-page recall, interview-day checklist,
-│                              visualizers/: monotonic-stack, kosaraju and bipartite trainers (open in a browser)
+│                              visualizers/: 7 step-through trainers (monotonic stack, Kosaraju, bipartite, DP,
+│                              linked lists, static timing, condition variables); see visualizers/README.md
 └── 08-Lead-and-Projects/    ← lead/behavioral + project deep-dive (secondary)
 ```
 

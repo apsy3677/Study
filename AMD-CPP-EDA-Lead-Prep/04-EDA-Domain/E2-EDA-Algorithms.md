@@ -3,6 +3,7 @@
 > Each algorithm: **the idea in one line → how it works → complexity → the follow-up they'll ask.**
 > Practice: `06-Practice/day3.cpp` (`levelize`, `worstSlack`, `criticalPath`, `leeRoute`, `hpwl`), `day2.cpp` (geometry).
 > Priority for R1: §1–§3 and §8 (graphs + geometry) ★★; the rest ★ (recognize and explain at a high level).
+> **See it move:** [the static timing trainer](../07-Revision/visualizers/sta-trainer.html) levelizes a netlist (Kahn), pushes arrival times forward, pulls required times backward, and traces the critical path. It includes a combinational-loop netlist where Kahn gets stuck. STA is DP on a DAG: pattern 12 in [MM05](../02-Patterns/MM05-DP-Patterns-Top-Down.md).
 
 ---
 

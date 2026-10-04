@@ -24,7 +24,7 @@ What is the INPUT?
 │   ├── "k-th largest / top k / median stream" .............. HEAP (size k) / TWO HEAPS         [P06]
 │   ├── "minimize the max / maximize the min / min capacity"  BINARY SEARCH ON ANSWER           [P03]
 │   ├── "all subsets / permutations / combinations" ......... BACKTRACKING                      [P09]
-│   ├── "number of ways / min cost / longest ... with choices" DP                               [P10]
+│   ├── "number of ways / min cost / longest ... with choices" DP                               [P10, MM05]
 │   └── bits, "without extra space", "appears once" ......... XOR / BIT TRICKS                  [P11]
 │
 ├── Linked list ............ dummy head, slow/fast, reverse-in-place, merge                     [P04]

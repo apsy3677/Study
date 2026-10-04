@@ -51,6 +51,10 @@ Claude appends to the **Session Log** and **Weak Spots** automatically in Coach 
 
 ## Weak Spots (fix before interview)
 <!-- one line each: topic — what exactly was wrong — file/section to re-read -->
+- SCC / Kosaraju — the mental model kept breaking (why flip the edges? why latest finisher first?) and the recursive-lambda code (`auto&& self`) was unclear → write separate DFS functions — MM04 §2–§5, §7; Kosaraju trainer
+- Bipartite — forgot the concept and the fast code — MM04 §10
 
 ## Session Log
 <!-- Claude appends: date — mode (quiz/problem/mock) — topic — score — notes -->
+- 2026-10-04 — concept — Bipartite + SCC (Kosaraju, Tarjan) — n/a — built MM04 ("Finish, Flip, Flood"), the Kosaraju trainer, flashcards, and day3 stubs MM04-1..4; next: code `sccLabels` + `isBipartite` from memory, timed
+- 2026-10-04 — concept — Bipartite deep dive — n/a — built the bipartite trainer (BFS layers view, odd-cycle prediction, no-outer-loop bug), MM04 §10 uses + odd-cycle proof, day3 stubs MM04-5 (LC 886) and MM04-6 (oddCycle)

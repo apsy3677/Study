@@ -29,6 +29,7 @@
 | **Hook** | Paint the start red; neighbours must be blue; neighbours of blue must be red. A conflict means an **odd cycle** → not bipartite. |
 | **Traps** | **Disconnected graph**: loop over all nodes and start a BFS from each uncolored one. |
 | **Uses** | two-team split, conflict graphs, **double-patterning / mask assignment** in lithography (an EDA use), matching problems. |
+| **Deep dive** | picture, BFS layers, uses, code, follow-ups: [MM04 §10](MM04-SCC-Kosaraju-Mental-Model.md#10-bipartite-two-teams-of-rivals) · [the bipartite trainer](../07-Revision/visualizers/bipartite-trainer.html) |
 
 ## Card D: Topological sort (Kahn) = "take whoever has no pending prerequisites"
 | | |
@@ -54,10 +55,17 @@ Push `(dist, node)`; on pop, skip if stale (`d != dist[u]`); relax the neighbour
 ## Card G: Union-Find = "who's your boss's boss?"
 Path compression + union by size/rank gives near O(1). Use it for dynamic connectivity, Kruskal MST, redundant connection, clustering, "accounts merge", **connectivity extraction** (which shapes/pins are electrically connected).
 
-## Card H: SCC (Kosaraju / Tarjan)
-Kosaraju: DFS order → reverse the graph → DFS in decreasing finish time; each tree is one SCC. Tarjan: one DFS with `disc`/`low` + a stack.
-EDA: find **combinational loops** (an SCC of size > 1, or a self-loop) → report them to the user / break them for timing.
-Also: bridges and articulation points (Tarjan `low`), which find single points of failure.
+## Card H: SCC (Kosaraju / Tarjan) = "Finish, Flip, Flood"
+> **Read first:** [MM04: the SCC mental model](MM04-SCC-Kosaraju-Mental-Model.md) (why it works, in one picture), then step through [the Kosaraju trainer](../07-Revision/visualizers/kosaraju-trainer.html) in predict mode.
+
+| | |
+|---|---|
+| **Picture** | SCCs are neighborhoods of one-way streets; the map of neighborhoods is a DAG. A DFS floods downhill, so only a flood that starts at the **bottom** collects exactly one SCC. |
+| **Kosaraju** | **Finish:** DFS, write each node down when it finishes. **Flip:** reverse every edge. **Flood:** latest finisher first, DFS on the flipped graph; each flood = one SCC. |
+| **Why** | The last finisher is in the top SCC; the flip makes it the bottom; a flood from the bottom can't leak. |
+| **Tarjan** | One DFS with `disc`/`low` + a stack; `low == disc` → pop one SCC. Update `low` from `disc[v]` only if v is **on the stack**. |
+| **EDA** | **combinational loops** (an SCC of size > 1, or a self-loop) → report them to the user / break them for timing. |
+| **Also** | bridges and articulation points (Tarjan `low`), which find single points of failure. |
 
 ## Card I: MST
 Kruskal (sort edges + DSU) or Prim (heap). EDA: **the MST approximates the Steiner tree** for net wirelength estimation (RSMT ≤ MST ≤ 1.5 × RSMT in the rectilinear metric).
@@ -73,7 +81,7 @@ Kruskal (sort edges + DSU) or Prim (heap). EDA: **the MST approximates the Stein
 ### P08-2 · Is Graph Bipartite? (LC 785) ★★★ · `isBipartite`
 Adjacency list; the graph may be disconnected.
 <details><summary>Hint</summary>Colors 0/1 with −1 = uncolored. What makes it fail?</details>
-<details><summary>Approach check</summary>BFS from every uncolored node; neighbour with the same color → false. O(V+E). Follow-up: "Possible Bipartition" (LC 886) = build the graph from dislikes.</details>
+<details><summary>Approach check</summary>BFS from every uncolored node; neighbour with the same color → false. O(V+E). Follow-up: "Possible Bipartition" (LC 886) = build the graph from dislikes (**MM04-5** in `day3.cpp`). Follow-up 2: return the odd cycle as proof (**MM04-6**).</details>
 
 ### P08-3 · Course Schedule II / build order (LC 210) ★★★ · `findOrder`
 <details><summary>Approach check</summary>Kahn. Return empty if a cycle exists. Edge direction: prerequisite → course. Follow-up: "minimum semesters" = BFS levels = **levelization**.</details>
@@ -102,11 +110,13 @@ Follow-up: "the grid is 100k × 100k and streamed row by row" → union-find wit
 <details><summary>Approach check</summary>BFS over words; neighbours via changing each char a..z and checking a set. Bidirectional BFS for speed.</details>
 
 ### P08-10 · Kosaraju SCC count ★ · `countSCC`
-<details><summary>Approach check</summary>Pass 1: DFS, push nodes in finish order. Pass 2: on the transposed graph, DFS in reverse finish order; count the trees. O(V+E). Use iterative DFS for big graphs.</details>
+<details><summary>Approach check</summary>Finish, Flip, Flood. Pass 1: DFS, push nodes in finish order. Pass 2: on the flipped graph, DFS from the latest finisher first; count the floods. O(V+E). Use iterative DFS for big graphs.</details>
+
+More SCC practice in `day3.cpp`: **MM04-1** labels in topological order, **MM04-2** combinational-loop nodes (EDA), **MM04-3** fewest edges to make the graph strongly connected, **MM04-4** Tarjan. Hints: [MM04 §12](MM04-SCC-Kosaraju-Mental-Model.md#12-practice-predict-then-verify-the-trainer-has-these-graphs-as-presets).
 
 ---
 
 ## Recall check
-1. Frontier order → algorithm table from memory. 2. Why mark visited on push? 3. Bipartite failure condition + the disconnected trap.
+1. Frontier order → algorithm table from memory. 2. Why mark visited on push? 3. Bipartite failure condition + the disconnected trap. 3b. Kosaraju in three words, and why the flip plus "latest finisher first" stops the flood from leaking.
 4. Kahn's cycle detection. 5. STA: forward pass op, backward pass op, slack formula. 6. Why is longest path easy on a DAG but NP-hard in general?
 7. CSR representation: what arrays, and why is it faster than `vector<vector<int>>`?

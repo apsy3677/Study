@@ -55,7 +55,7 @@ Every day has a **MUST** core of about 5–6 hours, and **SHOULD** blocks if you
 | Block | Time | What | File |
 |---|---|---|---|
 | MUST | 15m | Spaced review: Day 2 flashcards, plus Day 1 quiz misses | |
-| MUST | 90m | P08 Graphs: BFS/DFS/Topo/Dijkstra/DSU/Bipartite/SCC | `02-Patterns/P08` |
+| MUST | 90m | P08 Graphs: BFS/DFS/Topo/Dijkstra/DSU/Bipartite/SCC (for SCC + bipartite, start with the **MM04 mental model** + the two trainers in predict mode) | `02-Patterns/P08`, [MM04](02-Patterns/MM04-SCC-Kosaraju-Mental-Model.md), [Kosaraju trainer](07-Revision/visualizers/kosaraju-trainer.html), [bipartite trainer](07-Revision/visualizers/bipartite-trainer.html) |
 | MUST | 75m | P10 DP (coin change, LIS, LCS, knapsack, edit distance) | `02-Patterns/P10` |
 | SHOULD | 30m | P09 Backtracking, P11 Trie/Bits/Math | `02-Patterns/P09, P11` |
 | MUST | 45m | EDA/FPGA/Vivado primer (the vocabulary) | [04-EDA-Domain/E1-EDA-FPGA-Vivado-Primer.md](04-EDA-Domain/E1-EDA-FPGA-Vivado-Primer.md) |
@@ -115,13 +115,14 @@ AMD-CPP-EDA-Lead-Prep/
 ├── 01-Speed-Cpp/            ← speed playbook + cpp_toolkit.cpp (type-from-memory reference)
 ├── 02-Patterns/             ← P01..P12 DSA patterns as 5-part cards + hint-ladder problems;
 │                              MM01 monotonic-stack mental model, MM02 mental-models atlas (pictures → code),
-│                              MM03 stuck-at-brute-force escape routes (the flip / contribution technique)
+│                              MM03 stuck-at-brute-force escape routes (the flip / contribution technique),
+│                              MM04 SCC (Kosaraju "Finish, Flip, Flood", Tarjan) + bipartite mental model
 ├── 03-Cpp-Deep/             ← C1..C6 theory: object model, modern C++, concurrency, perf/Linux, OS, tricky snippets
 ├── 04-EDA-Domain/           ← E1 primer, E2 algorithms, E3 EDA system design
 ├── 05-Tests/                ← diagnostic, daily quizzes (answers separate), mocks, coach prompt
 ├── 06-Practice/             ← compile-and-run problem files with tests (+ spoiler solutions)
 ├── 07-Revision/             ← flashcards (+Anki), one-page recall, interview-day checklist,
-│                              visualizers/monotonic-stack-trainer.html (open in a browser)
+│                              visualizers/: monotonic-stack, kosaraju and bipartite trainers (open in a browser)
 └── 08-Lead-and-Projects/    ← lead/behavioral + project deep-dive (secondary)
 ```
 

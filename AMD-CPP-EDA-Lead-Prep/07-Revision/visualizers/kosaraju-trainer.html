@@ -1,0 +1,797 @@
+<title>Kosaraju Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same bench as the monotonic-stack trainer: the graph is the instrument, the call stack and the
+   finish list are the side readouts, narration and live code sit underneath, the SCC ledger closes the page. */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --ink: #152030;
+  --muted: #5a6779;
+  --rule: #d5dbe4;
+  --cobalt: #2a55e0;
+  --cobalt-ink: #ffffff;
+  --wait: #9db0dc;
+  --amber: #b9770a;
+  --amber-wash: rgba(232, 165, 40, 0.22);
+  --ok: #1d7f48;
+  --bad: #bf3434;
+  --code-bg: #f4f6fa;
+  --c0: #d9822b; --c1: #2e9d6a; --c2: #8a5cd6; --c3: #d14d72;
+  --c4: #1f9e9a; --c5: #a8892a; --c6: #b0569c; --c7: #4f9a3a;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+    --cobalt: #7d9bff; --cobalt-ink: #0d1218; --wait: #3e5890;
+    --amber: #f0b33f; --amber-wash: rgba(240, 179, 63, 0.2); --ok: #4cc584; --bad: #ef6b6b;
+    --code-bg: #10161e; color-scheme: dark;
+    --c0: #f0a050; --c1: #4cc58a; --c2: #a985f0; --c3: #ef7096;
+    --c4: #3cc7c2; --c5: #d1b24a; --c6: #d77cc2; --c7: #7cc363;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+  --cobalt: #7d9bff; --cobalt-ink: #0d1218; --wait: #3e5890;
+  --amber: #f0b33f; --amber-wash: rgba(240, 179, 63, 0.2); --ok: #4cc584; --bad: #ef6b6b;
+  --code-bg: #10161e; color-scheme: dark;
+  --c0: #f0a050; --c1: #4cc58a; --c2: #a985f0; --c3: #ef7096;
+  --c4: #3cc7c2; --c5: #d1b24a; --c6: #d77cc2; --c7: #7cc363;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 32px); padding-block: 28px 48px; display: grid; gap: 20px; }
+
+header { display: grid; gap: 6px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 70ch; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 600 0.9rem var(--body); padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--cobalt); color: var(--cobalt-ink); }
+.seg button.bugbtn[aria-pressed="true"] { background: var(--bad); color: #fff; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+input[type="text"], select { font: 0.95rem var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 10px; min-width: 0; max-width: 100%; }
+input[type="text"] { width: min(330px, 100%); }
+select { width: min(330px, 100%); }
+.btn { font: 600 0.9rem var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--cobalt); color: var(--cobalt-ink); border-color: var(--cobalt); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.check { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; cursor: pointer; padding-bottom: 7px; }
+.check input { width: 18px; height: 18px; accent-color: var(--cobalt); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+.msg { font-size: 0.85rem; color: var(--bad); min-height: 1.2em; margin: 0; }
+
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; min-width: 0; }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 16px; }
+.graph-panel { display: grid; gap: 10px; }
+.phases { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 26px; align-items: center; }
+.phases li { position: relative; font: 600 0.8rem var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); }
+.phases li + li::before { content: "→"; position: absolute; left: -20px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.phases li.now { background: var(--cobalt); border-color: var(--cobalt); color: var(--cobalt-ink); }
+.phases li.past { color: var(--ink); }
+.phases li.skipped { text-decoration: line-through; color: var(--bad); border-color: var(--bad); }
+.chart-wrap { overflow-x: auto; }
+.chart-wrap svg { display: block; width: 100%; height: auto; min-width: 320px; max-height: 420px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 2px solid var(--rule); background: var(--panel); }
+.sw.cur { background: var(--cobalt); border-color: var(--cobalt); }
+.sw.open { border: 3px solid var(--cobalt); }
+.sw.fin { background: var(--wait); border-color: var(--wait); }
+.sw.lab { background: linear-gradient(90deg, var(--c0) 0 33%, var(--c1) 33% 66%, var(--c2) 66%); border-color: transparent; }
+.sw.line { width: 22px; height: 0; border-radius: 0; border: 0; border-top: 2.5px solid var(--amber); background: none; }
+.sw.line.wall { border-top: 3px dashed var(--bad); }
+
+/* SVG graph */
+.edge { fill: none; stroke: var(--muted); stroke-width: 1.8; opacity: 0.8; }
+.edge.flipped { stroke: var(--amber); opacity: 0.9; }
+.edge.inscc { stroke: var(--nc); opacity: 0.95; }
+.edge.check { stroke: var(--cobalt); stroke-width: 2.4; stroke-dasharray: 5 4; opacity: 1; }
+.edge.hot { stroke: var(--cobalt); stroke-width: 3.2; opacity: 1; }
+.edge.wall { stroke: var(--bad); stroke-width: 3.2; stroke-dasharray: 7 4; opacity: 1; }
+.node circle { fill: var(--panel); stroke: var(--rule); stroke-width: 2; transition: fill 0.2s ease, stroke 0.2s ease; }
+.node .nid { font: 600 15px var(--mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); pointer-events: none; }
+.node.fin circle { fill: var(--wait); stroke: var(--wait); }
+.node.lab circle { fill: var(--nc); fill-opacity: 0.3; stroke: var(--nc); stroke-width: 2.5; }
+.node.open circle { stroke: var(--cobalt); stroke-width: 3.5; }
+.node.cur circle { fill: var(--cobalt); fill-opacity: 1; stroke: var(--cobalt); }
+.node.cur .nid { fill: var(--cobalt-ink); }
+.node.pickable { cursor: pointer; }
+.node.pickable circle { stroke: var(--cobalt); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.node.pickable:hover circle { stroke-width: 4; }
+.node.picked circle { stroke: var(--ink); stroke-width: 4.5; stroke-dasharray: none; }
+.fbadge { font: 600 11.5px var(--mono); text-anchor: middle; fill: var(--muted); }
+.fbadge.last { fill: var(--amber); }
+.sbadge { font: 600 12px var(--mono); text-anchor: start; }
+.fbadge, .sbadge { paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; }
+
+.side { display: grid; gap: 16px; align-content: start; }
+.side section { display: grid; gap: 8px; }
+.stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 6px; min-height: 40px; }
+.chip { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.85rem; padding: 6px 10px; border-radius: 8px; border: 2px solid var(--cobalt); color: var(--ink); background: var(--panel); }
+.chip.top { background: var(--cobalt); color: var(--cobalt-ink); }
+.chip.top::after { content: "top"; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+.empty { list-style: none; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); padding: 6px 10px; border: 1px dashed var(--rule); border-radius: 8px; }
+.order { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ochip { display: grid; justify-items: center; min-width: 38px; padding: 4px 6px; border-radius: 8px; background: var(--wait); border: 2px solid transparent; font-family: var(--mono); }
+.ochip .on { font-weight: 600; font-size: 0.95rem; line-height: 1.2; }
+.ochip .orank { font-size: 0.68rem; color: var(--ink); opacity: 0.75; }
+.ochip.lab { background: var(--panel); border-color: var(--nc); box-shadow: inset 0 0 0 40px color-mix(in srgb, var(--nc) 26%, transparent); }
+.ochip.ptr { outline: 3px solid var(--cobalt); outline-offset: 1px; }
+.ochip.fresh { outline: 3px solid var(--amber); outline-offset: 1px; }
+.order-note { font-size: 0.82rem; color: var(--muted); margin: 0; }
+.order-note.bug { color: var(--bad); font-weight: 700; }
+
+.readouts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.narr { display: grid; gap: 12px; align-content: start; }
+.narr p.now { margin: 0; font-size: 1.02rem; max-width: 62ch; }
+.feedback { margin: 0; font-weight: 700; min-height: 1.4em; }
+.feedback.ok { color: var(--ok); }
+.feedback.bad { color: var(--bad); }
+.feedback.ask { color: var(--cobalt); }
+.playbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.counter { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+.score { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin: 0; }
+.codebox { display: grid; gap: 8px; align-content: start; }
+pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 0; overflow-x: auto; font-family: var(--mono); font-size: 0.78rem; line-height: 1.6; }
+pre.code span { display: block; padding: 0 12px; white-space: pre; border-left: 3px solid transparent; }
+pre.code span.hl { background: var(--amber-wash); border-left-color: var(--amber); }
+pre.code span.bug { color: var(--bad); font-weight: 600; }
+.code-note { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+.lower { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
+.lower .panel { display: grid; gap: 10px; align-content: start; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; }
+tr.active td { background: var(--amber-wash); }
+td.blank { color: var(--muted); white-space: normal; }
+td.ok { color: var(--ok); font-weight: 600; }
+td.bad { color: var(--bad); font-weight: 600; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--nc); margin-right: 6px; vertical-align: 0; }
+.cond { margin: 0; font-size: 0.86rem; color: var(--muted); }
+.log { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); max-height: 280px; overflow-y: auto; }
+.log li:first-child { color: var(--ink); }
+
+.model { display: grid; gap: 10px; }
+.model ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; max-width: 78ch; }
+.keys { font-size: 0.82rem; color: var(--muted); margin: 0; }
+kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel); }
+
+@media (max-width: 820px) {
+  .bench, .readouts, .lower { grid-template-columns: minmax(0, 1fr); }
+  .stack { flex-direction: row-reverse; flex-wrap: wrap-reverse; justify-content: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { .node circle { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern trainer · strongly connected components</span>
+    <h1>Kosaraju Trainer</h1>
+    <p class="lede"><strong>Finish, Flip, Flood.</strong> Step through both passes and watch why a flood that starts at the bottom can't leak. Turn on <strong>Predict</strong> to call where pass 2 starts and what every flood collects, and try the two bug versions to see a flood leak.</p>
+  </header>
+
+  <section class="controls" aria-label="Setup">
+    <div class="field">
+      <label for="preset">Graph</label>
+      <select id="preset"></select>
+    </div>
+    <div class="field">
+      <label for="edges">Edges (u&gt;v, nodes 0–11)</label>
+      <input type="text" id="edges" autocomplete="off" spellcheck="false">
+    </div>
+    <button type="button" class="btn" id="load">Load</button>
+    <button type="button" class="btn" id="random">Random</button>
+    <div class="field">
+      <span class="eyebrow">Version</span>
+      <div class="seg" role="group" aria-label="Algorithm version">
+        <button type="button" id="modeOk" aria-pressed="true">Correct</button>
+        <button type="button" id="modeNoflip" class="bugbtn" aria-pressed="false">Bug: no flip</button>
+        <button type="button" id="modeEarly" class="bugbtn" aria-pressed="false">Bug: earliest first</button>
+      </div>
+    </div>
+    <label class="check" for="predict"><input type="checkbox" id="predict"> Predict before reveal</label>
+  </section>
+  <p class="msg" id="inputMsg" role="status"></p>
+
+  <section class="bench">
+    <div class="panel graph-panel">
+      <ol class="phases" id="phases" aria-label="Kosaraju's three steps">
+        <li data-p="1">1 · Finish</li>
+        <li data-p="2">2 · Flip</li>
+        <li data-p="3">3 · Flood</li>
+      </ol>
+      <div class="chart-wrap" id="chart"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw cur"></i>current node</span>
+        <span><i class="sw open"></i>on the call stack</span>
+        <span><i class="sw fin"></i>finished (pass 1)</span>
+        <span><i class="sw lab"></i>labeled: one color per SCC</span>
+        <span><i class="sw line"></i>flipped edge</span>
+        <span><i class="sw line wall"></i>wall</span>
+        <span>f3 = 3rd to finish</span>
+      </div>
+    </div>
+    <aside class="panel side">
+      <section aria-label="Call stack">
+        <h2 id="stackTitle">Call stack</h2>
+        <ul class="stack" id="stack"></ul>
+      </section>
+      <section aria-label="Finish order">
+        <h2>Finish order</h2>
+        <ol class="order" id="order"></ol>
+        <p class="order-note" id="orderNote"></p>
+      </section>
+    </aside>
+  </section>
+
+  <section class="readouts">
+    <div class="panel narr" aria-live="polite">
+      <span class="eyebrow" id="evType">What just happened</span>
+      <p class="now" id="narr"></p>
+      <p class="feedback" id="feedback"></p>
+      <div class="playbar">
+        <button type="button" class="btn" id="back">Back</button>
+        <button type="button" class="btn primary" id="step">Step</button>
+        <button type="button" class="btn" id="play">Play</button>
+        <button type="button" class="btn" id="reset">Reset</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="score" id="score"></p>
+    </div>
+    <div class="panel codebox">
+      <span class="eyebrow">The code, line by line</span>
+      <pre class="code" id="code" aria-label="C++ code with the current lines highlighted"></pre>
+      <p class="code-note">The shared arrays are globals here to save space. MM04 §5 passes them as parameters.</p>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <h2>SCCs found</h2>
+      <div class="table-wrap"><table id="ledger"></table></div>
+      <p class="cond" id="cond"></p>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ol class="log" id="log" reversed></ol>
+    </div>
+  </section>
+
+  <section class="panel model">
+    <h2>The model in four sentences</h2>
+    <ol>
+      <li>A DFS is a <strong>flood</strong>: from any node it fills that node's neighborhood (its SCC), then runs downhill into every neighborhood below.</li>
+      <li>A node <strong>finishes</strong> only after everything it reaches is done, so an upstream neighborhood always finishes after a downstream one. The last finisher is at the <strong>top</strong>.</li>
+      <li><strong>Flipping</strong> every edge keeps each neighborhood the same, but turns the top into the <strong>bottom</strong>.</li>
+      <li>So pass 2 <strong>floods</strong> the flipped graph from the latest finisher first. It starts at the bottom, can't leak, and every edge out of it hits a <strong>wall</strong>: a neighborhood that's already labeled.</li>
+    </ol>
+    <p class="keys"><kbd>→</kbd> or <kbd>Space</kbd> step · <kbd>←</kbd> back. Each node and edge is touched a constant number of times in each pass, so the whole thing is O(V + E).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const PRESETS = [
+    { label: "Running example · 3 SCCs", n: 6,
+      edges: [[0, 1], [1, 2], [2, 0], [3, 4], [4, 3], [4, 0], [5, 3]],
+      pos: [[430, 100], [570, 100], [500, 215], [180, 100], [305, 100], [55, 100]] },
+    { label: "Practice 1 · 4 SCCs", n: 7,
+      edges: [[0, 1], [1, 2], [2, 3], [3, 1], [3, 4], [4, 5], [5, 4], [6, 0]],
+      pos: [[160, 100], [270, 100], [340, 215], [410, 100], [530, 100], [655, 100], [50, 100]] },
+    { label: "Tiny 0 → 1 · why order matters", n: 2,
+      edges: [[0, 1]], pos: [[100, 100], [300, 100]] },
+    { label: "Siblings · diamond into a loop", n: 5,
+      edges: [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [4, 3]],
+      pos: [[50, 140], [180, 55], [180, 225], [320, 140], [460, 140]] },
+    { label: "One big loop · 1 SCC", n: 5,
+      edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [2, 0]], pos: null },
+    { label: "DAG only · every node alone", n: 4,
+      edges: [[0, 1], [0, 2], [1, 3], [2, 3]], pos: [[50, 140], [180, 55], [180, 225], [310, 140]] },
+  ];
+  const MAXN = 12, R = 20;
+  const HL = { intro: [11, 12], outer: [12], visit: [0, 1], seen: [2, 3], finish: [4], flip: [13, 14], noflip: [13, 14],
+    take: [16, 17, 18], skip: [17, 18], flood: [6, 7], inner: [8, 9], wall: [8, 9], scc: [18], done: [] };
+  const EVTYPE = { intro: "Pass 1 · Finish", outer: "Pass 1 · new DFS", visit: "Pass 1 · visit", seen: "Pass 1 · edge to a visited node",
+    finish: "Pass 1 · a node finishes", flip: "Step 2 · Flip", noflip: "Step 2 · Flip skipped (bug)", take: "Pass 2 · start a flood",
+    skip: "Pass 2 · already labeled", flood: "Pass 2 · flood", inner: "Pass 2 · edge inside this flood", wall: "Pass 2 · wall",
+    scc: "Pass 2 · one flood done", done: "Finished" };
+
+  const S = { g: null, mode: "ok", ev: [], k: 0, predict: false, sel: new Set(), checked: new Map(), score: { ok: 0, total: 0 }, timer: null };
+  const $ = (id) => document.getElementById(id);
+  const fmtSet = (a) => "{" + a.slice().sort((p, q) => p - q).join(", ") + "}";
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const r1 = (x) => Math.round(x * 10) / 10;
+
+  function circle(n) {
+    if (n === 1) return [[100, 100]];
+    if (n === 2) return [[100, 100], [300, 100]];
+    const rad = n <= 6 ? 120 : 150;
+    return Array.from({ length: n }, (_, k) => {
+      const a = -Math.PI / 2 + (2 * Math.PI * k) / n;
+      return [Math.round(rad * Math.cos(a)), Math.round(rad * Math.sin(a))];
+    });
+  }
+
+  // ---------- ground truth (for verdicts in the bug versions) ----------
+  function truthOf(n, adj) {
+    const reach = Array.from({ length: n }, (_, s) => {
+      const r = Array(n).fill(false), st = [s]; r[s] = true;
+      while (st.length) { const u = st.pop(); for (const v of adj[u]) if (!r[v]) { r[v] = true; st.push(v); } }
+      return r;
+    });
+    const comp = Array(n).fill(-1), groups = [];
+    for (let u = 0; u < n; u++) {
+      if (comp[u] !== -1) continue;
+      const g = [];
+      for (let v = 0; v < n; v++) if (reach[u][v] && reach[v][u]) { comp[v] = groups.length; g.push(v); }
+      groups.push(g);
+    }
+    return { reach, comp, groups };
+  }
+  function judge(members, T) {
+    const c = T.comp[members[0]];
+    if (members.length === T.groups[c].length && members.every((x) => T.comp[x] === c)) return { ok: true };
+    for (const a of members) for (const b of members)
+      if (T.reach[a][b] && !T.reach[b][a]) return { ok: false, a, b };
+    return { ok: false, a: members[0], b: members[0] };
+  }
+
+  // ---------- run the algorithm once, recording a snapshot per event ----------
+  function build() {
+    const { n, edges } = S.g;
+    const adj = Array.from({ length: n }, () => []), radj = Array.from({ length: n }, () => []);
+    for (const [u, v] of edges) { adj[u].push(v); radj[v].push(u); }
+    const vis = Array(n).fill(false), ord = [], stk = [], comp = Array(n).fill(-1);
+    const ev = [];
+    const snap = (o) => Object.assign({ vis: vis.slice(), ord: ord.slice(), stk: stk.slice(), comp: comp.slice() }, o);
+
+    ev.push(snap({ t: "intro", phase: 1 }));
+    const dfsFinish = (u, from) => {
+      vis[u] = true; stk.push(u);
+      ev.push(snap({ t: "visit", phase: 1, u, via: from === undefined ? null : [from, u] }));
+      for (const v of adj[u]) {
+        if (!vis[v]) dfsFinish(v, u);
+        else ev.push(snap({ t: "seen", phase: 1, u, v, edge: [u, v], open: stk.includes(v) }));
+      }
+      stk.pop(); ord.push(u);
+      ev.push(snap({ t: "finish", phase: 1, u, rank: ord.length }));
+    };
+    for (let u = 0; u < n; u++) if (!vis[u]) { ev.push(snap({ t: "outer", phase: 1, u })); dfsFinish(u); }
+
+    ev.push(snap({ t: S.mode === "noflip" ? "noflip" : "flip", phase: 2 }));
+    const g2 = S.mode === "noflip" ? adj : radj;
+    const T = truthOf(n, adj);
+    const idx = [...Array(n).keys()];
+    if (S.mode !== "early") idx.reverse();
+    let count = 0;
+    for (const i of idx) {
+      const u = ord[i];
+      if (comp[u] !== -1) { ev.push(snap({ t: "skip", phase: 3, u, i, rank: i + 1 })); continue; }
+      const take = snap({ t: "take", phase: 3, u, i, rank: i + 1, id: count });
+      ev.push(take);
+      const members = [], walls = [];
+      const dfsFlood = (x, from) => {
+        comp[x] = count; members.push(x); stk.push(x);
+        ev.push(snap({ t: "flood", phase: 3, u: x, id: count, i, via: from === undefined ? null : [from, x] }));
+        for (const y of g2[x]) {
+          if (comp[y] === -1) dfsFlood(y, x);
+          else if (comp[y] === count) ev.push(snap({ t: "inner", phase: 3, u: x, v: y, id: count, i, edge: [x, y] }));
+          else { walls.push([x, y]); ev.push(snap({ t: "wall", phase: 3, u: x, v: y, id: count, other: comp[y], i, edge: [x, y] })); }
+        }
+        stk.pop();
+      };
+      dfsFlood(u);
+      take.members = members.slice();
+      ev.push(snap({ t: "scc", phase: 3, id: count, i, from: u, members: members.slice(), walls: walls.slice(), verdict: judge(members, T) }));
+      count++;
+    }
+    ev.push(snap({ t: "done", phase: 3, count, truth: T }));
+    S.ev = ev; S.k = 0; S.sel.clear(); S.checked = new Map(); S.score = { ok: 0, total: 0 };
+  }
+
+  const isPending = () => {
+    const e = S.ev[S.k];
+    return S.predict && (e.t === "flip" || e.t === "noflip" || e.t === "take") && !S.checked.has(S.k);
+  };
+  const firstIdx = (e) => (S.mode === "early" ? 0 : e.ord.length - 1);
+  const pickable = (e, k) => (e.t === "take" ? e.comp[k] === -1 : true);
+  const curNode = (e) => ("u" in e && e.t !== "done" ? e.u : null);
+
+  // ---------- drawing ----------
+  function edgeD(a, b, curved) {
+    const [ax, ay] = a, [bx, by] = b;
+    if (ax === bx && ay === by) {
+      return `M${ax - 9},${ay - R + 3} C${ax - 36},${ay - R - 44} ${ax + 36},${ay - R - 44} ${ax + 9},${ay - R + 3}`;
+    }
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    if (!curved) return `M${r1(ax + ux * R)},${r1(ay + uy * R)} L${r1(bx - ux * (R + 3))},${r1(by - uy * (R + 3))}`;
+    const off = Math.min(40, L * 0.25), cx = (ax + bx) / 2 - uy * off, cy = (ay + by) / 2 + ux * off;
+    const toward = (x, y, d) => { const ex = cx - x, ey = cy - y, l = Math.hypot(ex, ey) || 1; return [r1(x + (ex / l) * d), r1(y + (ey / l) * d)]; };
+    const s = toward(ax, ay, R), t = toward(bx, by, R + 3);
+    return `M${s[0]},${s[1]} Q${r1(cx)},${r1(cy)} ${t[0]},${t[1]}`;
+  }
+
+  function chart(e, pending) {
+    const { n, pos, edges } = S.g;
+    const xs = pos.map((p) => p[0]), ys = pos.map((p) => p[1]);
+    const minX = Math.min(...xs) - 46, maxX = Math.max(...xs) + 52, minY = Math.min(...ys) - 70, maxY = Math.max(...ys) + 46;
+    const flipped = e.phase >= 2 && S.mode !== "noflip";
+    const drawn = edges.map(([u, v]) => (flipped ? [v, u] : [u, v]));
+    const keys = new Set(drawn.map(([a, b]) => a + ">" + b));
+    const key = (p) => (p ? p[0] + ">" + p[1] : null);
+    const hot = key(e.via), chk = e.t === "seen" || e.t === "inner" ? key(e.edge) : null, wall = e.t === "wall" ? key(e.edge) : null;
+
+    const colors = ["muted", "amber", "hot", "bad", "c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7"];
+    const cvar = { muted: "var(--muted)", amber: "var(--amber)", hot: "var(--cobalt)", bad: "var(--bad)" };
+    let s = `<svg viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}" role="img" aria-label="Graph with ${n} nodes. ${flipped ? "Edges are flipped." : "Original edges."}"><defs>`;
+    for (const c of colors) {
+      s += `<marker id="m-${c}" viewBox="0 0 10 10" refX="8.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill: ${cvar[c] || `var(--${c})`}"></path></marker>`;
+    }
+    s += `</defs>`;
+
+    const special = [];
+    for (const [a, b] of drawn) {
+      const k = a + ">" + b;
+      const curved = a !== b && keys.has(b + ">" + a);
+      let cls = "edge", mk = "muted", style = "";
+      if (flipped) { cls += " flipped"; mk = "amber"; }
+      if (e.comp[a] >= 0 && e.comp[a] === e.comp[b]) { cls += " inscc"; mk = "c" + (e.comp[a] % 8); style = `--nc: var(--c${e.comp[a] % 8})`; }
+      if (k === wall) { cls = "edge wall"; mk = "bad"; }
+      else if (k === hot) { cls = "edge hot"; mk = "hot"; }
+      else if (k === chk) { cls = "edge check"; mk = "hot"; }
+      const path = `<path class="${cls}" style="${style}" d="${edgeD(pos[a], pos[b], curved)}" marker-end="url(#m-${mk})"></path>`;
+      if (k === wall || k === hot || k === chk) special.push(path); else s += path;
+    }
+    s += special.join("");
+
+    const cur = curNode(e), lastFin = e.ord.length === n ? e.ord[n - 1] : -1;
+    for (let k = 0; k < n; k++) {
+      const [x, y] = pos[k];
+      const lab = e.comp[k];
+      let cls = "node", style = "";
+      if (lab >= 0) { cls += " lab"; style = `--nc: var(--c${lab % 8})`; }
+      else if (e.ord.includes(k)) cls += " fin";
+      if (e.stk.includes(k)) cls += " open";
+      if (cur === k && !pending) cls += " cur";
+      if (pending && pickable(e, k)) cls += " pickable";
+      if (S.sel.has(k)) cls += " picked";
+      s += `<g class="${cls}" style="${style}" data-k="${k}"><circle cx="${x}" cy="${y}" r="${R}"></circle><text class="nid" x="${x}" y="${y}">${k}</text><title>node ${k}</title></g>`;
+      const rank = e.ord.indexOf(k);
+      if (rank >= 0) s += `<text class="fbadge${k === lastFin && e.phase >= 2 ? " last" : ""}" x="${x}" y="${y + R + 16}">f${rank + 1}</text>`;
+      if (lab >= 0) s += `<text class="sbadge" style="fill: var(--c${lab % 8})" x="${x + R - 2}" y="${y - R - 3}">#${lab}</text>`;
+    }
+    return s + `</svg>`;
+  }
+
+  function renderPhases(e) {
+    for (const li of $("phases").children) {
+      const p = +li.dataset.p;
+      li.className = p === e.phase ? "now" : p < e.phase ? "past" : "";
+      if (p === 2 && S.mode === "noflip" && e.phase >= 2) li.className += " skipped";
+    }
+  }
+
+  function renderStack(e) {
+    $("stackTitle").textContent = e.phase === 3 ? "Call stack (dfsFlood)" : "Call stack (dfsFinish)";
+    const el = $("stack");
+    if (!e.stk.length) { el.innerHTML = `<li class="empty">empty</li>`; return; }
+    el.innerHTML = e.stk.map((k, p) => `<li class="chip${p === e.stk.length - 1 ? " top" : ""}"><span>node ${k}</span></li>`).join("");
+  }
+
+  function renderOrder(e, pending) {
+    const el = $("order");
+    if (!e.ord.length) el.innerHTML = `<li class="empty">nobody has finished yet</li>`;
+    else el.innerHTML = e.ord.map((k, idx) => {
+      let cls = "ochip", style = "";
+      if (e.comp[k] >= 0) { cls += " lab"; style = `--nc: var(--c${e.comp[k] % 8})`; }
+      if (e.phase === 3 && e.i === idx) cls += " ptr";
+      if (e.t === "finish" && idx === e.ord.length - 1) cls += " fresh";
+      return `<li class="${cls}" style="${style}"><span class="on">${k}</span><span class="orank">f${idx + 1}</span></li>`;
+    }).join("");
+    const note = $("orderNote");
+    note.className = "order-note";
+    if (e.phase === 1) note.textContent = "A node joins on the right when its DFS call returns.";
+    else if (S.mode === "early") { note.className += " bug"; note.textContent = "Bug: pass 2 reads this list from the LEFT, earliest finisher first."; }
+    else note.textContent = pending ? "Pass 2 reads this list in a fixed direction. Which end?" : "Pass 2 reads this list from the right: latest finisher first.";
+  }
+
+  function narrate(e) {
+    const m = S.mode, n = S.g.n, ew = m === "noflip" ? "Edge" : "Flipped edge";
+    switch (e.t) {
+      case "intro": return "Pass 1, FINISH: run a plain DFS from every unvisited node. A node is written to the finish list the moment its DFS call returns, which is after everything it can reach is done.";
+      case "outer": return `Outer loop: ${e.u} hasn't been visited yet, so a new DFS starts at ${e.u}.`;
+      case "visit": return e.via ? `Edge ${e.via[0]} → ${e.u}: ${e.u} is new. Visit it and push it on the call stack.` : `Visit ${e.u} and push it on the call stack.`;
+      case "seen": return `Edge ${e.u} → ${e.v}: ${e.v} is already visited (${e.open ? "it's still on the call stack" : "it has already finished"}). Skip it.`;
+      case "finish": {
+        let s = `${e.u} finishes (f${e.rank}). Everything reachable from ${e.u} is done, so ${e.u} joins the end of the finish list.`;
+        if (e.rank === n) s += ` It's the last finisher, so it sits in a top neighborhood: nothing is upstream of it.`;
+        return s;
+      }
+      case "flip": {
+        const last = e.ord[n - 1];
+        let s = `Pass 1 done. ${last} finished last, so it's in a top neighborhood. FLIP every edge (amber): each neighborhood stays the same, but top and bottom swap, so ${last} is now at the bottom.`;
+        if (m === "early") s += ` Bug version: pass 2 will read the finish list from the LEFT, starting with ${e.ord[0]}.`;
+        return s;
+      }
+      case "noflip": return `Pass 1 done. Bug version: we skip the flip and flood the ORIGINAL graph, starting from ${e.ord[n - 1]}, the last finisher. It's at the top, so watch the flood run downhill.`;
+      case "take":
+        if (m === "ok") return `Take ${e.u} (f${e.rank}), the latest finisher that isn't labeled yet. In the flipped graph its neighborhood is at the bottom of what's left, so this flood can't leak. New SCC #${e.id}.`;
+        if (m === "noflip") return `Take ${e.u} (f${e.rank}). In the original graph its neighborhood is at the TOP of what's left, so the flood will run downhill. New "SCC" #${e.id}.`;
+        return `Take ${e.u} (f${e.rank}), the EARLIEST unlabeled finisher. In the flipped graph that's the top of what's left, so the flood can run downhill. New "SCC" #${e.id}.`;
+      case "skip": return `${e.u} (f${e.rank}) is already labeled as SCC #${e.comp[e.u]}. Skip it.`;
+      case "flood": return e.via ? `${ew} ${e.via[0]} → ${e.u}: ${e.u} isn't labeled, so the flood reaches it. Label ${e.u} as #${e.id}.` : `dfsFlood(${e.u}): label ${e.u} as #${e.id}.`;
+      case "inner": return `${ew} ${e.u} → ${e.v}: ${e.v} is already in this flood (#${e.id}). Skip it.`;
+      case "wall": return `${ew} ${e.u} → ${e.v}: ${e.v} already belongs to SCC #${e.other}. That's a wall: the flood stops here.`;
+      case "scc":
+        if (e.verdict.ok) return `SCC #${e.id} = ${fmtSet(e.members)}. ${e.walls.length ? "Every way out hit a wall" : "No edge led out of it"}, so the flood collected exactly one neighborhood.`;
+        return `"SCC" #${e.id} = ${fmtSet(e.members)}. ✗ That's a leak, not one SCC: ${e.verdict.a} can reach ${e.verdict.b}, but ${e.verdict.b} can't reach ${e.verdict.a}.`;
+      case "done":
+        if (m === "ok") return `Done: ${e.count} SCC${e.count === 1 ? "" : "s"}, numbered top first. Every edge between two SCCs goes from a lower id to a higher one, so the ids are a topological order of the neighborhoods.`;
+        if (e.count === e.truth.groups.length) return `Done, and this time the bug got lucky: with ${e.count === 1 ? "a single SCC there's nowhere to leak to" : "this graph no flood happened to leak"}. Try a preset with several SCCs to see it fail.`;
+        return `Done, but wrong: ${e.count} "SCC${e.count === 1 ? "" : "s"}" instead of ${e.truth.groups.length}. The real SCCs are ${e.truth.groups.map(fmtSet).join(" ")}. Switch to Correct and compare.`;
+    }
+    return "";
+  }
+
+  function logLine(e) {
+    switch (e.t) {
+      case "intro": return "pass 1: FINISH";
+      case "outer": return `new DFS from ${e.u}`;
+      case "visit": return `visit ${e.u}`;
+      case "seen": return `${e.u}→${e.v}: already visited`;
+      case "finish": return `${e.u} finishes (f${e.rank})`;
+      case "flip": return "FLIP every edge";
+      case "noflip": return "bug: no flip";
+      case "take": return `take ${e.u} (f${e.rank})`;
+      case "skip": return `${e.u}: already #${e.comp[e.u]}`;
+      case "flood": return `label ${e.u} as #${e.id}`;
+      case "inner": return `${e.u}→${e.v}: already in #${e.id}`;
+      case "wall": return `${e.u}→${e.v}: wall (#${e.other})`;
+      case "scc": return `SCC #${e.id} = ${fmtSet(e.members)}${e.verdict.ok ? "" : "  ✗ leak"}`;
+      case "done": return `done: ${e.count} SCC${e.count === 1 ? "" : "s"}`;
+    }
+    return "";
+  }
+
+  function codeLines() {
+    return [
+      "void dfsFinish(int u) {",
+      "    visited[u] = true;",
+      "    for (int v : adj[u])",
+      "        if (!visited[v]) dfsFinish(v);",
+      "    order.push_back(u);            // FINISH: u is done",
+      "}",
+      "void dfsFlood(int u, int id) {",
+      "    comp[u] = id;",
+      S.mode === "noflip" ? "    for (int v : adj[u])           // BUG: original edges" : "    for (int v : radj[u])          // flipped edges",
+      "        if (comp[v] == -1) dfsFlood(v, id);   // labeled = wall",
+      "}",
+      "// 1. FINISH: every node gets a DFS",
+      "for (int u = 0; u < n; ++u) if (!visited[u]) dfsFinish(u);",
+      S.mode === "noflip" ? "// 2. FLIP  (BUG: skipped)" : "// 2. FLIP every edge",
+      S.mode === "noflip" ? "// radj is never built" : "for (int u = 0; u < n; ++u) for (int v : adj[u]) radj[v].push_back(u);",
+      S.mode === "early" ? "// 3. FLOOD  (BUG: earliest finisher first)" : "// 3. FLOOD, latest finisher first",
+      S.mode === "early" ? "for (int i = 0; i < n; ++i) {" : "for (int i = n - 1; i >= 0; --i) {",
+      "    int u = order[i];",
+      "    if (comp[u] == -1) { dfsFlood(u, count); ++count; }",
+      "}",
+    ];
+  }
+
+  function renderTable(e) {
+    const rows = [];
+    for (let q = 0; q <= S.k; q++) if (S.ev[q].t === "scc") rows.push(S.ev[q]);
+    let h = "<thead><tr><th>SCC</th><th>nodes</th><th>flooded from</th><th>walls hit</th><th>verdict</th></tr></thead><tbody>";
+    if (!rows.length) h += `<tr><td class="blank" colspan="5">None yet: SCCs appear in pass 2, one per flood.</td></tr>`;
+    for (const r of rows) {
+      const active = (e.t === "scc" && e.id === r.id) ? "active" : "";
+      const walls = r.walls.length ? r.walls.map((w) => `${w[0]}→${w[1]}`).join(", ") : "none";
+      h += `<tr class="${active}"><td><span class="dot" style="--nc: var(--c${r.id % 8})"></span>#${r.id}</td><td>${fmtSet(r.members)}</td><td>${r.from}</td><td>${walls}</td><td class="${r.verdict.ok ? "ok" : "bad"}">${r.verdict.ok ? "✓ one SCC" : "✗ leak"}</td></tr>`;
+    }
+    $("ledger").innerHTML = h + "</tbody>";
+
+    let c = "";
+    if (e.t === "done") {
+      const pairs = new Map();
+      for (const [u, v] of S.g.edges) {
+        const a = e.comp[u], b = e.comp[v];
+        if (a !== b) pairs.set(a + ">" + b, [a, b]);
+      }
+      const list = [...pairs.values()].sort((p, q) => p[0] - q[0] || p[1] - q[1]).map(([a, b]) => `#${a} → #${b}`);
+      c = list.length ? `Edges between SCCs (original direction): ${list.join(", ")}.` : "No edges between different SCCs.";
+      if (S.mode === "ok" && list.length) c += " Each one goes from a lower id to a higher id.";
+    }
+    $("cond").textContent = c;
+  }
+
+  function render() {
+    const e = S.ev[S.k], pending = isPending();
+    $("chart").innerHTML = chart(e, pending);
+    renderPhases(e);
+    renderStack(e);
+    renderOrder(e, pending);
+    $("evType").textContent = EVTYPE[e.t];
+
+    let text = narrate(e);
+    const fb = $("feedback");
+    fb.className = "feedback"; fb.textContent = "";
+    const asksFirst = e.t === "flip" || e.t === "noflip";
+    if (S.predict && (asksFirst || e.t === "take")) {
+      const chk = S.checked.get(S.k);
+      if (!chk) {
+        fb.className = "feedback ask";
+        if (asksFirst) {
+          text = "Pass 1 is done. Before step 2: which node will pass 2 flood from first?";
+          fb.textContent = "Predict: click that node in the graph, then press Check.";
+        } else {
+          text = `Pass 2 takes ${e.u} (f${e.rank}) and starts a new flood.`;
+          fb.textContent = `Predict: which nodes will this flood label? Click them (${e.u} included), then press Check.`;
+        }
+      } else if (chk.ok) {
+        fb.className = "feedback ok";
+        fb.textContent = asksFirst
+          ? `Correct: pass 2 starts at ${chk.want[0]}, the ${S.mode === "early" ? "earliest finisher (that's the bug)" : "latest finisher"}.`
+          : `Correct: the flood labels ${fmtSet(chk.want)}.`;
+      } else {
+        fb.className = "feedback bad";
+        fb.textContent = asksFirst
+          ? `Not quite: pass 2 starts at ${chk.want[0]}, the ${S.mode === "early" ? "earliest" : "latest"} finisher.`
+          : `Not quite. You picked ${chk.picked.length ? fmtSet(chk.picked) : "nothing"}; the flood labels ${fmtSet(chk.want)}. ${S.mode === "ok" ? "It stops at nodes that are already labeled: the walls." : "In this bug version it runs past its own neighborhood."}`;
+      }
+    }
+    $("narr").textContent = text;
+
+    $("code").innerHTML = codeLines().map((ln, i) => {
+      const cls = [];
+      if (HL[e.t].includes(i) && !pending) cls.push("hl");
+      if (ln.includes("BUG")) cls.push("bug");
+      return `<span class="${cls.join(" ")}">${esc(ln)}</span>`;
+    }).join("");
+
+    renderTable(e);
+    const lines = [];
+    for (let q = 0; q <= S.k; q++) lines.push(logLine(S.ev[q]));
+    $("log").innerHTML = lines.slice().reverse().slice(0, 16).map((l) => `<li>${esc(l)}</li>`).join("");
+    $("log").start = lines.length;
+
+    $("counter").textContent = `step ${S.k + 1} of ${S.ev.length}`;
+    $("back").disabled = S.k === 0;
+    $("step").textContent = pending ? "Check" : "Step";
+    $("step").disabled = !pending && S.k >= S.ev.length - 1;
+    $("play").disabled = S.predict;
+    $("play").textContent = S.timer ? "Pause" : "Play";
+    $("score").textContent = S.predict || S.score.total
+      ? `Predictions: ${S.score.ok} of ${S.score.total} right`
+      : "Tip: turn on Predict and call each flood yourself.";
+    $("modeOk").setAttribute("aria-pressed", String(S.mode === "ok"));
+    $("modeNoflip").setAttribute("aria-pressed", String(S.mode === "noflip"));
+    $("modeEarly").setAttribute("aria-pressed", String(S.mode === "early"));
+  }
+
+  // ---------- interaction ----------
+  function check() {
+    const e = S.ev[S.k];
+    const want = e.t === "take" ? e.members.slice() : [e.ord[firstIdx(e)]];
+    const picked = [...S.sel];
+    const ok = want.length === picked.length && want.every((x) => S.sel.has(x));
+    S.checked.set(S.k, { ok, want, picked });
+    S.score.total++; if (ok) S.score.ok++;
+    S.sel.clear();
+    render();
+  }
+  function step() {
+    if (isPending()) { check(); return; }
+    if (S.k < S.ev.length - 1) { S.k++; S.sel.clear(); render(); }
+    else stopPlay();
+  }
+  function back() { if (S.k > 0) { S.k--; S.sel.clear(); render(); } }
+  function stopPlay() { if (S.timer) { clearInterval(S.timer); S.timer = null; } render(); }
+  function togglePlay() {
+    if (S.timer) { stopPlay(); return; }
+    if (S.k >= S.ev.length - 1) S.k = 0;
+    S.timer = setInterval(() => { if (S.k >= S.ev.length - 1) stopPlay(); else step(); }, 900);
+    render();
+  }
+  function reset() { if (S.timer) { clearInterval(S.timer); S.timer = null; } build(); render(); }
+
+  const edgesText = (edges) => edges.map(([u, v]) => `${u}>${v}`).join(", ");
+  function loadGraph(g, presetValue) {
+    S.g = g;
+    $("edges").value = edgesText(g.edges);
+    $("preset").value = presetValue;
+    $("inputMsg").textContent = "";
+    reset();
+  }
+  function loadPreset(i) {
+    const p = PRESETS[i];
+    loadGraph({ n: p.n, edges: p.edges.map((x) => x.slice()), pos: p.pos ? p.pos.map((x) => x.slice()) : circle(p.n) }, String(i));
+  }
+  function parseInput() {
+    const parts = $("edges").value.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
+    const edges = [], seen = new Set();
+    let n = 0;
+    for (const part of parts) {
+      const mt = part.match(/^(\d{1,2})\s*(?:->|→|>)\s*(\d{1,2})$/);
+      if (!mt) { $("inputMsg").textContent = `Couldn't read "${part}". Write edges like 0>1, 1>2, 2>0.`; return; }
+      const u = +mt[1], v = +mt[2];
+      if (u >= MAXN || v >= MAXN) { $("inputMsg").textContent = `Use node numbers 0 to ${MAXN - 1}.`; return; }
+      n = Math.max(n, u + 1, v + 1);
+      const k = u + ">" + v;
+      if (!seen.has(k)) { seen.add(k); edges.push([u, v]); }
+    }
+    if (!edges.length) { $("inputMsg").textContent = "Enter at least one edge, like 0>1."; return; }
+    loadGraph({ n, edges, pos: circle(n) }, "custom");
+  }
+  function randomGraph() {
+    const n = 6 + Math.floor(Math.random() * 4);
+    const ids = [...Array(n).keys()];
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    const groups = [];
+    for (let i = 0; i < n;) { const sz = Math.min(n - i, 1 + Math.floor(Math.random() * 3)); groups.push(ids.slice(i, i + sz)); i += sz; }
+    const edges = [], seen = new Set();
+    const add = (u, v) => { const k = u + ">" + v; if (!seen.has(k)) { seen.add(k); edges.push([u, v]); } };
+    const pick = (g) => g[Math.floor(Math.random() * g.length)];
+    for (const g of groups) {
+      if (g.length > 1) for (let j = 0; j < g.length; j++) add(g[j], g[(j + 1) % g.length]);
+      if (g.length === 3 && Math.random() < 0.4) add(g[0], g[2]);
+    }
+    for (let a = 0; a < groups.length; a++)
+      for (let b = a + 1; b < groups.length; b++)
+        if (b === a + 1 || Math.random() < 0.25) add(pick(groups[a]), pick(groups[b]));   // chain + a few shortcuts
+    edges.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+    loadGraph({ n, edges, pos: circle(n) }, "custom");
+  }
+
+  const sel = $("preset");
+  sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join("") + `<option value="custom">Your graph</option>`;
+  sel.addEventListener("change", () => { if (sel.value !== "custom") loadPreset(+sel.value); });
+  $("load").addEventListener("click", parseInput);
+  $("edges").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); parseInput(); } });
+  $("random").addEventListener("click", randomGraph);
+  const setMode = (m) => { if (S.mode !== m) { S.mode = m; reset(); } };
+  $("modeOk").addEventListener("click", () => setMode("ok"));
+  $("modeNoflip").addEventListener("click", () => setMode("noflip"));
+  $("modeEarly").addEventListener("click", () => setMode("early"));
+  $("predict").addEventListener("change", (ev) => {
+    S.predict = ev.target.checked;
+    if (S.predict && S.timer) { clearInterval(S.timer); S.timer = null; }
+    S.sel.clear(); render();
+  });
+  $("step").addEventListener("click", step);
+  $("back").addEventListener("click", back);
+  $("play").addEventListener("click", togglePlay);
+  $("reset").addEventListener("click", reset);
+  $("chart").addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-k]");
+    if (!t || !isPending()) return;
+    const e = S.ev[S.k], k = +t.getAttribute("data-k");
+    if (!pickable(e, k)) return;
+    if (e.t === "take") { if (S.sel.has(k)) S.sel.delete(k); else S.sel.add(k); }
+    else { const had = S.sel.has(k); S.sel.clear(); if (!had) S.sel.add(k); }
+    render();
+  });
+  document.addEventListener("keydown", (ev) => {
+    const tag = (ev.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea") return;
+    if (tag === "button" && ev.key === " ") return;   // the button's own click handles Space
+    if (ev.key === "ArrowRight" || ev.key === " ") { ev.preventDefault(); step(); }
+    else if (ev.key === "ArrowLeft") { ev.preventDefault(); back(); }
+  });
+
+  loadPreset(0);
+})();
+</script>

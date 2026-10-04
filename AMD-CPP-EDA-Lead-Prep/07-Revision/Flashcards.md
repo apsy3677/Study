@@ -292,7 +292,7 @@
 22. **Fast power mod?**
    <details><summary>answer</summary>Square-and-multiply: while b: if b&amp;1 r=r&#42;a%m; a=a&#42;a%m; b&gt;&gt;=1. Reduce a%=m first.</details>
 
-## Graphs (8)
+## Graphs (15)
 
 1. **Frontier → algorithm?**
    <details><summary>answer</summary>FIFO=BFS, min-heap=Dijkstra, deque=0-1 BFS, indegree-0 queue=Kahn.</details>
@@ -313,10 +313,31 @@
    <details><summary>answer</summary>No decrease-key: push duplicates; on pop skip if d != dist[u].</details>
 
 7. **Kosaraju SCC?**
-   <details><summary>answer</summary>DFS finish order → transpose → DFS in reverse finish order; each tree = SCC.</details>
+   <details><summary>answer</summary>Finish, Flip, Flood: DFS and record the finish order → reverse every edge → latest finisher first, DFS on the reversed graph; each flood = one SCC.</details>
 
 8. **CSR graph?**
    <details><summary>answer</summary>offsets[n+1] + targets[E]: contiguous adjacency, cache-friendly, one allocation.</details>
+
+9. **Why does Kosaraju flip the graph and start from the latest finisher?**
+   <details><summary>answer</summary>The last finisher is in a top (source) SCC. Flipping keeps every SCC but turns the top into the bottom, so a DFS from it can't leak out of its own SCC.</details>
+
+10. **Why does an upstream SCC finish later in a DFS?**
+   <details><summary>answer</summary>Enter A first: A reaches all of B, so B finishes before A's first node returns. Enter B first: B can't reach A, so B is done before A starts.</details>
+
+11. **Tarjan: when is u an SCC head, and which edges update low?**
+   <details><summary>answer</summary>When low[u] == disc[u]. Tree edge: low[u] = min(low[u], low[v]). Any other edge: only if v is on the stack, low[u] = min(low[u], disc[v]).</details>
+
+12. **Fewest edges to make a digraph strongly connected?**
+   <details><summary>answer</summary>Condense the SCCs; answer max(#source SCCs, #sink SCCs), or 0 if there's only one SCC.</details>
+
+13. **Bipartite ⇔ ?**
+   <details><summary>answer</summary>No odd cycle. Two teams: every edge flips the team, so an odd cycle lands you on the wrong team.</details>
+
+14. **Bipartite: how do you return an odd cycle as proof?**
+   <details><summary>answer</summary>Keep the BFS parent. A same-color edge u–v joins two nodes in the same layer; walk both up until they meet. u…ancestor…v plus the edge v–u is a cycle of 2k+1 edges.</details>
+
+15. **Where do bipartite graphs show up?**
+   <details><summary>answer</summary>Splitting conflicts into two groups (LC 886, two exam slots, double-patterning masks in EDA), and two-kind graphs: matching (jobs ↔ machines, pin assignment), netlists as cells ↔ nets, users ↔ hotels.</details>
 
 ## Dynamic programming (5)
 

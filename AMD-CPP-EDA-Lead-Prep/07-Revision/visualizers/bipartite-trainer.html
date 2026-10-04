@@ -1,0 +1,864 @@
+<title>Bipartite Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same bench as the Kosaraju and monotonic-stack trainers: the graph is the instrument, the BFS queue and the
+   layers are the side readouts, narration and live code sit underneath, then the result, the uses and the model. */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --ink: #152030;
+  --muted: #5a6779;
+  --rule: #d5dbe4;
+  --cobalt: #2a55e0;
+  --cobalt-ink: #ffffff;
+  --amber: #b9770a;
+  --amber-wash: rgba(232, 165, 40, 0.22);
+  --ok: #1d7f48;
+  --bad: #bf3434;
+  --code-bg: #f4f6fa;
+  --teamA: #1f9e9a;
+  --teamB: #d9822b;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+    --cobalt: #7d9bff; --cobalt-ink: #0d1218;
+    --amber: #f0b33f; --amber-wash: rgba(240, 179, 63, 0.2); --ok: #4cc584; --bad: #ef6b6b;
+    --code-bg: #10161e; --teamA: #3cc7c2; --teamB: #f0a050; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1218; --panel: #151c26; --ink: #e4e9f0; --muted: #94a2b4; --rule: #273243;
+  --cobalt: #7d9bff; --cobalt-ink: #0d1218;
+  --amber: #f0b33f; --amber-wash: rgba(240, 179, 63, 0.2); --ok: #4cc584; --bad: #ef6b6b;
+  --code-bg: #10161e; --teamA: #3cc7c2; --teamB: #f0a050; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 32px); padding-block: 28px 48px; display: grid; gap: 20px; }
+
+header { display: grid; gap: 6px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 72ch; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 0.98rem; margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 600 0.9rem var(--body); padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--cobalt); color: var(--cobalt-ink); }
+.seg button.bugbtn[aria-pressed="true"] { background: var(--bad); color: #fff; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+input[type="text"], select { font: 0.95rem var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 10px; min-width: 0; max-width: 100%; }
+input[type="text"] { width: min(300px, 100%); }
+select { width: min(330px, 100%); }
+.btn { font: 600 0.9rem var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--cobalt); color: var(--cobalt-ink); border-color: var(--cobalt); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.check { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; cursor: pointer; padding-bottom: 7px; }
+.check input { width: 18px; height: 18px; accent-color: var(--cobalt); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+.msg { font-size: 0.85rem; color: var(--bad); min-height: 1.2em; margin: 0; }
+
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; min-width: 0; }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 16px; }
+.graph-panel { display: grid; gap: 10px; align-content: start; }
+.chart-wrap { overflow-x: auto; }
+.chart-wrap svg { display: block; width: 100%; height: auto; min-width: 320px; max-height: 440px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 2px solid var(--rule); background: var(--panel); }
+.sw.A { background: color-mix(in srgb, var(--teamA) 32%, var(--panel)); border-color: var(--teamA); }
+.sw.B { background: color-mix(in srgb, var(--teamB) 32%, var(--panel)); border-color: var(--teamB); }
+.sw.cur { background: var(--cobalt); border-color: var(--cobalt); }
+.sw.queued { border: 3px solid var(--cobalt); }
+.sw.line { width: 22px; height: 0; border-radius: 0; border: 0; border-top: 2.5px solid var(--ink); background: none; }
+.sw.line.bad { border-top: 3px solid var(--bad); }
+.note { margin: 0; font-size: 0.9rem; color: var(--ink); max-width: 75ch; padding: 8px 12px; border-radius: 8px; background: var(--code-bg); border: 1px solid var(--rule); }
+
+/* SVG graph */
+.stripe.A { fill: var(--teamA); fill-opacity: 0.08; }
+.stripe.B { fill: var(--teamB); fill-opacity: 0.1; }
+.colhead { font: 600 11.5px var(--mono); text-anchor: middle; letter-spacing: 0.04em; }
+.colhead.A { fill: var(--teamA); }
+.colhead.B { fill: var(--teamB); }
+.edge { fill: none; stroke: var(--muted); stroke-width: 1.8; opacity: 0.55; }
+.edge.tree { stroke: var(--ink); opacity: 0.85; stroke-width: 2.2; }
+.edge.hot { stroke: var(--cobalt); stroke-width: 3.4; opacity: 1; }
+.edge.check { stroke: var(--cobalt); stroke-width: 2.6; stroke-dasharray: 5 4; opacity: 1; }
+.edge.cyc { stroke: var(--bad); stroke-width: 3.2; opacity: 0.9; }
+.edge.conf { stroke: var(--bad); stroke-width: 4.2; opacity: 1; stroke-dasharray: 8 4; }
+.edge.hidden { stroke: var(--bad); stroke-width: 2.8; opacity: 0.9; stroke-dasharray: 3 4; }
+.node circle { fill: var(--panel); stroke: var(--rule); stroke-width: 2; transition: fill 0.2s ease, stroke 0.2s ease; }
+.node .nid { font: 600 15px var(--mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); pointer-events: none; }
+.node.A circle { fill: var(--teamA); fill-opacity: 0.3; stroke: var(--teamA); stroke-width: 2.5; }
+.node.B circle { fill: var(--teamB); fill-opacity: 0.3; stroke: var(--teamB); stroke-width: 2.5; }
+.node.queued circle { stroke: var(--cobalt); stroke-width: 3.5; }
+.node.cur circle { fill: var(--cobalt); fill-opacity: 1; stroke: var(--cobalt); }
+.node.cur .nid { fill: var(--cobalt-ink); }
+.node.oncyc circle { stroke: var(--bad); stroke-width: 3.5; }
+.node.clash circle { stroke: var(--bad); stroke-width: 4.5; }
+.node.unvisited circle { stroke: var(--bad); stroke-dasharray: 4 3; stroke-width: 2.5; }
+.node.pickable { cursor: pointer; }
+.node.pickable circle { stroke-dasharray: 4 3; }
+.node.pickable:hover circle { stroke-width: 4.5; }
+.node.picked circle { stroke: var(--ink); stroke-width: 4.5; stroke-dasharray: none; }
+.lbadge { font: 600 11.5px var(--mono); text-anchor: middle; fill: var(--muted); }
+.tbadge { font: 700 12px var(--mono); text-anchor: start; }
+.lbadge, .tbadge, .colhead { paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; }
+.tbadge.A { fill: var(--teamA); }
+.tbadge.B { fill: var(--teamB); }
+
+.side { display: grid; gap: 16px; align-content: start; }
+.side section { display: grid; gap: 8px; }
+.queue { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.qchip { font: 600 0.9rem var(--mono); min-width: 34px; text-align: center; padding: 5px 8px; border-radius: 8px; border: 2px solid var(--cobalt); background: var(--panel); }
+.qchip.A { background: color-mix(in srgb, var(--teamA) 26%, var(--panel)); }
+.qchip.B { background: color-mix(in srgb, var(--teamB) 26%, var(--panel)); }
+.qchip.front { outline: 3px solid var(--cobalt); outline-offset: 1px; }
+.empty { list-style: none; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); padding: 6px 10px; border: 1px dashed var(--rule); border-radius: 8px; }
+.layers { display: grid; gap: 6px; }
+.lrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.85rem; }
+.lname { min-width: 30px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lteam { font-weight: 700; min-width: 16px; }
+.lteam.A { color: var(--teamA); }
+.lteam.B { color: var(--teamB); }
+.lchip { padding: 2px 7px; border-radius: 6px; border: 1.5px solid var(--rule); }
+.lchip.A { border-color: var(--teamA); }
+.lchip.B { border-color: var(--teamB); }
+.side-note { font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+.readouts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.narr { display: grid; gap: 12px; align-content: start; }
+.narr p.now { margin: 0; font-size: 1.02rem; max-width: 62ch; }
+.feedback { margin: 0; font-weight: 700; min-height: 1.4em; }
+.feedback.ok { color: var(--ok); }
+.feedback.bad { color: var(--bad); }
+.feedback.ask { color: var(--cobalt); }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choices[hidden] { display: none; }
+.playbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.counter { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+.score { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin: 0; }
+.codebox { display: grid; gap: 8px; align-content: start; }
+pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 0; overflow-x: auto; font-family: var(--mono); font-size: 0.78rem; line-height: 1.6; }
+pre.code span { display: block; padding: 0 12px; white-space: pre; border-left: 3px solid transparent; }
+pre.code span.hl { background: var(--amber-wash); border-left-color: var(--amber); }
+pre.code span.bug { color: var(--bad); font-weight: 600; }
+
+.lower { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; }
+.lower .panel { display: grid; gap: 10px; align-content: start; }
+.ret { font: 700 1.5rem var(--mono); margin: 0; }
+.ret.ok { color: var(--ok); }
+.ret.bad { color: var(--bad); }
+.ret.run { color: var(--muted); }
+.result-lines { margin: 0; display: grid; gap: 6px; font-size: 0.92rem; }
+.result-lines div { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.result-lines b { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); min-width: 92px; }
+.result-lines code { font-family: var(--mono); }
+.log { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); max-height: 280px; overflow-y: auto; }
+.log li:first-child { color: var(--ink); }
+
+.uses { display: grid; gap: 14px; }
+.uses-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.uses-grid section { display: grid; gap: 8px; align-content: start; }
+.uses ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 62ch; }
+.tag { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--rule); color: var(--muted); margin-right: 4px; }
+.uses .foot { margin: 0; font-size: 0.88rem; color: var(--muted); max-width: 80ch; }
+
+.model { display: grid; gap: 10px; }
+.model ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; max-width: 78ch; }
+.keys { font-size: 0.82rem; color: var(--muted); margin: 0; }
+kbd { font-family: var(--mono); font-size: 0.8em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--panel); }
+
+@media (max-width: 820px) {
+  .bench, .readouts, .lower, .uses-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .node circle { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Pattern trainer · bipartite graphs</span>
+    <h1>Bipartite Trainer</h1>
+    <p class="lede"><strong>Two teams of rivals.</strong> Watch BFS paint the graph layer by layer, alternating teams, and see why an edge inside one layer always closes an odd cycle. Switch to the <strong>BFS layers</strong> view to see the two teams as alternating columns. Turn on <strong>Predict</strong> to call the verdict and the odd cycle yourself.</p>
+  </header>
+
+  <section class="controls" aria-label="Setup">
+    <div class="field">
+      <label for="preset">Graph</label>
+      <select id="preset"></select>
+    </div>
+    <div class="field">
+      <label for="edges">Edges (u-v, nodes 0–11)</label>
+      <input type="text" id="edges" autocomplete="off" spellcheck="false">
+    </div>
+    <button type="button" class="btn" id="load">Load</button>
+    <button type="button" class="btn" id="random">Random</button>
+    <div class="field">
+      <span class="eyebrow">Version</span>
+      <div class="seg" role="group" aria-label="Algorithm version">
+        <button type="button" id="modeOk" aria-pressed="true">Correct</button>
+        <button type="button" id="modeNoouter" class="bugbtn" aria-pressed="false">Bug: no outer loop</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="eyebrow">View</span>
+      <div class="seg" role="group" aria-label="Graph view">
+        <button type="button" id="viewPic" aria-pressed="true">Picture</button>
+        <button type="button" id="viewLayers" aria-pressed="false">BFS layers</button>
+      </div>
+    </div>
+    <label class="check" for="predict"><input type="checkbox" id="predict"> Predict before reveal</label>
+  </section>
+  <p class="msg" id="inputMsg" role="status"></p>
+
+  <section class="bench">
+    <div class="panel graph-panel">
+      <div class="chart-wrap" id="chart"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw A"></i>team A (even layer)</span>
+        <span><i class="sw B"></i>team B (odd layer)</span>
+        <span><i class="sw"></i>not painted yet</span>
+        <span><i class="sw cur"></i>current node</span>
+        <span><i class="sw queued"></i>in the queue</span>
+        <span><i class="sw line"></i>BFS tree edge</span>
+        <span><i class="sw line bad"></i>conflict / odd cycle</span>
+        <span>L2 = layer 2</span>
+      </div>
+      <p class="note" id="note"></p>
+    </div>
+    <aside class="panel side">
+      <section aria-label="BFS queue">
+        <h2>Queue</h2>
+        <ol class="queue" id="queue"></ol>
+        <p class="side-note">Front on the left.</p>
+      </section>
+      <section aria-label="Layers">
+        <h2>Layers</h2>
+        <div class="layers" id="layers"></div>
+        <p class="side-note">Team = layer mod 2. Even layers are A, odd layers are B.</p>
+      </section>
+    </aside>
+  </section>
+
+  <section class="readouts">
+    <div class="panel narr" aria-live="polite">
+      <span class="eyebrow" id="evType">What just happened</span>
+      <p class="now" id="narr"></p>
+      <p class="feedback" id="feedback"></p>
+      <div class="choices" id="choices" hidden>
+        <button type="button" class="btn" data-v="true">true · bipartite</button>
+        <button type="button" class="btn" data-v="false">false · not bipartite</button>
+      </div>
+      <div class="playbar">
+        <button type="button" class="btn" id="back">Back</button>
+        <button type="button" class="btn primary" id="step">Step</button>
+        <button type="button" class="btn" id="play">Play</button>
+        <button type="button" class="btn" id="reset">Reset</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="score" id="score"></p>
+    </div>
+    <div class="panel codebox">
+      <span class="eyebrow">The code, line by line</span>
+      <pre class="code" id="code" aria-label="C++ code with the current lines highlighted"></pre>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <h2>Result</h2>
+      <p class="ret run" id="ret"></p>
+      <div class="result-lines" id="resultLines"></div>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ol class="log" id="log" reversed></ol>
+    </div>
+  </section>
+
+  <section class="panel uses">
+    <h2>Where bipartite graphs show up</h2>
+    <div class="uses-grid">
+      <section>
+        <h3>Test it: can the conflicts be split into two groups?</h3>
+        <ul>
+          <li><span class="tag">LeetCode</span>Is Graph Bipartite (LC 785) and Possible Bipartition (LC 886): people who dislike each other go to different groups.</li>
+          <li><span class="tag">Scheduling</span>Two exam slots: two exams that share a student can't share a slot. Two slots work exactly when the conflict graph is bipartite.</li>
+          <li><span class="tag">EDA</span>Double-patterning lithography: shapes too close together must go on different masks. An odd cycle is a conflict no mask split can fix, so the layout changes or a stitch splits a shape across both masks.</li>
+          <li><span class="tag">Parity</span>Grids and trees are always bipartite (team = (row + col) mod 2, or depth mod 2). That's the chessboard argument: a knight always lands on the other color.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Built bipartite: two kinds of nodes, edges only between kinds</h3>
+        <ul>
+          <li><span class="tag">Matching</span>Jobs ↔ machines, interns ↔ teams: maximum matching (Hopcroft–Karp) and min-cost assignment (Hungarian). In a bipartite graph, max matching = min vertex cover (König).</li>
+          <li><span class="tag">EDA</span>A netlist is a cells ↔ nets incidence graph, the form partitioners and placers work on. Pin and I/O assignment is a bipartite matching.</li>
+          <li><span class="tag">Backend</span>Users ↔ hotels (bookings, reviews) for recommendations, and every many-to-many table (students ↔ courses) is a bipartite graph.</li>
+        </ul>
+      </section>
+    </div>
+    <p class="foot">Two colors take O(V + E) with one BFS. Three colors is NP-complete. That gap is why "is it bipartite?" is the special, fast case worth recognizing.</p>
+  </section>
+
+  <section class="panel model">
+    <h2>The model in five sentences</h2>
+    <ol>
+      <li>Every edge says <strong>"different teams"</strong>. So paint the start team A and alternate.</li>
+      <li>BFS paints in <strong>layers</strong>: a node's team is its layer number mod 2.</li>
+      <li>A BFS edge joins the <strong>same layer</strong> or two <strong>neighboring layers</strong>. Neighboring layers are always opposite teams, so those edges are fine.</li>
+      <li>An edge inside one layer joins two same-team nodes. With the two BFS paths back to their common ancestor it forms a cycle of length 2k + 1: <strong>odd</strong>. So no odd cycle ⇔ bipartite.</li>
+      <li>Each component needs its own start: that's the <strong>outer loop</strong>. Without it, an odd cycle in another component is never seen.</li>
+    </ol>
+    <p class="keys"><kbd>→</kbd> or <kbd>Space</kbd> step · <kbd>←</kbd> back. Each node is queued once and each edge is checked from both ends, so the whole run is O(V + E).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const gridEdges = [];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    if (c < 2) gridEdges.push([r * 3 + c, r * 3 + c + 1]);
+    if (r < 2) gridEdges.push([r * 3 + c, (r + 1) * 3 + c]);
+  }
+  const PRESETS = [
+    { label: "Square · even cycle", n: 4, edges: [[0, 1], [1, 2], [2, 3], [3, 0]],
+      pos: [[80, 60], [260, 60], [260, 220], [80, 220]],
+      note: "A 4-cycle is even: going around flips the team 4 times and lands back on the start's team." },
+    { label: "Triangle · odd cycle", n: 3, edges: [[0, 1], [1, 2], [2, 0]],
+      pos: [[170, 50], [290, 230], [50, 230]],
+      note: "The smallest odd cycle. 1 and 2 both get team B from 0, but they are rivals too." },
+    { label: "Two components · the outer-loop trap", n: 5, edges: [[0, 1], [2, 3], [3, 4], [4, 2]],
+      pos: [[60, 150], [190, 150], [420, 60], [520, 230], [320, 230]],
+      note: "The odd cycle hides in the second component. Switch to \"Bug: no outer loop\" and watch that version miss it." },
+    { label: "Hexagon + hub · odd cycle of 5", n: 7, edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [6, 0], [6, 3]],
+      pos: [[300, 30], [404, 90], [404, 210], [300, 270], [196, 210], [196, 90], [300, 150]],
+      note: "The hexagon alone is even. The hub gives 0 and 3 a 2-step path where the hexagon needs 3 steps, and together they make an odd cycle of 5." },
+    { label: "Pentagon · LC 886 example 3", n: 5, edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0]], pos: null,
+      note: "LC 886 (Possible Bipartition) example 3, with people 1..5 renamed 0..4. Any 5-cycle is odd, so no 2-group split exists." },
+    { label: "Grid 3×3 · chessboard", n: 9, edges: gridEdges,
+      pos: Array.from({ length: 9 }, (_, k) => [60 + (k % 3) * 120, 50 + Math.floor(k / 3) * 105]),
+      note: "Every grid is bipartite: team = (row + col) mod 2, exactly the chessboard colors." },
+    { label: "Tree · always bipartite", n: 7, edges: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]],
+      pos: [[260, 40], [150, 140], [370, 140], [90, 240], [210, 240], [310, 240], [430, 240]],
+      note: "A tree has no cycles at all, so it is always bipartite: team = depth mod 2." },
+    { label: "Double patterning (EDA) · mask conflicts", n: 6, edges: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 4], [4, 5]],
+      pos: [[50, 150], [160, 150], [270, 150], [380, 70], [380, 230], [490, 150]],
+      note: "Each node is a layout shape; an edge means two shapes are too close to print on the same mask. Shapes 2, 3 and 4 are all too close to each other (an odd cycle), so no 2-mask split exists: the layout must change, or a stitch splits one shape across both masks." },
+  ];
+  const MAXN = 12, R = 20, GX = 130, GY = 74;
+  const HL = { intro: [0, 1, 2], start: [3, 4, 5, 6], pop: [7, 8], paint: [9, 10], fine: [9, 10, 11], conflict: [11], done: [15] };
+  const EVTYPE = { intro: "Setup", start: "Start a BFS", pop: "Take the front of the queue", paint: "Paint a new node",
+    fine: "Edge to the other team", conflict: "Conflict: same team", done: "Finished" };
+
+  const S = { g: null, mode: "ok", view: "pic", ev: [], k: 0, predict: false, sel: new Set(), checked: new Map(), score: { ok: 0, total: 0 }, timer: null, adj: [], layer: null, note: "" };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const team = (c) => (c === 0 ? "A" : "B");
+  const fmtSet = (a) => (a.length ? "{" + a.slice().sort((p, q) => p - q).join(", ") + "}" : "none");
+  const fmtCyc = (c) => (c.length === 1 ? `${c[0]}–${c[0]}` : c.concat([c[0]]).join("–"));
+  const ekey = (a, b) => (a < b ? a + "-" + b : b + "-" + a);
+
+  function circle(n) {
+    if (n === 1) return [[100, 100]];
+    if (n === 2) return [[100, 100], [300, 100]];
+    const rad = n <= 6 ? 120 : 150;
+    return Array.from({ length: n }, (_, k) => {
+      const a = -Math.PI / 2 + (2 * Math.PI * k) / n;
+      return [Math.round(rad * Math.cos(a)), Math.round(rad * Math.sin(a))];
+    });
+  }
+
+  // ---------- helpers ----------
+  function cycleOf(u, v, parent) {           // u and v sit in the same BFS layer
+    if (u === v) return [u];
+    const left = [], right = [];
+    let a = u, b = v;
+    while (a !== b) { left.push(a); right.push(b); a = parent[a]; b = parent[b]; }
+    return left.concat([a], right.reverse());
+  }
+  function fullCheck(n, adj) {               // the correct algorithm, for verdicts on the bug version
+    const color = Array(n).fill(-1), parent = Array(n).fill(-1);
+    for (let s = 0; s < n; s++) {
+      if (color[s] !== -1) continue;
+      color[s] = 0;
+      const q = [s];
+      for (let h = 0; h < q.length; h++) {
+        const u = q[h];
+        for (const v of adj[u]) {
+          if (color[v] === -1) { color[v] = 1 - color[u]; parent[v] = u; q.push(v); }
+          else if (color[v] === color[u]) return { ok: false, cyc: cycleOf(u, v, parent) };
+        }
+      }
+    }
+    return { ok: true, cyc: null };
+  }
+  function layerLayout(n, adj) {
+    const lvl = Array(n).fill(-1), comps = [];
+    for (let s = 0; s < n; s++) {
+      if (lvl[s] !== -1) continue;
+      const order = [s]; lvl[s] = 0;
+      for (let h = 0; h < order.length; h++) {
+        const u = order[h];
+        for (const v of adj[u]) if (lvl[v] === -1) { lvl[v] = lvl[u] + 1; order.push(v); }
+      }
+      comps.push(order);
+    }
+    const pos = Array(n);
+    let y0 = 0, maxL = 0;
+    for (const order of comps) {
+      const byL = [];
+      for (const u of order) (byL[lvl[u]] = byL[lvl[u]] || []).push(u);
+      const rows = Math.max(...byL.map((g) => g.length));
+      byL.forEach((g, L) => {
+        maxL = Math.max(maxL, L);
+        g.forEach((u, i) => { pos[u] = [L * GX, y0 + i * GY + ((rows - g.length) * GY) / 2]; });
+      });
+      y0 += rows * GY + 46;
+    }
+    return { pos, lvl, maxL };
+  }
+  function validCycleSet(sel, u, v) {        // is sel an odd cycle that uses edge u–v?
+    if (u === v) return sel.size === 1 && sel.has(u);
+    if (!sel.has(u) || !sel.has(v) || sel.size % 2 === 0) return false;
+    const nodes = [...sel], idx = new Map(nodes.map((x, i) => [x, i])), full = (1 << nodes.length) - 1, memo = new Map();
+    const go = (x, mask) => {                // Hamiltonian path u → … → v inside sel; the edge v–u closes it
+      if (mask === full) return x === v;
+      const key = x * 4096 + mask;
+      if (memo.has(key)) return memo.get(key);
+      let found = false;
+      for (const y of S.adj[x]) {
+        const j = idx.get(y);
+        if (j === undefined || (mask >> j) & 1) continue;
+        if (y === v && (mask | (1 << j)) !== full) continue;
+        if (go(y, mask | (1 << j))) { found = true; break; }
+      }
+      memo.set(key, found);
+      return found;
+    };
+    return go(u, 1 << idx.get(u));
+  }
+
+  // ---------- run the algorithm once, recording a snapshot per event ----------
+  function build() {
+    const { n, edges } = S.g;
+    const adj = Array.from({ length: n }, () => []);
+    for (const [a, b] of edges) { adj[a].push(b); if (a !== b) adj[b].push(a); }
+    S.adj = adj;
+    S.layer = layerLayout(n, adj);
+    const color = Array(n).fill(-1), level = Array(n).fill(-1), parent = Array(n).fill(-1);
+    let q = [], qh = 0, conf = null, cyc = null;
+    const ev = [];
+    const snap = (o) => Object.assign({ color: color.slice(), level: level.slice(), parent: parent.slice(), q: q.slice(qh), conf, cyc }, o);
+
+    ev.push(snap({ t: "intro" }));
+    const starts = S.mode === "ok" ? [...Array(n).keys()] : [0];
+    let result = true, compNo = 0;
+    outer: for (const s of starts) {
+      if (color[s] !== -1) continue;
+      color[s] = 0; level[s] = 0; q = [s]; qh = 0;
+      ev.push(snap({ t: "start", u: s, comp: compNo }));
+      while (qh < q.length) {
+        const u = q[qh++];
+        ev.push(snap({ t: "pop", u }));
+        for (const v of adj[u]) {
+          if (color[v] === -1) {
+            color[v] = 1 - color[u]; level[v] = level[u] + 1; parent[v] = u; q.push(v);
+            ev.push(snap({ t: "paint", u, v }));
+          } else if (color[v] === color[u]) {
+            conf = [u, v]; cyc = cycleOf(u, v, parent); result = false;
+            ev.push(snap({ t: "conflict", u, v }));
+            break outer;
+          } else ev.push(snap({ t: "fine", u, v }));
+        }
+      }
+      compNo++;
+    }
+    const truth = fullCheck(n, adj);
+    const unvisited = [...Array(n).keys()].filter((x) => color[x] === -1);
+    q = []; qh = 0;
+    ev.push(snap({ t: "done", result, truth, unvisited }));
+    S.ev = ev; S.k = 0; S.sel.clear(); S.checked = new Map(); S.score = { ok: 0, total: 0 };
+  }
+
+  const isPending = () => {
+    const e = S.ev[S.k];
+    return S.predict && (e.t === "intro" || e.t === "conflict") && !S.checked.has(S.k);
+  };
+  const finalResult = () => S.ev[S.ev.length - 1].result;
+
+  // ---------- drawing ----------
+  function edgeD(a, b, curved) {
+    const [ax, ay] = a, [bx, by] = b;
+    if (ax === bx && ay === by) {
+      return `M${ax - 9},${ay - R + 3} C${ax - 36},${ay - R - 44} ${ax + 36},${ay - R - 44} ${ax + 9},${ay - R + 3}`;
+    }
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    if (!curved) return `M${r1(ax + ux * R)},${r1(ay + uy * R)} L${r1(bx - ux * R)},${r1(by - uy * R)}`;
+    let px = -uy, py = ux;
+    if (px < 0 || (px === 0 && py < 0)) { px = -px; py = -py; }
+    const off = Math.max(56, L * 0.62), cx = (ax + bx) / 2 + px * off, cy = (ay + by) / 2 + py * off;   // clears nodes in between
+    const toward = (x, y) => { const ex = cx - x, ey = cy - y, l = Math.hypot(ex, ey) || 1; return [r1(x + (ex / l) * R), r1(y + (ey / l) * R)]; };
+    const s0 = toward(ax, ay), t0 = toward(bx, by);
+    return `M${s0[0]},${s0[1]} Q${r1(cx)},${r1(cy)} ${t0[0]},${t0[1]}`;
+  }
+
+  function chart(e, pending) {
+    const { n, edges } = S.g, layered = S.view === "layers";
+    const pos = layered ? S.layer.pos : S.g.pos;
+    const xs = pos.map((p) => p[0]), ys = pos.map((p) => p[1]);
+    const minX = Math.min(...xs) - 52, maxX = Math.max(...xs) + 56;
+    const minY = Math.min(...ys) - (layered ? 74 : 62), maxY = Math.max(...ys) + 44;
+    let s = `<svg viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}" role="img" aria-label="Undirected graph with ${n} nodes, ${layered ? "arranged by BFS layer" : "as drawn"}.">`;
+    if (layered) {
+      for (let L = 0; L <= S.layer.maxL; L++) {
+        const x = L * GX, t = L % 2 ? "B" : "A";
+        s += `<rect class="stripe ${t}" x="${x - 46}" y="${minY + 6}" width="92" height="${maxY - minY - 12}" rx="10"></rect>`;
+        s += `<text class="colhead ${t}" x="${x}" y="${minY + 26}">layer ${L} · ${t}</text>`;
+      }
+    }
+
+    const hot = ["paint", "fine", "conflict"].includes(e.t) ? ekey(e.u, e.v) : null;
+    const confKey = e.conf ? ekey(e.conf[0], e.conf[1]) : null;
+    const cycSet = new Set(), hidSet = new Set();
+    const showCyc = e.cyc && !pending;
+    if (showCyc) e.cyc.forEach((x, i, c) => cycSet.add(ekey(x, c[(i + 1) % c.length])));
+    const hiddenCyc = e.t === "done" && e.result && !e.truth.ok ? e.truth.cyc : null;
+    if (hiddenCyc) hiddenCyc.forEach((x, i, c) => hidSet.add(ekey(x, c[(i + 1) % c.length])));
+
+    const special = [];
+    for (const [a, b] of edges) {
+      const k = ekey(a, b);
+      let cls = "edge";
+      if (a !== b && (e.parent[b] === a || e.parent[a] === b)) cls += " tree";
+      if (cycSet.has(k)) cls = "edge cyc";
+      if (hidSet.has(k)) cls = "edge hidden";
+      if (k === confKey) cls = "edge conf";
+      else if (k === hot) cls = "edge " + (e.t === "fine" ? "check" : "hot");
+      const sameLayer = layered && a !== b && S.layer.lvl[a] === S.layer.lvl[b];
+      const path = `<path class="${cls}" d="${edgeD(pos[a], pos[b], sameLayer)}"></path>`;
+      if (cls === "edge" || cls === "edge tree") s += path; else special.push(path);
+    }
+    s += special.join("");
+
+    const cur = ["start", "pop", "paint", "fine", "conflict"].includes(e.t) ? e.u : null;
+    const inQ = new Set(e.q);
+    const onCyc = new Set(showCyc ? e.cyc : hiddenCyc || []);
+    const unvisited = new Set(e.t === "done" ? e.unvisited : []);
+    for (let k = 0; k < n; k++) {
+      const [x, y] = pos[k];
+      let cls = "node";
+      if (e.color[k] >= 0) cls += " " + team(e.color[k]);
+      if (inQ.has(k)) cls += " queued";
+      if (cur === k) cls += " cur";
+      if (onCyc.has(k)) cls += " oncyc";
+      if (e.conf && (e.conf[0] === k || e.conf[1] === k)) cls += " clash";
+      if (unvisited.has(k)) cls += " unvisited";
+      if (pending && e.t === "conflict") cls += " pickable";
+      if (S.sel.has(k)) cls += " picked";
+      s += `<g class="${cls}" data-k="${k}"><circle cx="${x}" cy="${y}" r="${R}"></circle><text class="nid" x="${x}" y="${y}">${k}</text><title>node ${k}${e.color[k] >= 0 ? `, team ${team(e.color[k])}, layer ${e.level[k]}` : ", not painted"}</title></g>`;
+      if (e.level[k] >= 0) s += `<text class="lbadge" x="${x}" y="${y + R + 16}">L${e.level[k]}</text>`;
+      if (e.color[k] >= 0) s += `<text class="tbadge ${team(e.color[k])}" x="${x + R - 1}" y="${y - R - 2}">${team(e.color[k])}</text>`;
+    }
+    return s + `</svg>`;
+  }
+
+  function renderSide(e) {
+    const qEl = $("queue");
+    qEl.innerHTML = e.q.length
+      ? e.q.map((k, i) => `<li class="qchip ${team(e.color[k])}${i === 0 ? " front" : ""}">${k}</li>`).join("")
+      : `<li class="empty">empty</li>`;
+    const byL = [];
+    e.level.forEach((L, k) => { if (L >= 0) (byL[L] = byL[L] || []).push(k); });
+    $("layers").innerHTML = byL.length
+      ? byL.map((g, L) => g ? `<div class="lrow"><span class="lname">L${L}</span><span class="lteam ${L % 2 ? "B" : "A"}">${L % 2 ? "B" : "A"}</span>${g.map((k) => `<span class="lchip ${L % 2 ? "B" : "A"}">${k}</span>`).join("")}</div>` : "").join("")
+      : `<p class="side-note">Nothing painted yet.</p>`;
+  }
+
+  function narrate(e) {
+    const T = (k) => team(e.color[k]), Lv = (k) => e.level[k];
+    switch (e.t) {
+      case "intro":
+        return "BFS 2-coloring. Every edge says \"these two are on different teams\". BFS paints the start team A, its neighbors team B, their neighbors team A, and so on: a node's team is its BFS layer mod 2."
+          + (S.mode === "noouter" ? " Bug version: there is no outer loop, so only node 0's component is ever searched." : "");
+      case "start":
+        return e.comp === 0
+          ? `Start a BFS at ${e.u}: paint it team A, layer 0, and queue it.`
+          : `Outer loop: ${e.u} is still unpainted, so it's in a new component. Start another BFS there: team A, layer 0.`;
+      case "pop": return `Take ${e.u} off the front of the queue (team ${T(e.u)}, layer ${Lv(e.u)}) and look at its neighbors.`;
+      case "paint": return `Edge ${e.u}–${e.v}: ${e.v} is unpainted. Paint it the other team, ${T(e.v)}, one layer further out (layer ${Lv(e.v)}), and queue it.`;
+      case "fine": return `Edge ${e.u}–${e.v}: ${e.v} is already team ${T(e.v)}, the other team. Fine.`;
+      case "conflict":
+        if (e.u === e.v) return `Edge ${e.u}–${e.u} is a self-loop: a node can't be on a different team from itself. Not bipartite: return false.`;
+        return `Edge ${e.u}–${e.v}: both ends are team ${T(e.u)}, in the same layer (${Lv(e.u)}). Walking both back up the BFS tree to their common ancestor gives the odd cycle ${fmtCyc(e.cyc)} (length ${e.cyc.length}). Not bipartite: return false.`;
+      case "done": {
+        if (!e.result) return `Done: false. The odd cycle ${fmtCyc(e.cyc)} is the proof, and it's the answer to the follow-up "show me why".`;
+        const teams = (c) => fmtSet(e.color.map((x, k) => (x === c ? k : -1)).filter((k) => k >= 0));
+        if (S.mode === "noouter" && !e.truth.ok)
+          return `Returned true, but that's wrong. Nodes ${fmtSet(e.unvisited)} were never visited (no outer loop), and they contain the odd cycle ${fmtCyc(e.truth.cyc)}.`;
+        if (S.mode === "noouter" && e.unvisited.length)
+          return `Returned true, and this time it happens to be right, but nodes ${fmtSet(e.unvisited)} were never checked. An odd cycle there would have been missed.`;
+        return `Done: true. Every edge joins team A to team B, so the graph is bipartite. The two groups are A = ${teams(0)} and B = ${teams(1)}.`;
+      }
+    }
+    return "";
+  }
+
+  function logLine(e) {
+    switch (e.t) {
+      case "intro": return S.mode === "ok" ? "BFS 2-coloring" : "BFS 2-coloring (bug: no outer loop)";
+      case "start": return `start BFS at ${e.u} (team A)`;
+      case "pop": return `pop ${e.u}`;
+      case "paint": return `paint ${e.v} team ${team(e.color[e.v])}, layer ${e.level[e.v]}`;
+      case "fine": return `${e.u}–${e.v}: other team, fine`;
+      case "conflict": return `${e.u}–${e.v}: same team → odd cycle ${fmtCyc(e.cyc)}`;
+      case "done": return `return ${e.result}${S.mode === "noouter" && e.result && !e.truth.ok ? "  ✗ wrong" : ""}`;
+    }
+    return "";
+  }
+
+  function codeLines() {
+    const bug = S.mode === "noouter";
+    return [
+      "bool isBipartite(const vector<vector<int>>& adj) {",
+      "    int n = adj.size();",
+      "    vector<int> color(n, -1);",
+      bug ? "    int s = 0;                   // BUG: no outer loop, only node 0's component"
+          : "    for (int s = 0; s < n; ++s) {             // every component",
+      bug ? "    {" : "        if (color[s] != -1) continue;",
+      "        color[s] = 0;",
+      "        queue<int> q; q.push(s);",
+      "        while (!q.empty()) {",
+      "            int u = q.front(); q.pop();",
+      "            for (int v : adj[u]) {",
+      "                if (color[v] == -1) { color[v] = 1 - color[u]; q.push(v); }",
+      "                else if (color[v] == color[u]) return false;   // odd cycle",
+      "            }",
+      "        }",
+      "    }",
+      "    return true;",
+      "}",
+    ];
+  }
+
+  function renderResult(e, pending) {
+    const ret = $("ret"), lines = [];
+    const teams = (c) => fmtSet(e.color.map((x, k) => (x === c ? k : -1)).filter((k) => k >= 0));
+    if (e.t === "done") {
+      const wrong = S.mode === "noouter" && e.result && !e.truth.ok;
+      ret.className = "ret " + (wrong || !e.result ? "bad" : "ok");
+      ret.textContent = e.result ? (wrong ? "true  ✗ wrong" : "true · bipartite") : "false · not bipartite";
+    } else if (e.t === "conflict") {
+      ret.className = "ret bad";
+      ret.textContent = pending ? "conflict found…" : "false · not bipartite";
+    } else {
+      ret.className = "ret run";
+      ret.textContent = "running…";
+    }
+    lines.push(`<div><b>Team A</b><code>${teams(0)}</code></div>`);
+    lines.push(`<div><b>Team B</b><code>${teams(1)}</code></div>`);
+    if (e.cyc && !pending) lines.push(`<div><b>Odd cycle</b><code>${fmtCyc(e.cyc)}</code><span>length ${e.cyc.length}</span></div>`);
+    if (e.t === "done" && e.unvisited.length) lines.push(`<div><b>Never visited</b><code>${fmtSet(e.unvisited)}</code></div>`);
+    if (e.t === "done" && S.mode === "noouter" && e.result && !e.truth.ok) lines.push(`<div><b>Missed</b><code>${fmtCyc(e.truth.cyc)}</code><span>an odd cycle in a component that was never searched</span></div>`);
+    $("resultLines").innerHTML = lines.join("");
+  }
+
+  function render() {
+    const e = S.ev[S.k], pending = isPending();
+    $("chart").innerHTML = chart(e, pending);
+    renderSide(e);
+    $("evType").textContent = EVTYPE[e.t];
+    $("note").textContent = S.note;
+    $("note").hidden = !S.note;
+
+    let text = narrate(e);
+    const fb = $("feedback");
+    fb.className = "feedback"; fb.textContent = "";
+    $("choices").hidden = true;
+    if (S.predict && (e.t === "intro" || e.t === "conflict")) {
+      const chk = S.checked.get(S.k);
+      if (!chk && e.t === "intro") {
+        fb.className = "feedback ask";
+        fb.textContent = `Predict: what will ${S.mode === "noouter" ? "this buggy version" : "this code"} return for this graph?`;
+        $("choices").hidden = false;
+      } else if (!chk) {
+        text = e.u === e.v
+          ? `Edge ${e.u}–${e.u} is a self-loop, so ${e.u} conflicts with itself.`
+          : `Edge ${e.u}–${e.v}: both ends are team ${team(e.color[e.u])}, in the same layer. That edge closes an odd cycle.`;
+        fb.className = "feedback ask";
+        fb.textContent = "Predict: click the nodes of an odd cycle that uses this edge, then press Check.";
+      } else if (chk.kind === "verdict") {
+        fb.className = "feedback " + (chk.ok ? "ok" : "bad");
+        const extra = S.mode === "noouter" && chk.want && !S.ev[S.ev.length - 1].truth.ok ? " (even though the graph is not bipartite: that's the bug)" : "";
+        fb.textContent = chk.ok ? `Correct: it returns ${chk.want}${extra}.` : `Not quite: it returns ${chk.want}${extra}.`;
+      } else {
+        fb.className = "feedback " + (chk.ok ? "ok" : "bad");
+        fb.textContent = chk.ok
+          ? `Correct: ${fmtSet(chk.picked)} is an odd cycle through ${e.u}–${e.v}. BFS found ${fmtCyc(e.cyc)}.`
+          : `Not quite. You picked ${fmtSet(chk.picked)}. One odd cycle through this edge is ${fmtCyc(e.cyc)}: walk ${e.u} and ${e.v} up the BFS tree until they meet.`;
+      }
+    }
+    $("narr").textContent = text;
+
+    $("code").innerHTML = codeLines().map((ln, i) => {
+      const cls = [];
+      let hl = HL[e.t];
+      if (e.t === "done" && !e.result) hl = [11];
+      if (hl.includes(i) && !pending) cls.push("hl");
+      if (ln.includes("BUG")) cls.push("bug");
+      return `<span class="${cls.join(" ")}">${esc(ln)}</span>`;
+    }).join("");
+
+    renderResult(e, pending);
+    const lines = [];
+    for (let q = 0; q <= S.k; q++) lines.push(logLine(S.ev[q]));
+    $("log").innerHTML = lines.slice().reverse().slice(0, 16).map((l) => `<li>${esc(l)}</li>`).join("");
+    $("log").start = lines.length;
+
+    const verdictPending = pending && e.t === "intro";
+    $("counter").textContent = `step ${S.k + 1} of ${S.ev.length}`;
+    $("back").disabled = S.k === 0;
+    $("step").textContent = verdictPending ? "Pick above" : pending ? "Check" : "Step";
+    $("step").disabled = verdictPending || (!pending && S.k >= S.ev.length - 1);
+    $("play").disabled = S.predict;
+    $("play").textContent = S.timer ? "Pause" : "Play";
+    $("score").textContent = S.predict || S.score.total
+      ? `Predictions: ${S.score.ok} of ${S.score.total} right`
+      : "Tip: turn on Predict and call the verdict and the odd cycle yourself.";
+    $("modeOk").setAttribute("aria-pressed", String(S.mode === "ok"));
+    $("modeNoouter").setAttribute("aria-pressed", String(S.mode === "noouter"));
+    $("viewPic").setAttribute("aria-pressed", String(S.view === "pic"));
+    $("viewLayers").setAttribute("aria-pressed", String(S.view === "layers"));
+  }
+
+  // ---------- interaction ----------
+  function record(entry) {
+    S.checked.set(S.k, entry);
+    S.score.total++; if (entry.ok) S.score.ok++;
+    S.sel.clear();
+    render();
+  }
+  function checkVerdict(val) {
+    const want = finalResult();
+    record({ kind: "verdict", ok: val === want, want, picked: val });
+  }
+  function checkCycle() {
+    const e = S.ev[S.k], picked = [...S.sel];
+    record({ kind: "cycle", ok: validCycleSet(new Set(picked), e.u, e.v), picked });
+  }
+  function step() {
+    if (isPending()) { if (S.ev[S.k].t === "conflict") checkCycle(); return; }
+    if (S.k < S.ev.length - 1) { S.k++; S.sel.clear(); render(); }
+    else stopPlay();
+  }
+  function back() { if (S.k > 0) { S.k--; S.sel.clear(); render(); } }
+  function stopPlay() { if (S.timer) { clearInterval(S.timer); S.timer = null; } render(); }
+  function togglePlay() {
+    if (S.timer) { stopPlay(); return; }
+    if (S.k >= S.ev.length - 1) S.k = 0;
+    S.timer = setInterval(() => { if (S.k >= S.ev.length - 1) stopPlay(); else step(); }, 900);
+    render();
+  }
+  function reset() { if (S.timer) { clearInterval(S.timer); S.timer = null; } build(); render(); }
+
+  const edgesText = (edges) => edges.map(([u, v]) => `${u}-${v}`).join(", ");
+  function loadGraph(g, presetValue, note) {
+    S.g = g; S.note = note || "";
+    $("edges").value = edgesText(g.edges);
+    $("preset").value = presetValue;
+    $("inputMsg").textContent = "";
+    reset();
+  }
+  function loadPreset(i) {
+    const p = PRESETS[i];
+    loadGraph({ n: p.n, edges: p.edges.map((x) => x.slice()), pos: p.pos ? p.pos.map((x) => x.slice()) : circle(p.n) }, String(i), p.note);
+  }
+  function parseInput() {
+    const parts = $("edges").value.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
+    const edges = [], seen = new Set();
+    let n = 0;
+    for (const part of parts) {
+      const mt = part.match(/^(\d{1,2})\s*(?:-|–|—)\s*(\d{1,2})$/);
+      if (!mt) { $("inputMsg").textContent = `Couldn't read "${part}". Write undirected edges like 0-1, 1-2, 2-0.`; return; }
+      const u = +mt[1], v = +mt[2];
+      if (u >= MAXN || v >= MAXN) { $("inputMsg").textContent = `Use node numbers 0 to ${MAXN - 1}.`; return; }
+      n = Math.max(n, u + 1, v + 1);
+      const k = ekey(u, v);
+      if (!seen.has(k)) { seen.add(k); edges.push([u, v]); }
+    }
+    if (!edges.length) { $("inputMsg").textContent = "Enter at least one edge, like 0-1."; return; }
+    loadGraph({ n, edges, pos: circle(n) }, "custom", "");
+  }
+  function randomGraph() {
+    const rand = (m) => Math.floor(Math.random() * m);
+    const n = 6 + rand(4);
+    const ids = [...Array(n).keys()];
+    for (let i = n - 1; i > 0; i--) { const j = rand(i + 1); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    const split = Math.random() < 0.35 ? 3 + rand(n - 5) : n;        // sometimes two components
+    const edges = [], seen = new Set();
+    const add = (a, b) => { const k = ekey(a, b); if (a !== b && !seen.has(k)) { seen.add(k); edges.push([a, b]); } };
+    for (let i = 1; i < n; i++) {                                    // a random spanning tree per component
+      if (i === split) continue;
+      const lo = i < split ? 0 : split;
+      add(ids[i], ids[lo + rand(i - lo)]);
+    }
+    for (let x = 1 + rand(3); x > 0; x--) {                          // extra edges: some close odd cycles, some even
+      const i = rand(n), lo = i < split ? 0 : split, hi = i < split ? split : n;
+      add(ids[i], ids[lo + rand(hi - lo)]);
+    }
+    edges.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+    loadGraph({ n, edges, pos: circle(n) }, "custom", "");
+  }
+
+  const sel = $("preset");
+  sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join("") + `<option value="custom">Your graph</option>`;
+  sel.addEventListener("change", () => { if (sel.value !== "custom") loadPreset(+sel.value); });
+  $("load").addEventListener("click", parseInput);
+  $("edges").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); parseInput(); } });
+  $("random").addEventListener("click", randomGraph);
+  const setMode = (m) => { if (S.mode !== m) { S.mode = m; reset(); } };
+  $("modeOk").addEventListener("click", () => setMode("ok"));
+  $("modeNoouter").addEventListener("click", () => setMode("noouter"));
+  $("viewPic").addEventListener("click", () => { S.view = "pic"; render(); });
+  $("viewLayers").addEventListener("click", () => { S.view = "layers"; render(); });
+  $("predict").addEventListener("change", (ev) => {
+    S.predict = ev.target.checked;
+    if (S.predict && S.timer) { clearInterval(S.timer); S.timer = null; }
+    S.sel.clear(); render();
+  });
+  $("choices").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-v]");
+    if (b && isPending() && S.ev[S.k].t === "intro") checkVerdict(b.getAttribute("data-v") === "true");
+  });
+  $("step").addEventListener("click", step);
+  $("back").addEventListener("click", back);
+  $("play").addEventListener("click", togglePlay);
+  $("reset").addEventListener("click", reset);
+  $("chart").addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-k]");
+    if (!t || !isPending() || S.ev[S.k].t !== "conflict") return;
+    const k = +t.getAttribute("data-k");
+    if (S.sel.has(k)) S.sel.delete(k); else S.sel.add(k);
+    render();
+  });
+  document.addEventListener("keydown", (ev) => {
+    const tag = (ev.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea") return;
+    if (tag === "button" && ev.key === " ") return;   // the button's own click handles Space
+    if (ev.key === "ArrowRight" || ev.key === " ") { ev.preventDefault(); step(); }
+    else if (ev.key === "ArrowLeft") { ev.preventDefault(); back(); }
+  });
+
+  loadPreset(3);
+})();
+</script>

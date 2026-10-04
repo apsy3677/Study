@@ -69,6 +69,154 @@ static void t_countSCC() {
     CHECK_EQ(countSCC(6, {{0, 1}, {1, 0}, {2, 3}, {3, 4}, {4, 2}, {1, 2}, {4, 5}}), 3);
 }
 
+// ---------- MM04 ----------
+static vector<vector<bool>> reachAll(int n, const vector<PII>& edges) {   // reach[s][t]: path s → t
+    VVI adj(n);
+    for (auto [u, v] : edges) adj[u].push_back(v);
+    vector<vector<bool>> reach(n, vector<bool>(n, false));
+    for (int s = 0; s < n; ++s) {
+        VI st{s}; reach[s][s] = true;
+        while (!st.empty()) {
+            int u = st.back(); st.pop_back();
+            for (int v : adj[u]) if (!reach[s][v]) { reach[s][v] = true; st.push_back(v); }
+        }
+    }
+    return reach;
+}
+// ids 0..k-1 all used; same id ⇔ mutually reachable; every edge u→v has comp[u] <= comp[v]
+static bool validTopoScc(int n, const vector<PII>& edges, const VI& comp) {
+    if ((int)comp.size() != n) return false;
+    int k = 0;
+    for (int c : comp) { if (c < 0 || c >= n) return false; k = max(k, c + 1); }
+    vector<bool> used(k, false);
+    for (int c : comp) used[c] = true;
+    for (bool b : used) if (!b) return false;
+    auto reach = reachAll(n, edges);
+    for (int u = 0; u < n; ++u)
+        for (int v = 0; v < n; ++v)
+            if ((comp[u] == comp[v]) != (reach[u][v] && reach[v][u])) return false;
+    for (auto [u, v] : edges) if (comp[u] > comp[v]) return false;
+    return true;
+}
+static vector<PII> randomDigraph(uint32_t& seed, int& n) {
+    auto rnd = [&](int m) { seed = seed * 1103515245u + 12345u; return (int)((seed >> 8) % (uint32_t)m); };
+    n = 1 + rnd(9);
+    vector<PII> e(rnd(2 * n + 1));
+    for (auto& [u, v] : e) { u = rnd(n); v = rnd(n); }
+    return e;
+}
+static const vector<PII> kSccEx = {{0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 3}, {4, 0}, {5, 3}};      // MM04 running example
+static const vector<PII> kSccP1 = {{0, 1}, {1, 2}, {2, 3}, {3, 1}, {3, 4}, {4, 5}, {5, 4}, {6, 0}};  // MM04 practice 1
+static void checkSccLabeler(VI (*label)(int, const vector<PII>&)) {
+    CHECK_EQ(label(6, kSccEx), (VI{2, 2, 2, 1, 1, 0}));       // a chain [5] → [3 4] → [0 1 2]: unique labels
+    CHECK_EQ(label(7, kSccP1), (VI{1, 2, 2, 2, 3, 3, 0}));    // [6] → [0] → [1 2 3] → [4 5]
+    CHECK_EQ(label(2, {{0, 1}}), (VI{0, 1}));
+    CHECK_EQ(label(1, {{0, 0}}), (VI{0}));
+    CHECK_EQ(label(0, {}), (VI{}));
+    vector<PII> diamond{{0, 1}, {0, 2}, {1, 3}, {2, 3}, {3, 4}, {4, 3}};
+    CHECK(validTopoScc(5, diamond, label(5, diamond)));
+    CHECK(validTopoScc(3, {}, label(3, {})));
+    uint32_t seed = 4242;
+    bool allOk = true;
+    for (int iter = 0; iter < 300 && allOk; ++iter) {
+        int n;
+        auto e = randomDigraph(seed, n);
+        allOk = validTopoScc(n, e, label(n, e));
+    }
+    CHECK(allOk);
+}
+static void t_sccLabels() { checkSccLabeler(sccLabels); }
+static void t_sccLabelsTarjan() { checkSccLabeler(sccLabelsTarjan); }
+static void t_loopNodes() {
+    CHECK_EQ(loopNodes(6, kSccEx), (VI{0, 1, 2, 3, 4}));
+    CHECK_EQ(loopNodes(7, kSccP1), (VI{1, 2, 3, 4, 5}));
+    CHECK_EQ(loopNodes(3, {{0, 1}, {1, 1}, {1, 2}}), (VI{1}));             // a self-loop is a loop
+    CHECK_EQ(loopNodes(4, {{0, 1}, {0, 2}, {1, 3}, {2, 3}}), (VI{}));     // diamond: no loop
+    CHECK_EQ(loopNodes(2, {{0, 1}, {1, 0}, {0, 1}}), (VI{0, 1}));          // duplicate edge
+    CHECK_EQ(loopNodes(3, {}), (VI{}));
+    uint32_t seed = 777;
+    bool allOk = true;
+    for (int iter = 0; iter < 300 && allOk; ++iter) {
+        int n;
+        auto e = randomDigraph(seed, n);
+        auto reach = reachAll(n, e);
+        VI want;
+        for (int u = 0; u < n; ++u) {
+            bool onCycle = false;
+            for (auto [a, b] : e) if (a == u && reach[b][u]) onCycle = true;   // u → b, and b gets back to u
+            if (onCycle) want.push_back(u);
+        }
+        allOk = loopNodes(n, e) == want;
+    }
+    CHECK(allOk);
+}
+static void t_minEdgesToStronglyConnect() {
+    CHECK_EQ(minEdgesToStronglyConnect(1, {}), 0);
+    CHECK_EQ(minEdgesToStronglyConnect(3, {}), 3);
+    CHECK_EQ(minEdgesToStronglyConnect(3, {{0, 1}, {1, 2}}), 1);
+    CHECK_EQ(minEdgesToStronglyConnect(3, {{0, 1}, {0, 2}}), 2);
+    CHECK_EQ(minEdgesToStronglyConnect(4, {{0, 1}, {1, 2}, {2, 3}, {3, 0}}), 0);
+    CHECK_EQ(minEdgesToStronglyConnect(4, {{0, 1}, {1, 0}, {2, 3}, {3, 2}}), 2);
+    CHECK_EQ(minEdgesToStronglyConnect(6, kSccEx), 1);
+    CHECK_EQ(minEdgesToStronglyConnect(5, {{0, 1}, {2, 1}, {3, 4}}), 3);
+}
+static void t_possibleBipartition() {
+    CHECK(possibleBipartition(4, {{1, 2}, {1, 3}, {2, 4}}));
+    CHECK(!possibleBipartition(3, {{1, 2}, {1, 3}, {2, 3}}));
+    CHECK(!possibleBipartition(5, {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {1, 5}}));
+    CHECK(possibleBipartition(1, {}));
+    CHECK(possibleBipartition(6, {{1, 2}, {3, 4}, {5, 6}, {2, 3}}));
+    CHECK(!possibleBipartition(6, {{1, 2}, {4, 5}, {5, 6}, {4, 6}}));   // the odd cycle is in a later component
+}
+static bool validOddCycle(const VVI& adj, const VI& cyc) {
+    int k = (int)cyc.size();
+    if (k % 2 == 0) return false;
+    if ((int)set<int>(cyc.begin(), cyc.end()).size() != k) return false;
+    for (int i = 0; i < k; ++i) {
+        int a = cyc[i], b = cyc[(i + 1) % k];
+        if (a < 0 || a >= (int)adj.size()) return false;
+        if (find(adj[a].begin(), adj[a].end(), b) == adj[a].end()) return false;
+    }
+    return true;
+}
+static bool bruteBipartite(const VVI& adj) {
+    int n = (int)adj.size();
+    for (int mask = 0; mask < (1 << n); ++mask) {
+        bool ok = true;
+        for (int u = 0; u < n && ok; ++u)
+            for (int v : adj[u]) if (((mask >> u) & 1) == ((mask >> v) & 1)) { ok = false; break; }
+        if (ok) return true;
+    }
+    return false;
+}
+static void t_oddCycle() {
+    VVI tri{{1, 2}, {0, 2}, {0, 1}};
+    CHECK(validOddCycle(tri, oddCycle(tri)));
+    VVI square{{1, 3}, {0, 2}, {1, 3}, {0, 2}};
+    CHECK_EQ(oddCycle(square), (VI{}));
+    VVI hub(7);                                       // hexagon 0..5 + hub 6 on 0 and 3: odd cycle of 5
+    auto link = [&](int a, int b) { hub[a].push_back(b); hub[b].push_back(a); };
+    for (int i = 0; i < 6; ++i) link(i, (i + 1) % 6);
+    link(6, 0); link(6, 3);
+    CHECK(validOddCycle(hub, oddCycle(hub)));
+    VVI twoComp{{1}, {0}, {3, 4}, {2, 4}, {2, 3}};     // the odd cycle is in the 2nd component
+    CHECK(validOddCycle(twoComp, oddCycle(twoComp)));
+    VVI selfLoop{{0}};
+    CHECK(validOddCycle(selfLoop, oddCycle(selfLoop)));
+    CHECK_EQ(oddCycle(VVI{}), (VI{}));
+    uint32_t seed = 2026;
+    auto rnd = [&](int m) { seed = seed * 1103515245u + 12345u; return (int)((seed >> 8) % (uint32_t)m); };
+    bool allOk = true;
+    for (int iter = 0; iter < 300 && allOk; ++iter) {
+        int n = 1 + rnd(9);
+        VVI g(n);
+        for (int e = rnd(2 * n + 1); e > 0; --e) { int a = rnd(n), b = rnd(n); g[a].push_back(b); if (a != b) g[b].push_back(a); }
+        VI cyc = oddCycle(g);
+        allOk = bruteBipartite(g) ? cyc.empty() : validOddCycle(g, cyc);
+    }
+    CHECK(allOk);
+}
+
 // ---------- EDA ----------
 static void t_levelize() {
     CHECK_EQ(levelize(5, {{0, 2}, {1, 2}, {2, 3}, {3, 4}, {1, 4}}), (VI{0, 0, 1, 2, 3}));
@@ -254,6 +402,12 @@ int main(int argc, char** argv) {
     SECTION(t_findRedundantConnection);
     SECTION(t_hasCycleDirected);
     SECTION(t_countSCC);
+    SECTION(t_sccLabels);
+    SECTION(t_loopNodes);
+    SECTION(t_minEdgesToStronglyConnect);
+    SECTION(t_sccLabelsTarjan);
+    SECTION(t_possibleBipartition);
+    SECTION(t_oddCycle);
     SECTION(t_levelize);
     SECTION(t_worstSlack);
     SECTION(t_criticalPath);

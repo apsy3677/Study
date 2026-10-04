@@ -130,4 +130,35 @@ ll powMod(ll a, ll b, ll m) {
     return 0;
 }
 
+// ===== MM04 SCC deep dive (read 02-Patterns/MM04 first; write your DFS helpers as separate functions) =====
+// ★ MM04-1  Directed graph, nodes 0..n-1. Return comp[v] = SCC id of v, ids 0..k-1 numbered in
+//   TOPOLOGICAL order of the SCCs: if an edge u→v joins two different SCCs, comp[u] < comp[v].
+VI sccLabels(int n, const vector<PII>& edges) {
+    return {};
+}
+// ★ MM04-2 (EDA)  Directed netlist. Return, sorted, every node that lies on some directed cycle
+//   (a combinational loop). A self-loop counts.
+VI loopNodes(int n, const vector<PII>& edges) {
+    return {};
+}
+// MM04-3  Minimum number of new edges so that every node can reach every other node.
+int minEdgesToStronglyConnect(int n, const vector<PII>& edges) {
+    return -1;
+}
+// MM04-4  Same contract as MM04-1, but with Tarjan (one DFS). Careful: Tarjan closes the
+//   bottom SCCs first, so its own ids come out in REVERSE topological order.
+VI sccLabelsTarjan(int n, const vector<PII>& edges) {
+    return {};
+}
+// ★ MM04-5  LC 886 Possible Bipartition. People 1..n; each pair {a, b} in dislikes must end up in
+//   different groups. Can everyone be split into two groups?
+bool possibleBipartition(int n, const vector<PII>& dislikes) {
+    return false;
+}
+// MM04-6  Undirected graph. If it is NOT bipartite, return the nodes of one odd cycle in order
+//   (cycle[i] adjacent to cycle[i+1], and the last adjacent to the first). If it is bipartite, return {}.
+VI oddCycle(const VVI& adj) {
+    return {};
+}
+
 #include "tests/day3_tests.h"

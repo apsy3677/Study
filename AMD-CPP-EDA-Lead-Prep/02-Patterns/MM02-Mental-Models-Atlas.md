@@ -1,7 +1,7 @@
 # MM02: Mental Models Atlas (one picture, one sentence, a few decisions per pattern)
 
 > The P01–P12 files are the full reference. This atlas is the **compressed visual layer** you redraw from memory.
-> Monotonic stack has its own deep file: [MM01](MM01-Monotonic-Stack-Mental-Model.md).
+> Monotonic stack has its own deep file: [MM01](MM01-Monotonic-Stack-Mental-Model.md). So do SCC (Kosaraju, Tarjan) and bipartite: [MM04](MM04-SCC-Kosaraju-Mental-Model.md).
 
 ---
 
@@ -204,6 +204,8 @@ flowchart LR
 | **Kahn topo** | taking courses | repeatedly take whoever has no remaining prerequisites; anyone never freed is on a cycle |
 | **Dijkstra** | ripples through mud | always expand the cheapest known node; ignore outdated heap entries |
 | **Union-Find** | bosses | `find` walks up to the top boss (flattening the path); `union` makes one boss report to the other |
+| **Bipartite** | two teams of rivals | every edge flips the team; an odd cycle brings you back to the wrong team |
+| **Kosaraju SCC** | one-way streets, water flows downhill ([MM04](MM04-SCC-Kosaraju-Mental-Model.md)) | **Finish, Flip, Flood:** the last finisher is at the top; flipping puts it at the bottom; a flood from the bottom can't leak |
 
 | Say *(BFS)* | Write |
 |---|---|

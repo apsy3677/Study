@@ -20,6 +20,7 @@
 | shortest path | BFS / Dijkstra (stale skip) | mark visited on push |
 | connectivity | DSU | path compression + by size |
 | 2 groups, no inner edge | bipartite BFS coloring | every component |
+| mutual reachability, loops in a directed graph | SCC: Kosaraju | **Finish, Flip, Flood**: latest finisher first, on the flipped graph |
 | ways / min cost | DP | state in words; coins outer = combinations |
 | O(1) cache | map + list | map → iterator; splice to front |
 

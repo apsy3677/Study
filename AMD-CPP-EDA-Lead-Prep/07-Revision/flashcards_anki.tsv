@@ -97,8 +97,15 @@ Bipartite check trap?	Disconnected graph — start BFS from every uncolored node
 Directed cycle detection?	3-color DFS (gray→gray = back edge) or Kahn count < n.	graph
 Union-Find complexity?	Path compression + union by size → α(n) ≈ O(1).	graph
 Dijkstra stale entries?	No decrease-key: push duplicates; on pop skip if d != dist[u].	graph
-Kosaraju SCC?	DFS finish order → transpose → DFS in reverse finish order; each tree = SCC.	graph
+Kosaraju SCC?	Finish, Flip, Flood: DFS and record the finish order → reverse every edge → latest finisher first, DFS on the reversed graph; each flood = one SCC.	graph
 CSR graph?	offsets[n+1] + targets[E]: contiguous adjacency, cache-friendly, one allocation.	graph
+Why does Kosaraju flip the graph and start from the latest finisher?	The last finisher is in a top (source) SCC. Flipping keeps every SCC but turns the top into the bottom, so a DFS from it can't leak out of its own SCC.	graph
+Why does an upstream SCC finish later in a DFS?	Enter A first: A reaches all of B, so B finishes before A's first node returns. Enter B first: B can't reach A, so B is done before A starts.	graph
+Tarjan: when is u an SCC head, and which edges update low?	When low[u] == disc[u]. Tree edge: low[u] = min(low[u], low[v]). Any other edge: only if v is on the stack, low[u] = min(low[u], disc[v]).	graph
+Fewest edges to make a digraph strongly connected?	Condense the SCCs; answer max(#source SCCs, #sink SCCs), or 0 if there's only one SCC.	graph
+Bipartite ⇔ ?	No odd cycle. Two teams: every edge flips the team, so an odd cycle lands you on the wrong team.	graph
+Bipartite: how do you return an odd cycle as proof?	Keep the BFS parent. A same-color edge u–v joins two nodes in the same layer; walk both up until they meet. u…ancestor…v plus the edge v–u is a cycle of 2k+1 edges.	graph
+Where do bipartite graphs show up?	Splitting conflicts into two groups (LC 886, two exam slots, double-patterning masks in EDA), and two-kind graphs: matching (jobs ↔ machines, pin assignment), netlists as cells ↔ nets, users ↔ hotels.	graph
 DP 5 steps?	State (in words) → transition (last choice) → base → order → answer location.	dp
 Coin change combinations vs permutations?	Coins outer = combinations; amount outer = permutations.	dp
 0/1 knapsack 1D loop?	Items outer, capacity descending.	dp

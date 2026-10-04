@@ -8,10 +8,10 @@ Implement a stub → compile → the test run tells you **got vs expected** per 
 |---|---|---|
 | `day1.cpp` | 21: arrays, hashing, prefix sums, two pointers, sliding window, binary search | P01, P02, P03 |
 | `day2.cpp` | 34: linked lists, stacks, heaps/intervals, **geometry**, trees, LRU, **sum of subarray minimums / ranges** | P04–P07, P12, MM03 |
-| `day3.cpp` | 28: graphs, **EDA (levelize, slack/critical path, Lee router, HPWL)**, DP, trie/bits | P08, P10, P11, E2 |
+| `day3.cpp` | 34: graphs, **SCC deep dive (labels, combinational loops, min edges, Tarjan)**, **bipartite follow-ups (LC 886, odd cycle)**, **EDA (levelize, slack/critical path, Lee router, HPWL)**, DP, trie/bits | P08, MM04, P10, P11, E2 |
 | `day4.cpp` | 10: ring buffer, UniquePtr/SharedPtr, pool allocator, MyVector, blocking queue, alternating threads, parallel sum, thread pool, raw matrix | P12, C3 |
 
-Every reference solution was compiled and run with **GCC 14 and Clang 19** under AddressSanitizer + UBSan (day4 also under ThreadSanitizer): 483/483 checks pass.
+Every reference solution was compiled and run with **GCC 14 and Clang 19** under AddressSanitizer + UBSan (day4 also under ThreadSanitizer): 527/527 checks pass.
 
 ---
 

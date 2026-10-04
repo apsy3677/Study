@@ -116,7 +116,7 @@ bool hasCycleDirected(int n, const vector<PII>& edges) {
     return false;
 }
 
-int countSCC(int n, const vector<PII>& edges) {                 // Kosaraju, iterative
+int countSCC(int n, const vector<PII>& edges) {                 // Kosaraju, iterative (recursive version: MM04-1 below)
     VVI adj(n), radj(n);
     for (auto [u, v] : edges) { adj[u].push_back(v); radj[v].push_back(u); }
     VI order; vector<char> seen(n, 0);
@@ -398,6 +398,127 @@ ll powMod(ll a, ll b, ll m) {
         b >>= 1;
     }
     return r;
+}
+
+// ===== MM04 =====
+// Kosaraju with plain separate functions (the interview version from MM04 §5).
+static void dfsFinish(int u, const VVI& adj, vector<bool>& visited, VI& order) {
+    visited[u] = true;
+    for (int v : adj[u])
+        if (!visited[v]) dfsFinish(v, adj, visited, order);
+    order.push_back(u);                                          // u is done: all it reaches is done
+}
+static void dfsFlood(int u, const VVI& radj, VI& comp, int id) {
+    comp[u] = id;
+    for (int v : radj[u])
+        if (comp[v] == -1) dfsFlood(v, radj, comp, id);          // labeled = another SCC = a wall
+}
+VI sccLabels(int n, const vector<PII>& edges) {
+    VVI adj(n), radj(n);
+    for (auto [u, v] : edges) { adj[u].push_back(v); radj[v].push_back(u); }   // FLIP built up front
+    vector<bool> visited(n, false);
+    VI order;
+    for (int u = 0; u < n; ++u)                                  // FINISH
+        if (!visited[u]) dfsFinish(u, adj, visited, order);
+    VI comp(n, -1);
+    int count = 0;
+    for (int i = n - 1; i >= 0; --i) {                           // FLOOD, latest finisher first
+        int u = order[i];
+        if (comp[u] == -1) { dfsFlood(u, radj, comp, count); ++count; }
+    }
+    return comp;                                                 // ids already in topological order
+}
+
+VI loopNodes(int n, const vector<PII>& edges) {
+    VI comp = sccLabels(n, edges);
+    VI compSize(n, 0);
+    for (int c : comp) ++compSize[c];
+    vector<bool> onLoop(n, false);
+    for (int u = 0; u < n; ++u) if (compSize[comp[u]] >= 2) onLoop[u] = true;
+    for (auto [u, v] : edges) if (u == v) onLoop[u] = true;      // a self-loop is a 1-node loop
+    VI out;
+    for (int u = 0; u < n; ++u) if (onLoop[u]) out.push_back(u);
+    return out;
+}
+
+int minEdgesToStronglyConnect(int n, const vector<PII>& edges) {
+    VI comp = sccLabels(n, edges);
+    int k = n ? *max_element(comp.begin(), comp.end()) + 1 : 0;
+    if (k <= 1) return 0;
+    vector<bool> hasIn(k, false), hasOut(k, false);
+    for (auto [u, v] : edges)
+        if (comp[u] != comp[v]) { hasOut[comp[u]] = true; hasIn[comp[v]] = true; }
+    int tops = 0, bottoms = 0;
+    for (int c = 0; c < k; ++c) { if (!hasIn[c]) ++tops; if (!hasOut[c]) ++bottoms; }
+    return max(tops, bottoms);                                   // link bottoms back to tops
+}
+
+// Tarjan as a small struct: the shared arrays are members, so dfs() takes only u.
+struct TarjanSCC {
+    const VVI& adj;
+    VI disc, low, comp, stk;
+    vector<bool> onStack;
+    int timer = 0, count = 0;
+    explicit TarjanSCC(const VVI& g)
+        : adj(g), disc(g.size(), -1), low(g.size(), 0), comp(g.size(), -1), onStack(g.size(), false) {
+        for (int u = 0; u < (int)g.size(); ++u)
+            if (disc[u] == -1) dfs(u);
+    }
+    void dfs(int u) {
+        disc[u] = low[u] = timer++;
+        stk.push_back(u); onStack[u] = true;
+        for (int v : adj[u]) {
+            if (disc[v] == -1) { dfs(v); low[u] = min(low[u], low[v]); }   // tree edge: inherit v's reach
+            else if (onStack[v]) low[u] = min(low[u], disc[v]);            // back to an open node
+        }                                                                  // else: v's SCC is closed
+        if (low[u] == disc[u]) {                                           // u heads an SCC: pop it
+            while (true) {
+                int w = stk.back(); stk.pop_back(); onStack[w] = false;
+                comp[w] = count;
+                if (w == u) break;
+            }
+            ++count;
+        }
+    }
+};
+VI sccLabelsTarjan(int n, const vector<PII>& edges) {
+    VVI adj(n);
+    for (auto [u, v] : edges) adj[u].push_back(v);
+    TarjanSCC t(adj);
+    VI comp(n);
+    for (int u = 0; u < n; ++u) comp[u] = t.count - 1 - t.comp[u];   // bottom-first ids → top-first
+    return comp;
+}
+
+bool possibleBipartition(int n, const vector<PII>& dislikes) {
+    VVI adj(n);
+    for (auto [a, b] : dislikes) { adj[a - 1].push_back(b - 1); adj[b - 1].push_back(a - 1); }   // 1-indexed, both ways
+    return isBipartite(adj);
+}
+
+VI oddCycle(const VVI& adj) {
+    int n = (int)adj.size();
+    VI color(n, -1), parent(n, -1);
+    for (int s = 0; s < n; ++s) {
+        if (color[s] != -1) continue;
+        color[s] = 0;
+        queue<int> q; q.push(s);
+        while (!q.empty()) {
+            int u = q.front(); q.pop();
+            for (int v : adj[u]) {
+                if (color[v] == -1) { color[v] = 1 - color[u]; parent[v] = u; q.push(v); }
+                else if (color[v] == color[u]) {                 // u and v sit in the same BFS layer
+                    VI left, right;
+                    int a = u, b = v;
+                    while (a != b) { left.push_back(a); right.push_back(b); a = parent[a]; b = parent[b]; }
+                    left.push_back(a);                           // the common ancestor
+                    left.insert(left.end(), right.rbegin(), right.rend());
+                    return left;                                 // u … ancestor … v; the edge v–u closes it
+                }
+            }
+        }
+    }
+    return {};
 }
 
 #include "../tests/day3_tests.h"

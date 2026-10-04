@@ -38,7 +38,7 @@ What is the INPUT?
 │   ├── longest path in DAG (critical path, STA) .... TOPO + DP
 │   ├── connected groups / dynamic merging .......... UNION-FIND
 │   ├── 2-colorable / conflict-free split ........... BIPARTITE (BFS coloring)
-│   └── cycles in directed graph / loops ............ DFS 3-color or SCC (Tarjan/Kosaraju)      [P08]
+│   └── cycles in directed graph / loops ............ DFS 3-color or SCC (Tarjan/Kosaraju)      [P08, MM04]
 ├── Strings with shared prefixes, dictionary ......... TRIE                                     [P11]
 └── "Design a data structure" ........................ HASH MAP + (DLL | HEAP | DEQUE)          [P12]
 ```

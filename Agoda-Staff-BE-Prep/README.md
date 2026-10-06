@@ -6,4 +6,4 @@
 | **IV1 Coding:** 2 problems, HackerRank, LC medium–hard (elimination) | Next | [01-Coding-Round-DSA/](01-Coding-Round-DSA/README.md): 3-day sprint, 54 tested problems, 7 mocks |
 | IV2 Platform: system, design, connectivity, QA, code review | Later | _to build_ |
 | IV3 Architecture: low- and high-level design | Later | _to build_ |
-| IV4 Overall technical + culture fit | Later | _to build_ |
+| IV4 Overall technical + culture fit | Later | [04-Projects-Behavioral/](04-Projects-Behavioral/README.md): project write-ups and stories (Cursor prompt pack for the work laptop + strategy) |

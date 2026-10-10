@@ -1,0 +1,192 @@
+"What is the ""Framework of the Opposites""?"	For every decision, consider the exact opposite (push vs pull, store vs don't store, build vs offload), evaluate all paths, then choose.	arpit-sd::01-01-foundational-topics
+Why does a presence system use client heartbeats instead of the server polling clients?	Without a persistent connection the server cannot reach the client, so the client must push a periodic pulse.	arpit-sd::01-01-foundational-topics
+What should the presence table store: a boolean or a timestamp?	The last heartbeat time (epoch). Online = now − last_hb is below a threshold (e.g. 30 s).	arpit-sd::01-01-foundational-topics
+Storage for 1B users at 8 bytes per row?	About 8 GB (4 B user_id + 4 B last_hb).	arpit-sd::01-01-foundational-topics
+"How does ""absence == offline"" shrink the presence store?"	Keep rows only for active users and expire them by TTL. 100k active × 8 B ≈ 800 KB instead of 8 GB.	arpit-sd::01-01-foundational-topics
+Two ways to delete expired presence rows? Which is better?	A CRON job you run, or offloading to a datastore with native TTL (Redis/DynamoDB). Offloading is simpler.	arpit-sd::01-01-foundational-topics
+Redis vs DynamoDB for presence: what decides?	Context: Redis is fast in-memory but costly and self-run; DynamoDB is durable, managed, multi-region, cheaper, with AWS lock-in.	arpit-sd::01-01-foundational-topics
+Heartbeat every 10 s with 1M active users: DB write rate?	6M writes per minute (100k per second).	arpit-sd::01-01-foundational-topics
+Why does connection pooling matter for tiny DB updates?	TCP setup/teardown per request dominates; reusing pre-established connections removes it.	arpit-sd::01-01-foundational-topics
+What data structure implements a connection pool?	A bounded blocking queue (often a circular array) of connection objects; borrowers wait when it's empty.	arpit-sd::01-01-foundational-topics
+Reasons for soft delete?	Recoverability, archival, audit, and no B+ tree rebalancing that a real DELETE can cause.	arpit-sd::01-01-foundational-topics
+What is a cache stampede and the fix?	Many concurrent misses on one key all hit the DB. Request coalescing (single-flight): one request fetches, the rest wait for its result.	arpit-sd::01-01-foundational-topics
+Vertical vs horizontal scaling: what does horizontal add?	Near-linear capacity increase and fault tolerance (vertical just makes one box bigger).	arpit-sd::01-02-scaling-delegation-communication
+Why scale bottom-up?	Stateful layers (DB, cache) must handle the concurrent load from all API servers; scale them first.	arpit-sd::01-02-scaling-delegation-communication
+Three ways to scale a relational DB?	Vertical scaling, read replicas, sharding (plus a proxy to route).	arpit-sd::01-02-scaling-delegation-communication
+What does a DB proxy like ProxySQL do?	Knows the topology; routes queries via rules (e.g. SELECT → replica hostgroup), pools connections, can cache.	arpit-sd::01-02-scaling-delegation-communication
+The performance mantra for delegation?	What doesn't need to be done in realtime shouldn't be done in realtime.	arpit-sd::01-02-scaling-delegation-communication
+Which tasks should be delegated to async workers?	Long-running tasks, heavy computation, batch writes, anything eventually consistent.	arpit-sd::01-02-scaling-delegation-communication
+Message queue vs message stream?	Queue (SQS, RabbitMQ): each message goes to one consumer. Stream (Kafka, Kinesis): each consumer group reads every message.	arpit-sd::01-02-scaling-delegation-communication
+Why use Kafka instead of one worker that counts and indexes?	Separation of concerns: separate consumer groups (counter, search) each process the same event.	arpit-sd::01-02-scaling-delegation-communication
+Kafka's ordering guarantee?	Only within a partition; none across partitions.	arpit-sd::01-02-scaling-delegation-communication
+Two Kafka partition limitations?	You can't reduce partitions; consumers in a group beyond the partition count sit idle.	arpit-sd::01-02-scaling-delegation-communication
+Short polling vs long polling?	Short: server responds immediately, client repeats. Long: server holds the request until data is ready or timeout.	arpit-sd::01-02-scaling-delegation-communication
+WebSockets vs SSE?	WebSockets: bidirectional persistent channel. SSE: server-to-client one-way stream over HTTP.	arpit-sd::01-02-scaling-delegation-communication
+Typical load sequence for a realtime app?	Load UI → fetch initial state via REST → subscribe to live updates.	arpit-sd::01-02-scaling-delegation-communication
+Pessimistic locking flow?	Acquire lock → read/update → release (on commit or rollback).	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+Why do databases need locks?	To protect data consistency and integrity under concurrent updates.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+FOR UPDATE vs SKIP LOCKED vs NOWAIT on a locked row?	Wait · skip it and return other rows · fail immediately with an error.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+Why use SKIP LOCKED for airline seat selection?	Users need any free seat; concurrent transactions each grab a different unlocked seat without queueing or double booking.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+"Name systems with ""fixed inventory + contention""."	Airline check-in, CoWIN slots, IRCTC, BookMyShow, flash sales.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+How do you avoid an is_deleted column in the KV store?	Use a sentinel: expired_at = -1 marks a deleted row.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+How is PUT implemented in the KV store?	An upsert (MySQL REPLACE INTO / ON DUPLICATE KEY UPDATE; Postgres ON CONFLICT DO UPDATE), not GET-then-INSERT/UPDATE.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+How does GET respect TTL?	WHERE key = k AND expired_at > NOW(). Expired rows are filtered at read time.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+Why add LIMIT 1000 to the cleanup DELETE?	Avoid huge transactions that hold many locks, bloat logs, lag replicas and stall live traffic.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+When are read replicas appropriate?	Read-heavy load where slightly stale reads are fine; send consistent reads to the master.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+Master can't handle writes: what next?	Scale vertically first; then shard (range or hash) so each master owns an exclusive slice of keys.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+Do FOR UPDATE locks block a plain SELECT in InnoDB/Postgres?	No. Plain reads use MVCC snapshots; only locking reads wait.	arpit-sd::02-01-databases-locking-check-in-kv-on-sql
+What do most NoSQL DBs trade for scalability and availability?	Consistency (most are eventually consistent).	arpit-sd::02-02-nosql-slack-realtime
+"Does ""NoSQL scales"" imply ""SQL doesn't""?"	No. Anything you can shard scales, relational DBs included.	arpit-sd::02-02-nosql-slack-realtime
+Document vs key-value store?	Document: JSON, complex queries, partial updates (MongoDB). KV: key-wise access, heavily partitioned, no complex queries (Redis, DynamoDB).	arpit-sd::02-02-nosql-slack-realtime
+Why are column stores used for analytics?	They read only the columns a query touches, not whole rows.	arpit-sd::02-02-nosql-slack-realtime
+Wide-column store in one line?	Columns grouped into column families stored together on disk across rows (Cassandra).	arpit-sd::02-02-nosql-slack-realtime
+Slack insight 1?	A DM is just a channel with two members.	arpit-sd::02-02-nosql-slack-realtime
+How are Slack messages sharded and why?	By workspace, so all of a workspace's history is on one shard (no cross-shard scrolling).	arpit-sd::02-02-nosql-slack-realtime
+What does membership.checkpoint store and why?	Last message id read; the client fetches anything newer, which recovers missed realtime messages.	arpit-sd::02-02-nosql-slack-realtime
+Persistence-first vs realtime-first chat examples?	Slack persists first; WhatsApp delivers realtime with async persistence; Zoom chat has no persistence.	arpit-sd::02-02-nosql-slack-realtime
+Why multiplex everything over one WebSocket per user?	WebSockets are expensive persistent TCP connections and browsers limit them.	arpit-sd::02-02-nosql-slack-realtime
+How do edge servers deliver across servers?	Each subscribes to Redis Pub/Sub channels (one per Slack channel) for its users; publishes fan out to every subscribed edge.	arpit-sd::02-02-nosql-slack-realtime
+What does a TCP connection's identity consist of?	Source IP, source port, destination IP, destination port, protocol.	arpit-sd::02-02-nosql-slack-realtime
+Why do LB servers keep config in memory?	A config-DB call per request would wreck latency; the in-memory copy is kept in sync.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+How does config reach LB servers quickly, and what if that path fails?	Config DB → CDC → Redis Pub/Sub push; if Pub/Sub is down, LBs poll.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+What does the LB orchestrator do?	Health-checks backends and LB servers, updates the backend list, scales LB servers using metrics from Prometheus.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+How is the orchestrator itself kept alive?	Leader election: a master assigns exclusive work to workers; a new master is elected on failure.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+How do you scale the LB tier itself?	Weighted DNS (e.g. CoreDNS) resolving one name to many LB server IPs.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+How do two DNS servers provide HA without client changes?	They share a Virtual IP via VRRP; the secondary takes over the VIP (ARP) when the primary fails.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+How do threads, processes and machines synchronise?	Mutex/semaphore; disk (lock files); remote lock manager.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+Two requirements for a remote lock manager?	Atomic acquire and automatic expiry (TTL).	arpit-sd::03-01-load-balancer-remote-distributed-locks
+Redis command to acquire a lock with expiry?	SET key owner NX EX ttl (set-if-not-exists with TTL).	arpit-sd::03-01-load-balancer-remote-distributed-locks
+Why release a Redis lock via a Lua script?	Owner check + delete must be atomic so you never delete someone else's re-acquired lock.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+How does Redlock acquire a lock?	SETNX on N independent Redis masters; success if a majority (e.g. 3 of 5) is acquired, else release all.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+What does Redlock buy you and what does it cost?	No single point of failure and better correctness; lower throughput (consensus is slow).	arpit-sd::03-01-load-balancer-remote-distributed-locks
+Why do TTL-based locks need fencing tokens?	A paused holder can outlive its TTL while another client acquires the lock; monotonically increasing tokens let the resource reject stale writers.	arpit-sd::03-01-load-balancer-remote-distributed-locks
+Why can't sharded DBs rely on auto-increment IDs?	Each independent shard's auto-increment collides with the others; the app must supply globally unique IDs.	arpit-sd::03-02-id-generation
+Why does epoch_ms alone fail as an ID?	Two machines (or two calls) in the same millisecond produce the same value.	arpit-sd::03-02-id-generation
+How do you persist an ID counter cheaply and recover safely?	Flush every N increments; on restart begin at last_flushed + N (+1), skipping but never reusing IDs.	arpit-sd::03-02-id-generation
+Why do ID schemes put time in the most significant bits?	Numeric order matches time order (sortable); lower bits only break ties.	arpit-sd::03-02-id-generation
+What breaks monotonicity across machines?	Clock skew between machines.	arpit-sd::03-02-id-generation
+Core lesson about distributed ID generation?	You can't distribute it and guarantee strict monotonicity, so real systems relax a constraint.	arpit-sd::03-02-id-generation
+Amazon-style central ID service optimisation?	Hand out ID batches (ranges) per call; servers re-ask when exhausted.	arpit-sd::03-02-id-generation
+Why avoid UUIDs as primary keys at scale?	128-bit random keys bloat indexes and scatter inserts; indexes stop fitting in memory.	arpit-sd::03-02-id-generation
+How do Flickr ticket servers work and avoid SPOF?	MySQL auto-increment table bumped via upsert; two servers issue odd and even IDs.	arpit-sd::03-02-id-generation
+INSERT … ON DUPLICATE KEY UPDATE vs REPLACE INTO?	ODKU updates in place; REPLACE deletes then inserts (much slower). Both atomic.	arpit-sd::03-02-id-generation
+Snowflake bit layout?	41 bits epoch ms, 10 bits machine id, 12 bits per-machine sequence (plus a 0 sign bit).	arpit-sd::03-02-id-generation
+Instagram's ID layout and where it's generated?	41 bits ms since 2011, 13 bits logical shard, 10 bits sequence; a Postgres function at INSERT.	arpit-sd::03-02-id-generation
+Why is since_id pagination efficient?	It seeks straight into the index (WHERE id > x LIMIT k) instead of skipping OFFSET rows.	arpit-sd::03-02-id-generation
+How does a CDN serve a request?	Its domain maps to your origin; on a miss it fetches from the origin, caches the response and returns it.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+Why shouldn't photo uploads go through the API server?	It doubles bandwidth and wastes API resources just relaying bytes.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+How does a client upload to S3 without your servers relaying?	The service creates a pre-signed URL for an exact path; the client PUTs directly to S3.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+Why store image_id instead of the full image URL on a post?	The S3 path is computable from user_id + image_id; saves space and lets the service validate ownership.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+How are Instagram's private photos protected?	Short-lived signed CDN URLs; the CDN rejects invalid or expired signatures.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+Why can a service verify a JWT without the auth service?	It checks the signature with the issuer's public key (asymmetric, e.g. RS256).	arpit-sd::04-01-cdn-photo-uploads-gravatar
+When should you reach for public-key cryptography?	When system A must trust system B's statement without calling B.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+How do you avoid sending huge photos to every device?	CDN on-the-fly transformation (e.g. ?w=360), with cached variants.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+What is the Gravatar URL keyed by?	A hash of the user's email.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+"Two ways to model ""one active photo per user""?"	is_active flag flipped in one transaction (with a unique partial index), or active_photo_id denormalised on users.	arpit-sd::04-01-cdn-photo-uploads-gravatar
+How does the hashtag page achieve super-fast reads?	One pre-computed document per tag (count + top posts), served by key from a partitioned DB, cache and CDN.	arpit-sd::04-02-hashtag-service-unread-indicator
+Post ids vs full post details in the hashtag doc?	Ids: small but N+1 enrichment on read. Full details: one fast read, more storage, risk of staleness.	arpit-sd::04-02-hashtag-service-unread-indicator
+What's the value of splitting read and write paths?	Each can be optimised independently: cache + thin API on reads; Kafka + batching on writes.	arpit-sd::04-02-hashtag-service-unread-indicator
+How do hashtag workers count efficiently?	Aggregate counts in memory and flush every N events or time window with one increment per tag.	arpit-sd::04-02-hashtag-service-unread-indicator
+How do you minimise stop-the-world during a flush?	Swap the active map under the lock (O(1)) and write the old map to the DB outside the lock.	arpit-sd::04-02-hashtag-service-unread-indicator
+Why add a hashtag-extraction adapter?	POST_PUBLISH is keyed by post; re-emitting per-hashtag events keyed by tag lets one consumer own each tag's counts.	arpit-sd::04-02-hashtag-service-unread-indicator
+What does the newly-unread badge count?	The number of distinct people with unread messages, not the number of messages.	arpit-sd::04-02-hashtag-service-unread-indicator
+Best index for counting distinct unread senders?	Covering composite (to, ts, from): equality, then range, then the read column.	arpit-sd::04-02-hashtag-service-unread-indicator
+Day-N design for the unread indicator?	ON_MSG_UNSENT events → workers SADD(dest, src) into a per-user Redis set; the badge is the set size; clear on read.	arpit-sd::04-02-hashtag-service-unread-indicator
+"How is ""unread"" detected in the pre-computed approach?"	The messaging service knows via WebSocket presence that delivery failed and emits ON_MSG_UNSENT.	arpit-sd::04-02-hashtag-service-unread-indicator
+Core data structure of a cache server?	A hash table mapping key → typed object (type decides allowed operations).	arpit-sd::05-01-distributed-cache
+HTTP vs raw TCP (RESP) for a cache?	HTTP: easy tooling but heavy per-request overhead. RESP over TCP: minimal overhead, needs custom clients.	arpit-sd::05-01-distributed-cache
+How does a cache know it's full?	Cap on key count, or track total bytes via an allocation wrapper (zmalloc/zfree).	arpit-sd::05-01-distributed-cache
+LRU vs LFU: typical workloads?	LRU for recency-driven traffic (news, CDN); LFU for stable popularity (Wikipedia).	arpit-sd::05-01-distributed-cache
+Why does Redis approximate LRU?	An exact doubly linked list costs memory and CPU; sampling keys into a small eviction pool is close enough.	arpit-sd::05-01-distributed-cache
+Three ways to expire TTL keys?	Priority queue by expiry; lazy deletion on access; random sampling (Redis: 20 keys, repeat if > 25% expired).	arpit-sd::05-01-distributed-cache
+How does single-threaded Redis run background work?	Time events in its event loop (serverCron, activeExpireCycle) interleaved with I/O.	arpit-sd::05-01-distributed-cache
+How do multi-threaded caches (DiceDB) avoid lock contention?	Shared-nothing: one hash-table shard per core owned by a pinned data thread; I/O threads route by hash.	arpit-sd::05-01-distributed-cache
+Problem with hash(key) % N routing?	Changing N remaps most keys (≈ N/(N+1) of them).	arpit-sd::05-01-distributed-cache
+How does consistent hashing assign keys?	Nodes and keys hash onto a ring; each key goes to the next node clockwise.	arpit-sd::05-01-distributed-cache
+Steps to add a cache node with minimal transfer?	Snapshot the neighbour, load, replicate until lag ≈ 0, brief pause, update ring, resume, delete moved data.	arpit-sd::05-01-distributed-cache
+What problem do virtual nodes solve?	Skewed ring arcs: many positions per node spread load evenly.	arpit-sd::05-01-distributed-cache
+How do you look up a word in a 1 TB file quickly without a DB?	Load a small word → (offset, length) index into memory and read only that byte range from S3.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+Rough size of the dictionary index?	About 171k entries × ~16 B ≈ 2.7 MB (more with 8-byte offsets, still tiny).	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+How is the weekly changelog applied efficiently?	Both are sorted, so merge them in O(n) like merge sort, then rebuild the index.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+How do you switch dictionary versions without garbage reads?	Upload to a new versioned path and flip a meta.json pointer; never overwrite files in place.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+How do you store index and data in one portable file?	A fixed-length header holding the index and data offsets (plus metadata), followed by the index, then the data.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+Why are log-structured stores fast for writes?	Append-only sequential writes avoid disk seeks.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+How does an append-only store delete a key?	Append a tombstone (e.g. PUT(k, -1)); compaction removes it later.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+Layout of a Bitcask entry?	CRC, timestamp, key size, value size, key, value.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+How does Bitcask achieve O(1) GET?	An in-memory hash index maps key → (file id, value position, size); one seek reads the value.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+Bitcask's main limitation?	All keys must fit in memory.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+What does merge/compaction do in Bitcask?	Rewrites immutable files keeping only each key's latest live value and updates the index atomically.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+How do databases recover a torn write at the end of the log?	Scan entries verifying CRCs and truncate at the first mismatch.	arpit-sd::05-02-dictionary-without-db-bitcask-wal-recovery
+Core idea of an LSM tree over Bitcask?	Buffer writes in an in-memory memtable (plus a WAL), flush periodically to immutable sorted files, so keys needn't fit in RAM.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+What is an SSTable?	An immutable file of key-sorted entries with an index of key → offset.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Order of lookup for GET in an LSM?	Memtable, then SSTables newest to oldest; first hit wins.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Why flush the memtable to a new file each time?	Faster, one-shot sequential writes; avoids rewriting a large existing file.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+How do Bloom filters speed up LSM reads?	"Each SSTable's filter says ""definitely not here"" so the file is skipped; ""maybe"" means check it."	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Bloom filter error types?	False positives possible, false negatives impossible.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Purpose of the WAL in an LSM?	Durability for memtable contents; replayed on restart and truncated after each flush.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+B+ tree vs LSM workload fit?	B+ trees for read-heavy; LSM for write-heavy.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Name LSM-based storage engines.	RocksDB, LevelDB, BadgerDB (also Cassandra).	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Idea behind multi-tiered order storage?	Move orders to cheaper tiers by age (hot MySQL → S3) while keeping them queryable via indexes.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+How is cold data on S3 kept queryable?	Indexed file layout (index + data) served by index servers or Athena/Hive-style engines.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+How do you ingest huge event volumes cheaply?	Write to rotating local log files and ship them as batches to Kafka/S3, not one sync write per event.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Why avoid video_id as the Kafka partition key for impressions?	A viral video would create a hot partition; spread events evenly.	arpit-sd::06-01-lsm-trees-tiered-storage-event-ingestion
+Master vs playlist m3u8?	Master lists renditions (bandwidth/resolution → playlist) and doesn't change; a playlist lists .ts segments and grows by appends during live.	arpit-sd::06-02-live-streaming-designing-s3
+How does a player follow a live HLS stream?	It periodically re-fetches the playlist and plays newly appended segments.	arpit-sd::06-02-live-streaming-designing-s3
+SSAI vs CSAI?	SSAI stitches ad segments into the manifest server-side (seamless, hard to block); CSAI plays ads in the client on cues (glitchy, blockable).	arpit-sd::06-02-live-streaming-designing-s3
+Components of SSAI?	Origin with SCTE-35 markers, a manifest manipulator, an ad decision server (VAST), and the CDN.	arpit-sd::06-02-live-streaming-designing-s3
+How are private live streams protected at the CDN?	Signed tokens/certificates validated by the CDN per request.	arpit-sd::06-02-live-streaming-designing-s3
+Why use multiple CDNs?	Backup and performance: continuously measure and shift traffic in real time.	arpit-sd::06-02-live-streaming-designing-s3
+S3's four design goals?	Strong consistency, global namespace, multi-tenancy, cost efficiency.	arpit-sd::06-02-live-streaming-designing-s3
+What is a storage stamp?	A cluster of 10–20 racks (~30–50 PB) run at ≤ 70% utilisation, with headroom for rack failures.	arpit-sd::06-02-live-streaming-designing-s3
+What does the location service do?	Maps accounts/namespaces to stamps (via DNS) and manages cross-stamp replication.	arpit-sd::06-02-live-streaming-designing-s3
+Three layers inside a stamp?	Front-end (auth + routing + streaming), Partition (range ownership, throttling), Stream (replicated append-only DFS).	arpit-sd::06-02-live-streaming-designing-s3
+Why range partitioning in S3?	Keeps object locality and tenant isolation, and lets hot ranges be split.	arpit-sd::06-02-live-streaming-designing-s3
+Partition ownership rule?	Each partition is owned by exactly one partition server; a server can own many partitions.	arpit-sd::06-02-live-streaming-designing-s3
+How does S3-style storage get durability?	Sync replicas within the stamp, async replicas across data centres and regions.	arpit-sd::06-02-live-streaming-designing-s3
+Which user behaviours shape the recent-searches design?	50% tap the search bar within 5 s (read-heavy, must be preloaded); 30% of searches come from recent searches (write-heavy).	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+How are recent searches stored for fast reads?	A pre-computed list of the last 10 queries per user in Redis, written synchronously.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+Where does the full search history go?	Async via Kafka into a partitioned NoSQL DB (search logs), archived to S3 after ~6 months.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+How do you avoid a slow first load when a user's Redis entry was evicted?	Pre-warm recent searches into Redis when the app opens.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+Why short polling instead of WebSockets for Cricbuzz commentary?	About one update per minute and identical data for everyone; cached polling is cheaper than millions of idle sockets.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+How is the latest commentary served cheaply?	Redis holds the latest per match, or a CDN with max-age ≈ 5 s and prefreshing near expiry.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+How is commentary stored?	Ball-wise rows (match_id, innings, ball, text), upserted per ball.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+Pain points of Day-0 Elasticsearch?	Painful recovery, limits on scale and experimentation, hard debugging, no auto replication or latency routing, costly big tenants, no throttling.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+Key pieces of the revamped search platform?	Indexers to primary + backup-region ES, a search gateway, identity (JWT) and relevance re-ranking, multi-region failover.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+ES routing strategy by tenant size?	Small tenant → one shard (tenant_id % shards); large tenant → spread over N shards (tenant_id + doc_id % N).	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+What problem does tenant-aware routing solve?	Hot shards and noisy neighbours from uneven tenant sizes.	arpit-sd::07-01-recent-searches-cricbuzz-es-in-production
+Requirements of the distributed task scheduler?	One-off or cron tasks executed (as HTTP calls) within a 30 s SLA, minute granularity, multi-tenant, ~2B tasks/day.	arpit-sd::07-02-task-scheduler-flash-sale
+Why must every scheduler component be horizontally scalable and fault tolerant?	The strict SLA at extreme scale leaves no room for bottlenecks or single points of failure.	arpit-sd::07-02-task-scheduler-flash-sale
+How is the task store partitioned?	By tenant (customer or microservice).	arpit-sd::07-02-task-scheduler-flash-sale
+What do task pullers do and how are they coordinated?	Pull due tasks and enqueue them; each owns a tenant range assigned via ZooKeeper, reassigned if it dies.	arpit-sd::07-02-task-scheduler-flash-sale
+SQL used to pull due tasks concurrently?	WHERE scheduled_at <= now AND picked_at IS NULL ORDER BY scheduled_at LIMIT n FOR UPDATE SKIP LOCKED, then mark picked.	arpit-sd::07-02-task-scheduler-flash-sale
+How are executors organised and scaled?	Separate queues/fleets by priority and task type; an orchestrator autoscales on queue length.	arpit-sd::07-02-task-scheduler-flash-sale
+How are recurring (cron) tasks handled?	Expand the cron into the next N absolute run times inserted as jobs (idempotently), topping up on each pick.	arpit-sd::07-02-task-scheduler-flash-sale
+Why model flash-sale stock as one row per unit?	So concurrent buyers lock different rows (SKIP LOCKED) instead of all contending on one qty row.	arpit-sd::07-02-task-scheduler-flash-sale
+What happens on payment failure in the flash sale?	The unit is released: picked_at and picked_by are reset to NULL.	arpit-sd::07-02-task-scheduler-flash-sale
+How are abandoned carts handled?	A CRON job releases units picked more than ~12 min ago and not purchased.	arpit-sd::07-02-task-scheduler-flash-sale
+Why can't add-to-cart and payment be one transaction?	They span services and time; there's no distributed transaction, so use steps with compensation.	arpit-sd::07-02-task-scheduler-flash-sale
+Why can't per-minute unique counts be summed?	Users repeat across minutes; you need a set union, not a sum.	arpit-sd::08-01-impression-counting-dropbox-sync
+Why are exact hash sets impractical for impression counting at scale?	Each ad-minute can take MBs; hourly unions across thousands of customers run into TBs of processing.	arpit-sd::08-01-impression-counting-dropbox-sync
+What data structure estimates unique counts cheaply?	HyperLogLog (~12 KB per key, mergeable, approximate).	arpit-sd::08-01-impression-counting-dropbox-sync
+Redis HLL commands?	PFADD (add, O(1)), PFCOUNT (cardinality), PFMERGE (union of N HLLs).	arpit-sd::08-01-impression-counting-dropbox-sync
+Main limitation of HLL besides approximation?	You can't delete elements.	arpit-sd::08-01-impression-counting-dropbox-sync
+How do you answer unique viewers for an arbitrary range?	PFMERGE the per-minute HLLs for that range into a temp key, then PFCOUNT.	arpit-sd::08-01-impression-counting-dropbox-sync
+How does the impressions design keep Redis small?	Recent HLLs stay in Redis; bytes are copied periodically to DynamoDB and reloaded on demand.	arpit-sd::08-01-impression-counting-dropbox-sync
+Why archive raw view events to S3?	Replayability: if filter rules had a bug, events can be reprocessed.	arpit-sd::08-01-impression-counting-dropbox-sync
+How does Dropbox represent a file?	As a blocklist: hashes of 4 MB blocks, with blocks stored content-addressed.	arpit-sd::08-01-impression-counting-dropbox-sync
+Dropbox upload protocol?	Commit blocklist → metaserver replies with missing hashes → client uploads them to the block server → re-commit.	arpit-sd::08-01-impression-counting-dropbox-sync
+How do clients learn about changes?	A per-namespace incrementing version id; clients fetch everything after their last version, like a Kafka offset.	arpit-sd::08-01-impression-counting-dropbox-sync
+How does multi-versioning fall out of the design?	Old metadata rows keep old blocklists; the blocks still exist, so any version can be rebuilt.	arpit-sd::08-01-impression-counting-dropbox-sync
+Why is geo-proximity hard with plain (x, y)?	It needs a 2D range query (intersecting two 1D ranges), O(n) naively; 1D ranges are easy.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+How does GeoHash encode a location?	Repeatedly halve the longitude and latitude ranges into bits, interleave them, and encode in base 32.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+What does a shared GeoHash prefix mean?	The points fall in the same cell, so they're likely near each other (longer prefix = smaller cell).	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+GeoHash boundary edge case and fix?	Nearby points across a cell edge get different prefixes; also search the 8 neighbouring cells.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+Why Redis for ride-hailing driver locations?	In-memory speed, built-in geo queries, multi-master multi-replica sharding.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+Why did Gojek need EVAL_RO?	Redis rejects EVAL on replicas (scripts could write); a read-only variant lets filtering scripts run on replicas.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+How does the matcher keep latency low?	Split the area into smaller GEOSEARCH queries run in parallel; return partial results if the SLA is breached.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+How were hot shards avoided for driver locations?	Manually mix peak and low-traffic regions on each master (Redis sharding has no business context).	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+Why not a graph DB for follow/following?	No advanced graph algorithms needed; costly, hard to operate, and pagination is tricky.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+Problem with sharding an edges(src, dest) table by src?	"""Followers of B"" filters on dest, so it must fan out across all shards."	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+How do you serve both follower and following queries from one shard?	Store two rows per follow, (A, B, FOLLOWS) and (B, A, FOLLOWED_BY), and shard by src.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+FlockDB primary key and unique index?	PK (source_id, state, position); unique (source_id, destination_id, state).	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph
+How does FlockDB paginate efficiently?	Cursor on position (WHERE position > last ORDER BY position LIMIT k), not OFFSET.	arpit-sd::08-02-geo-proximity-ride-hailing-follow-graph

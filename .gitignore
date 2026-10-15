@@ -278,3 +278,6 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+# Company-internal interview material: keep out of this public repo
+Agoda-Staff-BE-Prep/**/*Interview_Toolkit*.pdf

@@ -13,6 +13,8 @@ This question involves creating a system that allows users to search through a l
 Design an API Gateway for Atlassian Services
 Candidates should discuss the architecture for an API gateway that handles incoming API requests, performs routing, load balancing, and security checks. Key points include scalability, rate limiting, authentication, and monitoring.
 
+Design Tagging Service for Atlassian content.
+
 Design a Version Control System for Documentation
 This question tests the ability to design a system that manages versioning for project documentation, including tracking changes, handling concurrent edits, and providing version history. Important considerations include data storage, conflict resolution, and ensuring data integrity.
 

@@ -14,9 +14,10 @@
 | Generic C + D + E (22 Qs) | 2 | |
 | Mock 1 | 2 | |
 | Mock 2 | 2 | |
-| WSL lab 1: supplier gateway | 3+ | |
-| WSL lab 2: idempotent booking | 3+ | |
-| WSL lab 3: signed webhooks | 3+ | |
+| WSL P1: booking, no double booking + idempotency (W2#1) | 3+ | |
+| WSL P2–P3: bounded pool → supplier gateway capstone | 3+ | |
+| WSL P4: cursor pagination (W8#2) | 3+ | |
+| WSL P5–P7: webhooks · auth · outbox queue | 3+ | |
 | Mock 3 (eve) | eve | |
 
 ## Mock scores (1–4)

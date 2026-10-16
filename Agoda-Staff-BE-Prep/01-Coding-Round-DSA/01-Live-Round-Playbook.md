@@ -77,6 +77,16 @@ Then: *"Let me run your example by hand… and one of mine: ___."*
 4. Keep functions short. Extract `canShip(capacity)`, `readCount(i)`, `expand(l, r)`.
 5. Before pressing Run: the **60-second checklist** in §7.
 
+**When you go blank mid-code (the "I can only write it if I remember it" trap):**
+Write your plan as 3–4 comments *first*, then turn each comment into 1–3 lines of code. You are never recalling code — you are translating a sentence. This works even for problems you've never seen:
+```cpp
+// if '(' : open a new level (recurse)
+// if ')' : close this level (return)
+// digit  : accumulate count
+// else   : read one token, apply count
+```
+Then fill each comment. Every line is small and obvious — nothing to recall, nothing to imagine. The comments also double as narration: the interviewer hears your plan as you code it.
+
 ### D. Test (4–5 min). Agoda scores this separately
 > "I'll test the given example, then the edge cases I listed earlier, and say why for each."
 

@@ -1,0 +1,237 @@
+{
+ "author": "Staff-bar review",
+ "initials": "SR",
+ "date": "2026-09-27T00:00:00Z",
+ "edits": [
+  {
+   "find": "Anuj Pratap Singh Yadav",
+   "comment": "HOW TO READ THIS (v2, updated with your answers): comments carry the critique of the original text, tagged [CRITICAL] / [HIGH] / [MED] / [LOW]. Redlines are the proposed text. Review > Accept All produces the rewrite. No [confirm] brackets are left; every new fact comes from your answers of 27 Sep.\n\nVERDICT: the original file is not at the Staff bar. The rewrite gets much closer, and your answers did most of that, not the wording. A shared layer serving 10-12 apps, a pattern another team (Low Power) adopted as a documented standard, design docs through architect and Distinguished Engineer review, interview panels, mentoring, and team adoption of your AI tooling are all Staff signals, and none of them were on the page.\n\nWith the redlines accepted: about 8.5/10 for FAANG Senior, and about 7/10 against the Staff (Google L6 / Microsoft 65) bar. That's competitive for Staff resume screens; the interview loop decides. What still keeps it below a clear L6: no measured org-level outcome (build time wasn't benchmarked), you own a subsystem rather than lead engineers on it, and there's no production distributed-systems depth. Principal is still out of range."
+  },
+  {
+   "find": "+91-97523-73677",
+   "comment": "[MED] Header. (1) The visible text is the word 'LinkedIn'. Naukri's parser and most ATS read text only, so your URL is lost, and on paper it doesn't exist. Print the URL. (2) No location. You're running an India-only search and recruiters filter on location first. Say 'open to Bangalore / Hyderabad' in recruiter replies; on the header it wraps the line. (3) The icons, especially the Gmail logo, add nothing and look template-made; ATS ignores them. Optional: drop them.",
+   "sub": [
+    [
+     "LinkedIn",
+     "linkedin.com/in/yadavaps77"
+    ],
+    [
+     "  +91-97523-73677   |   ",
+     "  +91-97523-73677   |   Noida, India   |   "
+    ]
+   ]
+  },
+  {
+   "find": "Staff Engineer with a decade of full-stack shipping",
+   "comment": "[HIGH] Summary. The first line spends itself on 'a decade of full-stack shipping - desktop binaries, enterprise web, and cloud SaaS'. To a FAANG screener 'full-stack' means web front-to-back, which you are not selling, so it positions you as a generalist. The only number (Cameo 1.2M of 4.2M) is a team's product usage. 'Every major chipmaker' is an unverifiable superlative. 'A decade' conflicts with the EDA version's '11 years'.\n\nThe rewrite uses the throughline you actually have (three huge, long-lived C++ codebases) and the two scope facts from your answers: 10-12 apps and a documented cross-team standard.",
+   "replace": "Staff Engineer with 11 years in large, long-lived C++ codebases: Photoshop Elements (Adobe), Office Win32 (Microsoft) and now Synopsys VC Formal, a 2M+ line formal-verification product. I own a customer-facing C++ subsystem end to end and led an incremental decoupling of a shared layer used by 10-12 apps that cut cross-layer dependencies ~75% without a rewrite; the pattern is now a documented cross-team standard.",
+   "diff": "whole"
+  },
+  {
+   "find": "SKILLS",
+   "comment": "[MED] Section order. SKILLS occupies the most valuable space on the page (the top third) with 5 lines of keywords. A human screener's 6-second pass goes name, title, company, first two bullets. Move SKILLS below EXPERIENCE (ATS doesn't care about order) or compress it to 2 lines. Not redlined because a tracked block move is messy in Word 2010; do this one by hand."
+  },
+  {
+   "find": "Languages: ",
+   "comment": "[HIGH] 'Go (study repo)' advertises a language whose only evidence is code nobody can see. Google/Meta recruiters will happily route you to a Go-heavy team, and the interviewer will ask for the repo. Remove it until the repo is public.",
+   "sub": [
+    [
+     ", Go (study repo)",
+     ""
+    ]
+   ]
+  },
+  {
+   "find": "Systems: ",
+   "comment": "[HIGH] The riskiest line on the page for a FAANG loop. 'Distributed systems, microservices, event-driven architectures' rests on one Microsoft service your own bullet says you 'contributed to'. An L6 system-design interviewer will spend 45 minutes testing exactly these words, and the resume has already promised depth. List what you can defend under pressure. Distributed-systems skill gets proven in the design round, not claimed in a skills line.",
+   "sub": [
+    [
+     "Distributed systems, microservices, multi-process IPC, event-driven architectures, large-codebase refactoring, dependency management",
+     "Modern C++ (C++17), large-codebase refactoring and modularization, dependency inversion, multi-process IPC, performance optimization, Linux, GDB"
+    ]
+   ]
+  },
+  {
+   "find": "Backend / Cloud: ",
+   "comment": "[MED] 'SDX' is Office-internal jargon. 'Multi-service integration' is filler. Keep REST APIs only if you designed or implemented endpoints, because it will be asked.",
+   "sub": [
+    [
+     "Azure (EventHubs, SharePoint), Docker, REST APIs, telemetry and metrics, SDX; multi-service integration",
+     "C# services on Azure (Event Hubs), Docker, REST APIs, product telemetry"
+    ]
+   ]
+  },
+  {
+   "find": "Frontend / Desktop: ",
+   "comment": "[LOW] Fine for Adobe or Microsoft app teams. For infra and platform roles it dilutes the C++ systems story, so drop it in a C++ systems variant.",
+   "sub": [
+    [
+     "React, TypeScript, HTML/CSS; ",
+     "React, TypeScript; "
+    ]
+   ]
+  },
+  {
+   "find": "Tooling and AI: ",
+   "comment": "[HIGH] 'LLVM-adjacent' is a weasel word: an interviewer reads it as 'I haven't used LLVM'. You are using it, in the program slicer (first phase done). Name it. 'Cursor SDK (built custom skills, MDC rules, subagents...)' lists the internals of the tool rather than what it's for. 'RIBS/Hyperdrive, vgbuild/synmake' are internal build-system names that mean nothing outside Adobe/Synopsys.",
+   "sub": [
+    [
+     "Cursor SDK (built custom skills, MDC rules, subagents, knowledge-indexing pipeline), Perforce/Git, CI/CD (RIBS/Hyperdrive, vgbuild/synmake), LLVM-adjacent",
+     "LLVM (program slicer, in progress), LLM agent tooling (Cursor skills, searchable doc index), Perforce, Git, CI/CD"
+    ]
+   ]
+  },
+  {
+   "find": "Staff Engineer  |  Synopsys Inc",
+   "comment": "[LOW] Title and dates: keep as is. You said the Feb 2024 change was a re-title, not a promotion. Listing your current title across the whole company tenure is the standard convention, and Indian background verification normally checks last designation plus joining/leaving dates, which this matches. LinkedIn shows the split; if anyone asks: 'same role, the title changed in Feb 2024'. (If it was actually a level change, show the split dates instead of the full tenure under Staff.)",
+   "keep_next": true
+  },
+  {
+   "find": "Product: VC Formal (DPV / Hector)",
+   "comment": "[LOW] 'DPV / Hector' are internal names. For a FAANG reader, say what the product does.",
+   "sub": [
+    [
+     "Product: VC Formal (DPV / Hector)",
+     "Product: VC Formal, formal verification for chip design"
+    ]
+   ]
+  },
+  {
+   "find": "- Own the C++/RTL coverage subsystem",
+   "comment": "[HIGH] Your clearest Staff signal (external customers, every release), written as a roster instead of a scope. (1) The customer names appear 3 times on this page (here, licensing, incidents). Once is a hook; three times is name-dropping, and it costs ~2 lines. (2) Judgment: naming a vendor's customers next to their escalations tells a hiring manager you'd do the same with theirs. Name them once, with no issue detail. (3) Missing: what 'own' means, and the Nvidia summit talk. The incidents bullet is folded in here.\n\nOn your worry that design review by a Distinguished Engineer 'reduces story points': it doesn't. Authoring design docs that pass architect/DE review is itself a Staff signal. What would hurt is implying the DE designed it, and the wording makes the authorship yours.",
+   "replace": "- Own the C++/RTL coverage subsystem of VC Formal end to end: design docs (reviewed by senior architects and a Distinguished Engineer), every release since 2023, and escalations from 8 semiconductor customers (incl. Nvidia, Intel, AMD, Apple, Google), each taken from root cause to regression test to a fix across all active release streams. Presented it at Nvidia's internal formal-verification summit.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Architected and drove an org-wide decoupling",
+   "comment": "[HIGH] Your best bullet, and badly undersold. (1) 'The internal dependency metric from 132 to 34': the reader can't know what 132 counts. It's now framed as cross-layer dependencies. There's no build-time number, so don't claim faster builds in interviews unless you measure it. You still could: time the rebuild after touching one shared header on an old changelist versus today. (2) The judgment was missing: earlier attempts stalled, and you chose incremental dependency inversion over a big-bang split. (3) The scope and adoption were missing, and your answers supply them. The shared layer serves 10-12 apps; you worked it through with the shared-code and CDC teams; the pattern became a documented standard; another team (Low Power) adopted it; two engineers you mentored run their own changes. That's multi-team influence, the core L6 signal, now split into two bullets so neither runs past 3 lines. (4) 'CLs' is Perforce jargon.",
+   "replace": "- Led the decoupling of shared code from engine internals in a 2M+ line C++ codebase whose shared layer serves 10-12 apps, a decade-old coupling that had stalled earlier attempts. Chose incremental dependency inversion (a callback-based options layer) over a big-bang split; 2-3 changes per sprint for 6+ months with the shared-code and CDC teams; cross-layer dependencies down ~75% (132 to 34).",
+   "diff": "whole",
+   "insert_after": [
+    "- Made the pattern a documented cross-team standard and presented it org-wide; the Low Power team adopted it, and two engineers I mentored now run their own decoupling work."
+   ]
+  },
+  {
+   "find": "- Led delivery of a coverage-database subsystem",
+   "comment": "[MED] An implementation inventory (append-only DB generation, proof-list union semantics, dual-design flow, sortable HTML columns) with no outcome. 'Led delivery': led whom? You built it; say 'built', and pair it with the cross-site design agreement. Missing: why it mattered. Customers couldn't merge proofs or save coverage for the viewer, and that blocked their signoff. A before/after beats a feature list.",
+   "replace": "- Built the coverage-database writer from scratch on a proprietary coverage API, unblocking customer signoff flows that could not merge proofs or save coverage for the viewer. Agreed the database hierarchy with the viewer team in Taiwan; hardened it through 8+ customer-reported issues and 40+ regression tests.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Delivered a three-phase licensing modernization",
+   "comment": "[HIGH] Three phases, two years, customer-facing, and the bullet reduces it to arrows and '76%'. The judgment is invisible: a fallback order designed so existing customers weren't locked out when tiers changed. Your best number is missing: the probe harness cut licensing-regression triage from weeks to ~2 days. '76% of the regression suite', with nothing about what it bought, reads as 'deleted tests'. The customer names repeat for the second time. The verified core limits (Base 1 to 4, Elite 4 to 12) become '3-4x' for a non-EDA reader.",
+   "replace": "- Took the product line's licensing through three models in two years (token; per-app cores with 3-4x higher per-license core limits; tiered with fallback), designing the fallback order so existing customers were never locked out by a tier change. Built a license-probe harness that turned regression triage from weeks into ~2 days, and cut the licensing suite from 38 tests to 9 with coverage preserved.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Delivered Property & Assertion Density",
+   "comment": "[MED] Was the weakest Synopsys bullet: 'Delivered X across A, B, C, D; shipped 5 sub-capabilities' is a mid-level activity log with no user and no outcome. Your answer supplies the outcome: most customers adopted it. That turns it into a real bullet.",
+   "replace": "- Built property and assertion density reporting end to end (engine, TCL shell, two-process XML IPC, HTML report) so customers could measure verification completeness on datapath designs, closing a gap with the sister product; now used by most of the product's customers.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Owned end-to-end customer incidents",
+   "comment": "[MED] Duplicate of bullet 1: the same customer list, for the second full time. Folded into bullet 1.",
+   "delete": true
+  },
+  {
+   "find": "- Built an internal Cursor-based engineering-productivity platform",
+   "comment": "[HIGH] Before your answer, this read as scope inflation: 'internal platform' with no evidence anyone else used it. You've now confirmed the real, and better, story: you introduced AI tooling to the team, the skills are shared and used, and your manager asked you to build the Jira-compliance notifier. Say that. 'Introduced' plus 'shared' is team leverage; 'platform' was a label without the evidence.\n\nIf you can get a count ('used by N of the team'), add it; it's the one number that would make this unambiguous. The JIRA ramp-up figure is dropped: it's the weaker of the two numbers and crowds the line.\n\nTwo lines follow: the program slicer (current, technical, relevant to C++ tooling roles) and a short 'Also' line for interviews, code reviews and mentoring, which is Staff evidence that was nowhere on the page.",
+   "replace": "- Introduced LLM agent tooling to my team: built and shared Cursor skills for regression validation, code review and license checks, backed by a searchable index of 500+ internal docs; regression triage dropped from 2-3 hours to 5-10 minutes. Also built the daily Jira-compliance notifier my manager asked for.",
+   "diff": "whole",
+   "insert_after": [
+    "- Building an LLVM-based program slicer for C++ hardware designs (in progress): the first phase computes the cone of influence of the signals used in a design's assertion properties.",
+    "- Also: interview panels; 50+ code reviews across my team and neighbouring teams; mentored 2 engineers on the coverage stack and ran the knowledge transfer that brought it into a new C++/RTL verification app."
+   ]
+  },
+  {
+   "find": "Software Engineer II  |  Microsoft",
+   "comment": "[LOW] Nothing to change, but know the effect: Microsoft SWE II (L61-62) at years 6-8 is the level anchor FAANG recruiters use. It's why the Synopsys section must carry the Staff case on its own.",
+   "keep_next": true
+  },
+  {
+   "find": "- Owned PowerPoint Recording Studio enhancements",
+   "comment": "[HIGH] Attribution. You confirmed Recording Studio was a team effort, not features you owned alone, so 'Owned' and 'driving 1.5M to 4.2M' both overstate. The honest version still carries the scale: you built features on a team whose product grew 2.8x. 'Sessions' follows your Cameo source; if an ex-Microsoft interviewer asks, it's the team's number, and say so first. The automation and telemetry bullet is merged in here.",
+   "replace": "- Built PowerPoint Recording Studio features (C++) with the team: camera modes, live background blur, video export and Cameo, a camera object placed on the slide. Monthly recording sessions grew from 1.5M to 4.2M over those releases (Cameo: ~1.2M). Led v1 test automation and Recording/Export telemetry.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Built the Stream 2.0 video insertion",
+   "comment": "[LOW] Fine as a supporting line. 'SDX' is jargon, and 'multi-service playback for M365 enterprise users' is filler.",
+   "replace": "- Built the standalone video insertion and playback component for Stream 2.0 in Excel Win32 (C++, TypeScript), for SharePoint and OneDrive video.",
+   "diff": "words"
+  },
+  {
+   "find": "- Delivered OneDrive Catalog SKU filtering",
+   "comment": "[MED] Good problem statement (sev-2s taking 2-3 weeks to fix), weak structure. The design decision is buried, and the second half is a different project jammed in. 'Contributed to' is honest; keep that meaning. 'Whitelisting' should be 'allowlist'. You said the 2-3 weeks figure may not be exact; it's a range, so it's fine as written. Just don't round it up in an interview.",
+   "replace": "- New commerce SKUs kept breaking OneDrive's upgrade path as sev-2s that took 2-3 weeks to fix in production; designed catalog filtering with an allowlist (C#) so unsupported SKUs never reached the upgrade API. Also worked on the purchase-events microservice (C#, Docker, Azure Event Hubs).",
+   "diff": "whole"
+  },
+  {
+   "find": "- Led automation for v1 of PowerPoint Explainer Videos",
+   "comment": "[LOW] Merged into the Recording Studio bullet.",
+   "delete": true
+  },
+  {
+   "find": "SDE 2 / Member of Technical Staff  |  Adobe",
+   "comment": "[MED] Title decision: 'Member of Technical Staff 2'. It's your HR title, so it matches previous-employer background verification. Adobe is also a target, and its recruiters read their own level names exactly; 'SDE 2' isn't an Adobe title. Change LinkedIn's 'SDE 2' to match.\n\nLayout: 'Keep with next' is now set on all three role headers as a tracked format change. In the original, the Adobe header sat alone at the bottom of page 1; after the rewrite the Microsoft header would have.",
+   "sub": [
+    [
+     "SDE 2 / Member of Technical Staff",
+     "Member of Technical Staff 2"
+    ]
+   ],
+   "keep_next": true
+  },
+  {
+   "find": "- Migrated Photoshop Elements and Premiere Elements",
+   "comment": "[LOW] Solid. 'RIBS' is Adobe-internal. The Spot Award is folded in here so the Awards section can go.",
+   "replace": "- Migrated Photoshop Elements and Premiere Elements from the legacy build system to Hyperdrive, parallelizing independent bundles in the CI/CD pipeline; install time down ~50% on average. Spot Award.",
+   "diff": "words"
+  },
+  {
+   "find": "- Designed and implemented lazy loading",
+   "comment": "[LOW] Fine. Tightened.",
+   "replace": "- Designed lazy loading for large files in the AEM web editor; load time down ~60% on the files customers had reported as freezing.",
+   "diff": "words"
+  },
+  {
+   "find": "- Implemented PSE / PRE licensing deactivation",
+   "comment": "[LOW] Three unrelated items in one bullet, with internal acronyms (PSE, PRE, LEID). At 11 years, 6-year-old feature work earns one compact line.",
+   "replace": "- Also: licensing deactivation on uninstall (Photoshop / Premiere Elements), MathML rendering in the AEM web editor, ColorPop in Photoshop Elements 2020. (C++, Java, React, TypeScript)",
+   "diff": "whole"
+  },
+  {
+   "find": "PERSONAL PROJECTS",
+   "comment": "[CRITICAL] Remove this section until the code is public. It claims 'runnable prototypes' of five storage and distributed-systems primitives, but nothing is public, and per your notes the code sits on a machine you can't share from. Google/Meta interviewers do open GitHub links. A Staff candidate listing Cursor-assisted study prototypes invites a deep dive on LSM compaction or WAL recovery that you'd have to win cold. Once 2-3 are public with a README and benchmarks, bring this back as one line with the URL.",
+   "delete": true
+  },
+  {
+   "find": "- Distributed systems primitives in Go",
+   "delete": true
+  },
+  {
+   "find": "EDUCATION",
+   "comment": "[LOW] Don't add the masterclasses (cv.md has a TRAINING section this .docx doesn't). At 11 years, courses on a resume read as gap-filling; they belong in LinkedIn Certifications. Exception: an applied-AI role, where one line helps."
+  },
+  {
+   "find": "AWARDS",
+   "comment": "[MED] At Staff level, an Awards section is mostly filler, and here it's actively weak (see below). The Adobe award moved into its bullet.",
+   "delete": true
+  },
+  {
+   "find": "- Spot Award, Synopsys (VP-nominated)",
+   "comment": "[HIGH] Remove. This is a prize for the closest guess in an estimation exercise. On a Staff resume it reads as trivia and invites a question you don't want: 'what was the exercise?'",
+   "delete": true
+  },
+  {
+   "find": "- Team Recognition, Synopsys",
+   "comment": "[LOW] A team award is weak individual signal. Remove.",
+   "delete": true
+  },
+  {
+   "find": "- Spot Award, Adobe",
+   "delete": true
+  }
+ ]
+}

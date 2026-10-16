@@ -1,104 +1,101 @@
-# Prototype Labs Plan (WSL): system design by building it
+# Prototype Labs Plan (WSL): cohort exercises, in Agoda-priority order
 
-**Who this is for:** a Claude Code session running in WSL Ubuntu. Read this file fully before acting.
+**Who this is for:** a Claude Code session running in WSL Ubuntu. Read this whole file before acting.
 **Owner:** Anuj, about 11 years of backend/systems experience, mostly C++, some Java. New to Go, comfortable with Python.
-**Why:** turn the System Design Masterclass exercises (notes: `/mnt/d/Git/Study/System Design/Arpit-Masterclass/`) into small running systems. The first three labs also act as hands-on practice for an upcoming backend "platform" interview round. That round grades system analysis, connectivity/API integration, QA/testing, code review and communication. Prep notes for it are in `/mnt/d/Git/Study/Agoda-Staff-BE-Prep/02-Platform-Round/`.
+**Source of exercises:** `/mnt/d/Git/Study/System Design/Cohort exercises-Weeks 01–08.md`, the 76 exercises from the Feb 2025 system-design cohort (concept, gotchas, verify, stretch). Theory notes: `/mnt/d/Git/Study/System Design/Arpit-Masterclass/` (one `slide-notes.md` per session).
+**Goal:** build the cohort exercises **in the order that best prepares the Agoda Staff Backend loop**, with an "Agoda twist" on each, so that if time runs out (it will), the most interview-relevant ones are done.
 
-## Ground rules for the session
-- **Never add AI attribution** to commits or PRs (no `Co-Authored-By`, no "Generated with", no session trailers). Commits belong to Anuj only.
-- **Ask before creating the GitHub repo** and ask whether it's public or private. Proposed name: `sysdesign-labs`. Keep the name and README neutral (no company names).
-- The repo lives in `~/code/sysdesign-labs` (Linux filesystem, not `/mnt/d`, for speed).
-- Teach while building: Anuj is learning Go. Explain Go idioms the first time they appear (contexts, goroutines/channels, `errgroup`, interfaces, table-driven tests), with a C++ comparison where it helps.
-- Don't claim something works unless the command actually ran. Show the test output.
+## The interviews this plan serves
 
-## Stack
-| Layer | Choice | Why |
-|---|---|---|
-| Services | **Go 1.23+** (`net/http`, `context`, `errgroup`, `log/slog`) | Concurrency, timeouts and deadlines are first-class. Small binaries |
-| Fakes, load, scripts | **Python 3.12** with `uv`, FastAPI, Locust | Fast to write configurable fake vendors and load tests |
-| Infra | Docker Compose: Postgres 16, Redis 7, **Redpanda** (Kafka API), **Toxiproxy**, Prometheus, Grafana, Jaeger (OTLP) | One `make up` brings everything up |
-| Tests | Go `testing` + `httptest`, **testcontainers-go**, Toxiproxy for faults, Locust or k6 for load, pytest for Python | Covers every level of the test pyramid |
-| CI | GitHub Actions: `golangci-lint`, unit, integration (testcontainers runs on the hosted runner) | Green badge per lab |
+| Round | When | What it tests | Evidence |
+|---|---|---|---|
+| **IV2 Platform** | ~1 week from 15 Oct 2026 | A flawed design (an **aggregator over external suppliers + booking**) to fix; API design; **connectivity** (retries, idempotency, rate limits, pagination, auth, webhooks); QA strategy; **booking-service code review** | `/mnt/d/Git/Study/Agoda-Staff-BE-Prep/02-Platform-Round/00-Round-Intel.md` |
+| **IV3 Architecture** | After IV2 | LLD + HLD. Reported prompts: **hotel search/booking with proximity search**, **concert booking (flash sale)**, **payment gateway at 10M DAU** (Stripe-like provider, transactions, reconciliation), Booking.com-style search + booking. "Lots of metrics and telemetry." | same folder, §2 |
+| IV4 Overall + culture | Last | Past projects and judgement; hands-on depth helps here too | |
 
-## Repo layout
+**Rule of thumb for priority:** an exercise ranks higher if (a) it shows up directly in a reported Agoda question, (b) it gives you a *"when I built this, I measured…"* story for connectivity/booking/payments, and (c) it's cheap to build.
+
+---
+
+## Priority list
+
+Hours are estimates for a Go beginner pairing with Claude. **Tier 0 is the must-do before IV2.** If you're behind, do just the ★ items in order.
+
+### Tier 0: before IV2 (Platform round), about 14 h
+
+| P | Cohort exercise | Agoda twist (what to actually build) | Why it ranks here | Est. |
+|---|---|---|---|---|
+| **0** | Setup | Repo, Go/uv/Docker, `deploy/compose.yml` (Postgres, MySQL, Redis, Toxiproxy, Prometheus, Grafana, Jaeger), Makefile, CI | Everything else needs it | 1.5 h |
+| **1 ★** | **W2#1 Airline check-in** (`airline-checkin/`) | **Room/seat booking API**: compare naive vs `FOR UPDATE` vs optimistic version vs **conditional `UPDATE … WHERE available > 0`**. Add an **`Idempotency-Key`** on `POST /bookings`. Stretch from the cohort: **a 5-min hold with TTL** (reserve → confirm), crash mid-hold | "Double booking" and idempotency were asked in the May 2026 Staff IV2. It's also the core of IV3's concert/flash-sale and hotel-booking prompts | 2.5 h |
+| **2 ★** | **W1#1 Bounded pool** (`bounded-blocking-pool/`) | Generic pool → reuse as a **per-supplier bulkhead** (acquire timeout, `defer release`, metrics for in-use/wait time) | The building block of the gateway in P3. "Expensive DB init per call" is a recruiter-flagged code-review catch | 1 h |
+| **3 ★** | **Capstone A: supplier gateway** (new; composes **W1#6 polling + ETag**, **W4#1 toy CDN** cache logic, **W8#3 Redis EVAL rate limiter**) | `fake-supplier` (Python/FastAPI: latency, errors, 429 + `Retry-After`, cursor pages, metered call counter). `gateway` (Go): parallel fan-out with an **overall deadline**, **retries with backoff + jitter** (idempotent only), **circuit breaker**, bulkhead (P2), **partial results**, **dedupe → cheapest offer**, **cache-aside + single-flight + stale-while-revalidate**, a **Redis Lua token bucket** per supplier (call budget). Toxiproxy chaos test | **This is the IV2 narrative** (the flight aggregator over metered APIs, asked in 2025 and 2026). The Gurugram rejection was for weak connectivity. Building it makes every answer concrete | 5 h |
+| **4 ★** | **W8#2 Cursor pagination** (`cursor-pagination/`) + W3#10 benchmark | Paginate the gateway's search results and a `GET /bookings` listing. Measure OFFSET vs `(created_at, id)` keyset p99 at depths 1…10K | "Pagination missing → cursor vs offset" was an explicit point in the 2026 IV2 | 1 h |
+| **5 ★** | **W7#9 Payment webhooks** (`payment-webhooks/`) | Build a **fake PSP** that signs (HMAC of `timestamp.body`) and **retries with backoff**. Receiver: raw-body verify with `hmac.Equal`, a replay window, `INSERT … ON CONFLICT DO NOTHING` on `event_id`, **enqueue then 200**, an async worker. Optionally run Razorpay test mode + ngrok as the cohort suggests | Webhooks are in the recruiter's list; it's also IV3's payment-gateway prompt | 1.5 h |
+| **6** | **W4#6 JWT auth** (guidance) | Add auth to the booking API: RS256, pinned alg, short expiry + refresh, `jti` denylist. Plus partner **API key + HMAC** request signing for the supplier-facing side | "Types of authentication, a secure connectivity session" (Bangkok Staff IV2) | 1 h |
+| **7** | **W7#8 Brokers, flavour 1: SQS on SQL** (`brokers-three-flavours/`) | SQS-style queue on Postgres/MySQL (visibility timeout, ack, DLQ, `SKIP LOCKED`), used as the **transactional outbox relay** for P1's `BookingConfirmed` events, with an idempotent consumer | Outbox + DLQ is the standard "dual write" fix in the booking review | 1.5 h |
+
+**Before IV2, stop here.** Then reread `08-Recall-Day-Of.md`. Each lab's "2-minute interview story" (see Lab shape) is what you'll actually use.
+
+### Tier 1: before IV3 (Architecture: LLD + HLD), about 16 h
+
+| P | Cohort exercise | Agoda twist | Why | Est. |
+|---|---|---|---|---|
+| **8 ★** | **W2#6 2PC** (`distributed-2pc/`) + stretch: **saga** | Payment flow: authorise → supplier confirm → capture, as **2PC first** (see it block when the coordinator dies), then an **orchestrated saga** with compensations + a **reconciliation job** | The IV3 payment-gateway prompt ("transactions, external provider, reconciliation") | 2.5 h |
+| **9 ★** | **W8#1 GeoHash** (`geohash-nearby/`) | "Hotels near me": encode/decode, 8 neighbours, Haversine refine, compare with Redis `GEOSEARCH`, measure boundary misses without neighbours | IV3 report: hotel search *"with an emphasis on proximity-based search"* | 2 h |
+| **10 ★** | **W4#2 Hashtag counter, 5 approaches** (`hashtag-counter/`) | **Hot-key counters**: "rooms left" / "N people viewing this hotel" during a flash sale. Naive vs batched vs map-swap vs Kafka-partitioned; measure DB writes and drift | IV3 concert flash sale; the canonical hot-key answer | 2 h |
+| **11** | **W7#6 Task scheduler** (`task-scheduler/`) + W7#7 CH rebalance | Scheduled **supplier refresh jobs** (popular routes every 5 min): `SKIP LOCKED` pullers, heartbeat leases, missed-run policy, worker death recovery | The cohort's own capstone; it's also the refresh scheduler in the IV2 aggregator design | 3 h |
+| **12** | **W5#1–3 Consistent hashing + vnodes** (`consistent-hashing/`) + **W1#2 sharding router** | Shard bookings by `user_id` vs `hotel_id`; measure remaps `% N` vs ring; skew vs vnodes | Scale-out vocabulary every HLD needs ("how do you shard bookings?") | 2 h |
+| **13** | **W1#8 Kafka demo** (`kafka-demo/`) + **W1#7 RabbitMQ** | Booking events on Kafka (key = `bookingId`), consumer groups, rebalance, replay; compare work-queue semantics in RabbitMQ (prefetch, DLQ) | Queue vs log is a guaranteed follow-up | 1.5 h |
+| **14** | **W3#2 Snowflake** (`id-snowflake-api/`) + **W3#8 UUID vs bigint** | Booking IDs: Snowflake with clock-rollback handling; UUIDv4 vs v7 vs BIGINT insert cost | "How are booking IDs generated across regions?" | 1.5 h |
+| **15** | **W1#3 Read replica** + **W2#5 read-your-own-writes** | "I just booked, why isn't it in My Trips?" Replica lag + a primary-read window / LSN token | Classic consistency follow-up | 1.5 h |
+
+### Tier 2: after the interviews, the Masterclass deep dive (ordered by learning value)
+W1#9 realtime chat → W2#9 Redis PubSub star → W1#5 SSE (price-alert push) · W5#9 sequential vs random IO → W5#8 **Bitcask** → W6#2 Bloom FPR → W6#1 **LSM** (Go or C++) · W8#5 HyperLogLog · W6#6 1 GB streaming upload + W4#14 presigned upload · W7#3 contact fuzzy search · W2#2 deadlock · W2#3–4 KV on MySQL → sharded · W3#1 atomic counter · W4#10–12 Redis cluster/replication/Sentinel · W8#3 EVAL vs EVAL_RO replica routing · W4#3 denormalisation · W2#7–8 Neo4j/Mongo · W1#4 fairness · W8#6 hot-reload sidecar.
+
+### Tier 3: read or paper only (skip building unless curious)
+W3#3–7, W3#9, W3#11, W3#12 (duplicate of W2#6), W4#4–5, W4#7–8, W4#13, W4#15, W5#4–7 (fold #6–7 into Bitcask), W6#3–5, W6#7, W7#1–2, W7#4–5, W8#4 (covered by W3#8).
+
+### If you only have 6 hours before IV2
+**P0 → P1 (with idempotency) → P3 (fan-out + deadline + retries + breaker + partial results; skip the cache) → P4.** That alone covers the 2026 IV2 checklist: freshness, cache, pagination, double booking, dedupe, auth (talk only).
+
+---
+
+## Repo
+
+**Ask before creating it on GitHub, and ask about visibility.** Proposed name: **`system-design-prototypes`** (alternative: `sysdesign-labs`). It's specifically for system design prototypes. Keep the name, README and commits **neutral**: no company names, nothing about interviews.
+
 ```
-sysdesign-labs/
-  README.md                 # index of labs, how to run, what each one teaches
-  Makefile                  # up/down/test/it/load across labs
-  deploy/compose.yml        # shared infra stack
-  deploy/grafana/, deploy/prometheus/
-  pkg/                      # shared Go helpers (retry, breaker, otel setup) once they're needed twice
-  labs/01-supplier-gateway/
-  labs/02-idempotent-booking/
-  labs/03-signed-webhooks/
-  ...
+system-design-prototypes/
+  README.md                 # index: exercise → folder → status → what it proves (table)
+  Makefile                  # up/down/test/it/load/bench
+  deploy/compose.yml        # shared infra: postgres, mysql, redis, toxiproxy, prometheus, grafana, jaeger (+ kafka/rabbitmq added when needed)
+  pkg/                      # shared Go helpers, only once something is needed twice (retry, breaker, otel, httpx)
+  labs/
+    01-airline-checkin/     # use the cohort's prototype folder names after the number
+    02-bounded-blocking-pool/
+    03-supplier-gateway/
+    04-cursor-pagination/
+    05-payment-webhooks/
+    ...
+  PROGRESS.md               # one line per session: lab, what was done, numbers measured
   .github/workflows/ci.yml
 ```
 
-## Every lab has the same shape
-1. `README.md`: the problem (cite the Masterclass session) → requirements and SLOs → Mermaid diagram → design decisions with trade-offs → **failure modes table** (failure → detection → mitigation → which test proves it) → "How I'd explain this in 2 minutes".
-2. Code (Go service + Python fakes where needed).
-3. **Tests at every level:** unit (table-driven), integration (testcontainers), fault injection (Toxiproxy: latency, timeouts, resets), contract test where two services talk, load test with a stated target (for example "p99 < 300 ms at 200 RPS").
-4. Observability: RED metrics (rate, errors, duration) on Prometheus, traces in Jaeger, structured logs with a trace id.
-5. `REVIEW.md`: a deliberately flawed version of one key component (5–8 planted issues: security, reliability, performance, tests, readability). Anuj writes review comments, *then* opens the folded answer key. This is code-review practice.
-6. `make test`, `make it` and `make load` work from the lab folder.
+**Stack:** Go 1.23+ (`net/http`, `context`, `errgroup`, `log/slog`, `pgx`, `go-redis`), Python 3.12 via `uv` (FastAPI fakes, Locust), Docker Compose, testcontainers-go, Toxiproxy, k6 or Locust, OpenTelemetry → Jaeger, Prometheus/Grafana. CI: `golangci-lint`, unit, integration.
 
-## Phase 1: before the interview (about 2 h/day, in this order)
+## Lab shape (every lab)
+1. **README.md**: the cohort exercise (week/number) → the Agoda twist → requirements → a Mermaid diagram → decisions and trade-offs → a **failure-modes table** (failure → detection → mitigation → test that proves it) → **the measured numbers** (the cohort's "Verify" list) → **"2-minute interview story"** (how I'd explain this in a design round, with one number I measured).
+2. Code: a Go service, plus Python fakes where useful.
+3. Tests: unit (table-driven) · integration (testcontainers) · fault injection (Toxiproxy) where there's a network hop · a load/bench test with a stated target.
+4. Observability: RED metrics, traces, structured logs with a trace ID.
+5. **REVIEW.md**: a deliberately flawed version of the key component (5–8 planted issues: SQL injection, per-call client/DB init, hardcoded key, missing pagination, race, swallowed errors, no timeout). I review it *before* opening the folded key. This is code-review practice for IV2.
+6. Work through the cohort's **Gotchas** and **Verify** bullets explicitly. Do the **Stretch** only if the tier's time allows.
 
-### Lab 0: Skeleton (about 1 h)
-- Install: Go, `uv` + Python 3.12, Docker (Docker Desktop with WSL integration, or Docker Engine in WSL), `golangci-lint`, k6 (optional).
-- Create the repo, layout, `deploy/compose.yml`, Makefile, CI workflow, root README.
-- Done when: `make up` starts the stack, Grafana/Jaeger UIs open, CI is green on an empty Go test.
-
-### Lab 1: Supplier connectivity gateway ★ most interview-relevant
-**Story:** a hotel search needs availability + price from N external suppliers. Each supplier is slow, flaky or rate-limited in its own way.
-- `fake-supplier` (Python/FastAPI): env-configurable latency distribution, error rate, 429 with `Retry-After`, cursor-paginated results, an API-key check.
-- `gateway` (Go): `GET /availability?hotel=…&checkin=…` fans out to suppliers concurrently.
-  - **Deadline propagation:** the request context carries an overall budget (for example 800 ms). Each supplier call gets `min(remaining, per-supplier timeout)`.
-  - **Retries:** only idempotent calls and only retryable errors (timeouts, 502/503, 429 honouring `Retry-After`). Exponential backoff + full jitter, max attempts, retry budget.
-  - **Circuit breaker** per supplier (closed/open/half-open). **Bulkhead:** a bounded concurrency semaphore per supplier.
-  - **Partial responses:** return what arrived within the deadline with `{"partial": true, "missing": ["supplierB"], …}`, not a 500.
-  - **Pagination:** follow cursors with a page cap. Never load unbounded pages.
-  - **Rate limiting** toward each supplier: a token bucket in Redis (a Lua script for atomicity).
-  - **Backpressure:** a bounded in-flight request queue. Shed load with 503 + `Retry-After` when it's full.
-  - Secrets from env/secret file, never hardcoded. HTTP client created once and reused (connection pooling).
-- Tests: unit (backoff math, breaker state machine, merge logic), `httptest` suppliers, Toxiproxy chaos (one supplier at +2 s latency → response is still within the deadline and marked partial), load test showing load shedding.
-- Masterclass link: 01-02 (communication, queues), 03-01 (remote locks / Redis atomics).
-
-### Lab 2: Idempotent booking + transactional outbox
-**Story:** "Book" must never double-charge or oversell, even when clients retry and consumers redeliver.
-- Go API + Postgres: `POST /bookings` with an `Idempotency-Key` header. Store key → request hash → response. Same key + same body → same response. Same key + different body → 422. Handle concurrent duplicates with a unique constraint.
-- Inventory: compare `SELECT … FOR UPDATE` vs `SKIP LOCKED` vs a conditional `UPDATE … WHERE available > 0`. Benchmark them under contention.
-- **Transactional outbox:** the booking row + outbox row in one transaction. A relay publishes to Redpanda. The consumer dedupes by event id and sends poison messages to a DLQ after N attempts.
-- A payment-step saga with a compensating action (cancel booking when the fake payment fails).
-- Tests: concurrency test (100 parallel bookings for 10 rooms → exactly 10 succeed), duplicate-retry test, kill-the-relay-mid-way test, consumer redelivery test.
-- Masterclass link: 02-01 (pessimistic locking, SKIP LOCKED), 07-02 (flash sale, per-unit inventory).
-
-### Lab 3: Signed webhooks + delivery worker
-**Story:** notify partners of booking/price changes over webhooks, reliably and safely.
-- Producer: signs payloads with HMAC-SHA256 (`timestamp.body`), sends `X-Signature` + `X-Timestamp` + an event id.
-- Delivery worker: retry schedule (1 m, 5 m, 30 m … compressed to seconds in tests), per-partner concurrency limit, a DLQ, and a replay endpoint.
-- Receiver (Python): verifies the signature with a constant-time compare, rejects stale timestamps (replay window), dedupes by event id, returns 2xx fast and processes async.
-- Contract test between producer and receiver (a schema/Pact-style JSON contract checked in CI).
-- Compare in the README: webhooks vs polling vs pub/sub vs SSE for partner integration.
-- Masterclass link: 01-02 (short/long polling, queues vs streams).
-
-## Phase 2: after the interview (Masterclass deep dive)
-| # | Lab | Session | Core idea to prove |
-|---|---|---|---|
-| 4 | Task scheduler | 07-02 | Pullers with `SKIP LOCKED`, cron expansion, at-least-once execution, autoscaled executors |
-| 5 | Distributed cache | 05-01 | Consistent hashing + virtual nodes. Rebalancing cost measured. LRU/TTL sampling |
-| 6 | ID generator | 03-02 | Snowflake layout, clock-skew handling, ticket-server comparison |
-| 7 | Remote locks | 03-01 | SETNX+TTL, fencing tokens, why Redlock is debated (demo a GC-pause failure) |
-| 8 | Realtime fan-out | 02-02 | WebSocket edge servers + Redis Pub/Sub, connection registry, reconnect storms |
-| 9 | Bitcask KV + WAL | 05-02 | Append-only log, in-memory keydir, merge/compaction, crash recovery (Go or **C++**) |
-| 10 | LSM tree | 06-01 | Memtable → SSTables, Bloom filters, compaction, read/write amplification (Go or **C++**) |
-| 11 | Impressions counter | 08-01 | HyperLogLog (PFADD/PFMERGE/PFCOUNT), tiered storage |
-| 12 | Geo-proximity | 08-02 | GeoHash, nearby-driver search, Redis GEO |
-| 13 | Online/offline indicator | 01-01 | Heartbeats, TTL keys, Redis vs DynamoDB-style trade-off |
-
-## How to start the WSL session
-```bash
-mkdir -p ~/code && cd ~/code && claude
-```
-Then say: *"Read /mnt/d/Git/Study/System Design/Prototype-Labs-Plan.md and start Lab 0. Ask me about the repo name and visibility first."*
+## Ground rules for the session
+- **Never add AI attribution** to commits or PRs. Commit only when I ask.
+- Repo in `~/code/system-design-prototypes` (Linux filesystem, not `/mnt/d`).
+- **Show the design for each lab and wait for my OK before coding.** Go one lab at a time, in the priority order above, unless I say otherwise.
+- **Teach Go as you go**: explain each idiom the first time (context, goroutines/channels, `errgroup`, interfaces, table-driven tests, `defer`) with a C++ comparison.
+- Let me write parts myself when I ask ("my turn": give me the stub and tests, and hints only).
+- Never claim something works without running it. Show the real test and benchmark output.
+- At the end of each session, append a line to `PROGRESS.md`, and tell me the next lab in priority order.

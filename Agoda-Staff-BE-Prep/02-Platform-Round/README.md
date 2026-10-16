@@ -63,7 +63,7 @@ Built for **Anuj** ([BE] Staff Software Engineer, Back End, Gurugram, [SHP] trac
 | 18:00–18:30 | MUST | Log scores + weak spots |
 
 ### Days 3 → interview eve (about 2 h/day)
-- **Hands-on reinforcement** in WSL: labs 1–3 of the [Prototype Labs Plan](../../System%20Design/Prototype-Labs-Plan.md) (supplier gateway with timeouts/retries/breaker/partial results → idempotent booking + outbox → signed webhooks). Building them makes every connectivity answer concrete ("when I built this, the breaker…").
+- **Hands-on reinforcement** in WSL: **Tier 0 (P0–P7)** of the [Prototype Labs Plan](../../System%20Design/Prototype-Labs-Plan.md), the cohort exercises in Agoda-priority order: booking with no double booking + idempotency (W2#1) → bounded pool as a bulkhead (W1#1) → **supplier gateway capstone** (deadline, retries, breaker, partial results, cache, rate limit) → cursor pagination (W8#2) → signed webhooks (W7#9) → JWT/HMAC auth → outbox queue (W7#8). Short on time? Do P0 → P1 → P3 → P4 only. Building them makes every connectivity answer concrete ("when I built this, the breaker…").
 - 20 min/day: 10 random generic questions (*"Generic drill"*) + 1 CR snippet.
 - **Eve:** **Mock 3** in the morning, the [Recall page](08-Recall-Day-Of.md) in the evening. **Nothing new after 6 pm.**
 

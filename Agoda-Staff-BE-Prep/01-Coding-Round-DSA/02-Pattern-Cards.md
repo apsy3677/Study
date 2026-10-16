@@ -6,34 +6,106 @@
 
 ---
 
-## S. Stack parsing / recursive descent: "every `(` opens a new world; every `)` folds it back into its parent"
+## S. Stack parsing / recursive descent
+
+**The one mental model:** `(` or `[` = *start a new chapter* (recursive call). `)` or `]` = *end the chapter, return what you built*. The callee consumes the closing bracket itself — so the caller never has to worry about it. The call stack IS your nesting stack, for free.
 
 **Triggers (Agoda dressing):** chemical formula / molecule weight (asked twice) · `k[...]` decode · reverse inside parentheses · calculator · backspace `#` · "remove k adjacent equal".
 
-**Invariant:** the top of the stack (or the current recursion frame) is *the group I'm building now*. Everything below is waiting for its `)`.
+**Invariant:** `i` always points at the next unread character. Every branch moves `i` past exactly what it consumed.
 
-**Two implementations. Pick by the shape of the grammar:**
-- **Recursive descent with an index by reference.** The cleanest for formulas: one function per grammar rule.
-- **Explicit stack of (partial result, multiplier).** Avoids recursion depth (say this as the follow-up).
-
+**The skeleton — fill in 3 blanks:**
 ```cpp
-// group := ( element | '(' group ')' ) count?   ...repeated until ')' or end
-long long parseGroup(const string& s, size_t& i) {
-    long long total = 0;
-    while (i < s.size() && s[i] != ')') {
-        long long unit;
-        if (s[i] == '(') { ++i; unit = parseGroup(s, i); ++i; }   // consume '(' and ')'
-        else unit = weight.at(readElement(s, i));                 // Uppercase + lowercase*
-        total += unit * readCount(s, i);                          // digits*, default 1
+T parse(const string& s, int& i) {
+    T result = IDENTITY;         // blank 1: 0 for weight, "" for string
+    int count = 0;
+    while (i < (int)s.size()) {
+        char c = s[i];
+        if (isdigit(c)) {
+            count = count * 10 + (c - '0'); i++;          // build multi-digit count
+        } else if (c == '(' || c == '[') {
+            i++;
+            T inner = parse(s, i);                         // recurse; callee eats ')'
+            result = COMBINE(result, APPLY(inner, max(count, 1)));  // blank 2
+            count = 0;
+        } else if (c == ')' || c == ']') {
+            i++;                                           // consume the closing bracket
+            return result;                                 // done — hand back to parent
+        } else {
+            T token = READ_TOKEN(s, i);                    // blank 3: read one unit
+            result = COMBINE(result, APPLY(token, max(count, 1)));
+            count = 0;
+        }
     }
-    return total;
+    return result;
 }
 ```
-Stack-of-runs (S5): `vector<pair<char,int>>`. Bump or push, **then** pop when the run reaches k.
 
-**Traps:** multi-digit counts · default count 1 · two-letter atoms (`Mg`) · a `)` with no count · consume `)` exactly once · `long long` (counts multiply through nesting) · `isdigit((unsigned char)c)` · `k == 1` in S5 · `'\0'` sentinel to flush the last number (S7).
+**Grammar shape decides where the count sits:**
+- **Count-before `[`** (`3[a2[c]]`): digits accumulate as standalone tokens, then hit `[` with `count` already set. Use skeleton as-is.
+- **Count-after element/`)`** (`CH4`, `(OH)2`): read the count *inside* the token reader right after consuming the name or group — don't rely on the `count` variable for that case.
 
-**Follow-up to volunteer:** "Invalid input: unbalanced parens or an unknown atom. I'd return `optional`/an error code, or throw `invalid_argument`. For 10⁵-deep nesting, an iterative stack avoids stack overflow. As a service: cache by formula string."
+**Fill-in table for the 3 blanks:**
+
+| Problem | IDENTITY | READ\_TOKEN | APPLY |
+|---|---|---|---|
+| Molecule weight | `0LL` | read uppercase + lowercase → look up weight | `token * count` |
+| Decode string | `""` | single char | repeat string `count` times |
+| Calculator with `()` | `0LL` | read signed number | value as-is |
+
+**Molecule weight — concrete (count-after style):**
+```cpp
+long long parse(const string& s, int& i, const unordered_map<string,long long>& w) {
+    long long total = 0;
+    while (i < (int)s.size() && s[i] != ')') {
+        if (s[i] == '(') {
+            i++;
+            long long inner = parse(s, i, w);       // callee eats ')'
+            long long k = readCount(s, i);           // count is AFTER ')'
+            total += inner * k;
+        } else {
+            string name = readName(s, i);            // read element name
+            long long k = readCount(s, i);           // count is right after element
+            total += w.at(name) * k;
+        }
+    }
+    if (i < (int)s.size()) i++;                     // consume ')'
+    return total;
+}
+// Two readers — memorise these, they appear in every parsing problem:
+string readName(const string& s, int& i) {
+    int start = i++;                                 // eat the uppercase letter
+    while (i < (int)s.size() && islower(s[i])) i++;
+    return s.substr(start, i - start);
+}
+long long readCount(const string& s, int& i) {
+    long long n = 0;
+    while (i < (int)s.size() && isdigit(s[i])) n = n * 10 + (s[i++] - '0');
+    return n == 0 ? 1 : n;                          // no digits → default 1
+}
+```
+
+**Decode string — exact same mental model, count-before style:**
+```cpp
+string decode(const string& s, int& i) {
+    string result;
+    int count = 0;
+    while (i < (int)s.size()) {
+        char c = s[i];
+        if (isdigit(c))     { count = count * 10 + (c - '0'); i++; }
+        else if (c == '[')  { i++; string inner = decode(s, i); for (int k=0;k<count;k++) result+=inner; count=0; }
+        else if (c == ']')  { i++; return result; }       // callee eats ']'
+        else                { result += c; i++; }
+    }
+    return result;
+}
+```
+
+**Stack-of-runs (S5):** `vector<pair<char,int>>`. Bump or push, **then** pop when the run reaches k.
+
+**Traps:** multi-digit counts · default count 1 · two-letter atoms (`Mg`) · a `)` with no count · `long long` (counts multiply through nesting) · `isdigit((unsigned char)c)` · k==1 in S5 · `'\0'` sentinel to flush the last number in S7.
+
+**Follow-up to volunteer:** "Invalid input: unbalanced parens or unknown atom → `optional`/`invalid_argument`. For 10⁵-deep nesting, an iterative stack of `(partial_result, multiplier)` avoids stack overflow. As a service: cache by formula string."
 
 ---
 

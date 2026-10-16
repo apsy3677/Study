@@ -1,0 +1,27 @@
+#	Problem	Cap	Why it's on the list	Key idea (read only after trying)
+1	Airplanes: LC 1921	15 min	Asked in the Gurugram [SHP] coding round, and in an India Staff review	arrival = (d + s - 1) / s in integers, sort, return the first minute i with arrival[i] <= i, else n. Ask: "if a plane lands exactly when I'm ready to shoot, is that a loss?" (yes)
+2	Molecule weight: S1 in agoda_day1.cpp	20 min	Asked twice; one candidate failed hidden tests	Recursive parse(i): loop until ) or the end. A unit is (→recurse→skip ), or Uppercase+lowercase letters → weight. Then read a number (default 1) and add unit * count. Use long long. Test H(CH4)2=33, Mg(OH)2, C12H22O11, ((CH)2O)3, (H)
+3	Next greater, circular: LC 503	15 min	Gurugram Staff round (Feb 2026)	Stack of indices still waiting for an answer. Loop k < 2n over a[k % n]; pop while a[top] < x and set ans[top] = x; push only when k < n. "Largest on the right" is just a suffix max, so mention that too
+4	Longest distinct substring: LC 3, returning the substring	10 min	Same Gurugram Staff round	if (last[c] >= left) left = last[c] + 1; track best start and length. Test "abba"
+5	Binary search on the answer: LC 1011 + LC 1552	25 min	3–4 reports ("Koko-like", "max of min")	Check one candidate answer greedily. 1011: first capacity in [max, sum] that works. 1552: sort, then the last gap that works, which needs an upper mid lo + (hi - lo + 1) / 2 or the loop never ends
+6	Jump Game I + II: LC 55, LC 45	15 min	3 reports (Staff and Senior, Bangkok)	55: keep the farthest reach; fail if i > far. 45: BFS levels with levelEnd/farthest, looping only to n-2. Say the O(n²) DP first, then the greedy
+7	Stock II: LC 122	10 min	"Stock buy/sell variation" (Staff, Bangkok)	Sum the positive day-to-day differences. Also know 121 (track the min so far) and 714 (two states: cash and holding, minus the fee)
+8	Palindromic substrings: LC 647	10 min	A Staff candidate passed with brute force but "couldn't optimize"	Expand around all 2n−1 centres: O(n²), O(1) space. Say the brute force is O(n³) first
+9	If time is left: Rank transform: LC 1331	10 min	Staff candidate who got the offer (2026)	Sort a copy, remove duplicates, rank = position from lower_bound + 1. Ask whether equal values share a rank
+
+That's about 2h10m. Spend the remaining 20 minutes on 05-Recall-and-Day-Of.md, specifically the trap list and the 5-line talk track.
+
+Skip: intervals, graphs, design classes and string DP. None of those showed up in Agoda's live coding rounds.
+
+In the room (half the score isn't the algorithm)
+
+Agoda scores four things: understanding, coding, testing and communication. For each problem:
+
+Before coding: restate the problem and ask 2–3 questions (input size, empty input, ties, the edge rule).
+Then say the brute force with its complexity, then the better idea, and wait for a nod.
+While coding: run the code once early to catch typos.
+Testing: test with reasons. "Empty input, because…", "ties, because…", "overflow, because…". Name those cases out loud.
+After it passes: offer one follow-up yourself, such as a better complexity or how this behaves as a service at scale.
+The clock: problem 1 should be done by minute 30, and never past 32.
+
+Tomorrow morning: one easy warm-up (LC 739, about 8 minutes). Open HackerRank, pick C++ and run a hello-world. Then nothing new.

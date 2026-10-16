@@ -1,0 +1,222 @@
+{
+ "author": "Staff-bar review",
+ "initials": "SR",
+ "date": "2026-09-27T00:00:00Z",
+ "edits": [
+  {
+   "find": "Anuj Pratap Singh Yadav",
+   "comment": "HOW TO READ THIS (v2, updated with your answers): comments carry the critique of the original text, tagged [CRITICAL] / [HIGH] / [MED] / [LOW]. Redlines are the proposed text. Review > Accept All produces the rewrite. No [confirm] brackets are left; every new fact comes from your answers of 27 Sep.\n\nVERDICT for Cadence / Siemens EDA Staff-Lead-Principal SWE: with the redlines accepted, about 8.5/10, at the bar. Your answers added what was missing: a Common layer serving 10-12 VC Formal apps, a pattern the Low Power team adopted as a documented standard, work across the Common and CDC teams, design docs through architect and Distinguished Engineer review, interview panels, mentoring and knowledge transfer. Two things still need care. (1) This version must not leak Synopsys customers to Synopsys competitors; the rewrite names none. (2) Position for infrastructure/platform roles on formal and simulation products (Jasper platform, Questa/OneSpin infrastructure, coverage/debug tooling), not formal-engine or algorithm roles, where a panel will test BMC/induction/SAT depth.\n\nFor Nvidia/AMD/Intel/Qualcomm CAD or methodology teams, use a copy of this version with the customer names restored once. There, 'I supported your formal team' is an asset."
+  },
+  {
+   "find": "+91-97523-73677",
+   "comment": "[MED] Header. The visible text is the word 'LinkedIn', so text-only parsers (Naukri, most ATS) and printed copies lose the URL. There's no location either, and recruiters filter on it first. The icons, especially the Gmail logo, add nothing; optional to drop.",
+   "sub": [
+    [
+     "LinkedIn",
+     "linkedin.com/in/yadavaps77"
+    ],
+    [
+     "  +91-97523-73677   |   ",
+     "  +91-97523-73677   |   Noida, India   |   "
+    ]
+   ]
+  },
+  {
+   "find": "Staff Engineer, 11 years shipping C++ systems",
+   "comment": "[HIGH] Better than the FAANG summary (it says 11 years and leads with C++), but it lists all 8 Synopsys customers. On a resume going to Cadence and Siemens, that's the single biggest judgment risk in either file: an EDA hiring manager reads it as 'will share our customer list next'. 'Marquee' is filler. Say '8 semiconductor customer accounts'; names can come out in the interview if asked. The rewrite adds the scope your answers supplied (10-12 apps, a cross-team standard).",
+   "replace": "Staff Engineer with 11 years shipping C++ at Synopsys, Microsoft and Adobe. At Synopsys VC Formal I own the DPV C++/RTL coverage subsystem end to end, including escalations from 8 semiconductor customer accounts, and led the decoupling of a Common layer used by 10-12 VC Formal apps from the Formal engine, cutting cross-layer dependencies ~75%; the pattern is now a cross-team standard.",
+   "diff": "whole"
+  },
+  {
+   "find": "SKILLS",
+   "comment": "[MED] Section order. Five lines of keywords take the top third of page 1. Move SKILLS below EXPERIENCE or compress it to 2-3 lines, so the Synopsys bullets start higher. Do this by hand; a tracked block move is messy in Word 2010."
+  },
+  {
+   "find": "Formal verification: ",
+   "comment": "[HIGH] Careful. Your own notes say formal and RTL concepts are where you're slowest. Every term here is a question a Cadence Jasper or Siemens OneSpin panel can ask at depth. 'FPV' is listed though your work is DPV. 'Save/restore session flow' is a feature, not a skill. List what you built and can defend. Add SVA or SystemVerilog only if you'd be comfortable writing properties live.",
+   "sub": [
+    [
+     "DPV, FPV; C++ code coverage, RTL coverage, Cone of Influence (COI), property and assertion density, save/restore session flow",
+     "DPV (datapath validation), C++ and RTL code coverage, coverage databases, cone-of-influence (COI) analysis, property and assertion density"
+    ]
+   ]
+  },
+  {
+   "find": "Tools and infra: ",
+   "comment": "[LOW] 'Hector', 'UCAPI', 'vgbuild/synmake' and Verdi command names (view_coverage, embed view) are Synopsys-internal. Cadence and Siemens readers know Verdi/VDB and FlexNet; the rest reads as noise, or as leaking internals.",
+   "sub": [
+    [
+     "VC Formal, Hector, UCAPI, Verdi VDB (view_coverage, embed view), FlexNet/SCL licensing, LCOV, Perforce/P4 Swarm, vgbuild/synmake, LSF, GDB",
+     "VC Formal, Verdi coverage database (VDB), FlexNet licensing, LCOV, LSF, Perforce, GDB, Linux"
+    ]
+   ]
+  },
+  {
+   "find": "Architecture: ",
+   "comment": "[LOW] 'System architecture' is empty; everything after it is specific. Drop it.",
+   "sub": [
+    [
+     "System architecture, dependency inversion",
+     "Dependency inversion"
+    ]
+   ]
+  },
+  {
+   "find": "Engineering platform: ",
+   "comment": "[MED] The label 'Engineering platform' names a tool's internals (MDC rules, subagents) rather than what it does for the team. The program slicer was missing; it's current work (first phase done) and the most relevant new skill for C++ COI analysis roles.",
+   "sub": [
+    [
+     "Engineering platform: ",
+     "AI and analysis tooling: "
+    ],
+    [
+     "Cursor SDK (custom skills, MDC rules, subagents), knowledge indexing pipeline, JIRA/Swarm/P4 automation, license-validation harness",
+     "LLVM (DG program slicer, in progress), LLM agent tooling in Cursor (custom skills, searchable doc index), Jira/Perforce automation, license-probe harness"
+    ]
+   ]
+  },
+  {
+   "find": "Staff Engineer  |  Synopsys Inc",
+   "comment": "[LOW] Title and dates: keep as is. You said the Feb 2024 change was a re-title, not a promotion. Listing the current title across the whole company tenure is the standard convention, and Indian background verification normally checks last designation plus joining/leaving dates, which this matches. LinkedIn shows the split; if anyone asks: 'same role, the title changed in Feb 2024'. (If it was actually a level change, show the split dates instead.)",
+   "keep_next": true
+  },
+  {
+   "find": "Product: VC Formal (DPV / Hector)",
+   "comment": "[LOW] 'Hector' is the internal engine name; EDA readers know DPV.",
+   "sub": [
+    [
+     "Product: VC Formal (DPV / Hector)",
+     "Product: VC Formal (DPV)"
+    ]
+   ]
+  },
+  {
+   "find": "- Own the DPV C++/RTL Coverage stack",
+   "comment": "[HIGH] Strongest Staff signal, weakest framing. (1) The customer names appear 3 times in this version (summary, here, escalations bullet), plus per-customer fixes in the save_covdb bullet. Sent to a Synopsys competitor, that's the confidentiality flag from the header note. (2) 'Own' was undefined. Your answer defines it: you write the design docs and take them through architect and Distinguished Engineer review. That doesn't reduce your credit; authoring docs that pass DE review is a Staff signal, and the wording keeps the authorship yours. (3) The Nvidia summit talk was missing; it's redacted to 'a top GPU customer' for this competitor-facing version. (4) The escalations bullet is folded in.",
+   "replace": "- Own the DPV C++/RTL coverage subsystem (save_covdb, VDB generation, Verdi integration) end to end: design docs (reviewed by senior architects and a Distinguished Engineer), every release since V-2023.12, and escalations from 8 semiconductor customer accounts, each taken from root cause to regression test to a fix across all active streams. Presented it at a top GPU customer's internal formal-verification summit.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Architected and drove \"One Percent Solution\"",
+   "comment": "[HIGH] Best bullet, undersold, and full of internal names. 'One Percent Solution', 'CommonFormalOptions Framework' and 'orange-bubble dependency metric' mean nothing at Cadence or Siemens; 'orange-bubble' is literally an internal tool's UI colour. There's no build-time number, so the rewrite leans on what you do have: a Common layer serving 10-12 apps, cross-team work with the Common and CDC teams, a documented standard presented org-wide, adoption by the Low Power team, and two engineers now running it themselves. That is multi-team influence, the core Staff signal, and it was all missing. Split into two bullets so neither runs past 3 lines.",
+   "replace": "- Led the decoupling of Common code from the Formal engine in a 2M+ line C++ codebase whose Common layer serves 10-12 VC Formal apps, a decade-old coupling that had stalled earlier attempts. Chose incremental dependency inversion (a callback-based options layer) over a big-bang split; 2-3 changes per sprint for 6+ months with the Common and CDC teams; cross-layer dependencies down ~75% (132 to 34).",
+   "diff": "whole",
+   "insert_after": [
+    "- Made the options-layer pattern a documented cross-team standard and presented it org-wide; the Low Power team adopted it, and two engineers I mentored now run their own decoupling work."
+   ]
+  },
+  {
+   "find": "- Led save_covdb delivery",
+   "comment": "[MED] A detail dump with no before/after, and it overlaps bullet 1 (save_covdb appears in both). The per-customer fix list (AMD FOR-loop, Intel switch-case, Nvidia VDB depth) is exactly the customer-specific detail to keep off a resume going to competitors. 'Led delivery': you built it, so say 'built'; it's accurate and still strong.",
+   "replace": "- Built save_covdb from scratch on UCAPI (proof merging, dual-design flow, Verdi VDB output), unblocking customer signoff flows that could not merge proofs or view C++ coverage in Verdi. Agreed the VDB hierarchy with the Verdi team in Taiwan; hardened it through 8+ customer-reported issues and 40+ regression tests.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Delivered Property and Assertion Density",
+   "comment": "[MED] Was a feature list of 5 sub-capabilities with no user and no outcome. Your answer supplies the outcome: most DPV customers use it.",
+   "replace": "- Built property and assertion density reporting (report_assertion_density) end to end across the Hector engine, VCF TCL shell, two-process XML IPC and HTML reports, giving DPV the signoff-completeness analytics FPV already had; now used by most DPV customers.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Delivered three-phase DPV licensing modernization",
+   "comment": "[HIGH] Three architectures, two years, customer-facing, and it's written as a product-SKU string (Token -> Cores lift Base and Elite -> Apex with CoDa/FPV/SEQ Elite fallback). The judgment is hidden: the fallback order exists so existing customers weren't locked out. The best number was missing: the T0-T6 probe harness cut triage from weeks to ~2 days. '76%' says nothing about what it bought. Customer names repeat here. Core limits verified per your answer.",
+   "replace": "- Took DPV licensing through three models in two years (Token; per-app Cores, raising Base 1 to 4 and Elite 4 to 12; then Apex), designing the Elite fallback order so existing customers were never locked out by a tier change. Built a T0-T6 license-probe harness that cut probe-regression triage from weeks to ~2 days; trimmed the licensing suite from 38 tests to 9 with coverage preserved.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Extended save_session / restore_session flow",
+   "comment": "[MED] The most internal-sounding line in either file: UAL, solveNB, HecProblem, -out_dir, report_grid_usage, and no outcome. Your answer gives the scope: many customers run save/restore flows. No customer names, correctly, for a competitor-facing resume.",
+   "replace": "- Extended save/restore, a flow many enterprise customers rely on, so case-split procedures, SVA results, density reports and C++ coverage proofs survive a restored session (XML-based problem persistence).",
+   "diff": "whole"
+  },
+  {
+   "find": "- Resolved customer escalations end-to-end",
+   "comment": "[HIGH] Delete. It's the third full listing of the customer roster and duplicates bullet 1, where the escalation pattern now lives.",
+   "delete": true
+  },
+  {
+   "find": "- Built an internal Cursor-based engineering platform",
+   "comment": "[HIGH] Before your answer, this read as scope inflation: 'internal engineering platform' with no evidence anyone else used it. You've now confirmed the real, and better, story: you introduced AI tooling to the team, the skills are shared and used, and your manager asked you to build the Jira-compliance notifier. 'Introduced' plus 'shared' is team leverage. If you can get a count ('used by N of the team'), add it. The JIRA ramp-up figure is dropped as the weaker number.\n\nTwo lines follow: the program slicer (first phase done) and an 'Also' line for interviews, code reviews, mentoring and the knowledge transfer to the new C++/RTL app. That's Staff evidence that was nowhere on the page. 'CoDa' is kept generic in case it isn't public yet; if it is, name it in the chip-company copy.",
+   "replace": "- Introduced LLM agent tooling to the DPV team: built and shared Cursor skills for regression validation, code review and license checks, backed by a searchable index of 500+ internal docs; regression triage dropped from 2-3 hours to 5-10 minutes. Also built the daily Jira-compliance notifier my manager asked for.",
+   "diff": "whole",
+   "insert_after": [
+    "- Building a DG/LLVM-based program slicer for C++ designs in DPV (in progress): the first phase computes the cone of influence of the signals in a design's assertion properties.",
+    "- Also: interview panels; 50+ code reviews across DPV and neighbouring teams; mentored 2 engineers on the coverage stack and ran the knowledge transfer that brought it into a new C++/RTL verification app."
+   ]
+  },
+  {
+   "find": "Software Engineer II  |  Microsoft",
+   "comment": "[LOW] For EDA readers, four Microsoft bullets put too much weight on unrelated products. Cut to two (Recording Studio and SKU filtering); the space went to the new Synopsys evidence.",
+   "keep_next": true
+  },
+  {
+   "find": "- Owned PowerPoint Recording Studio enhancements",
+   "comment": "[HIGH] Attribution. You confirmed Recording Studio was a team effort, so 'Owned' and 'driving 1.5M to 4.2M' both overstate. The honest version still carries the scale. If asked, the growth is the team's number, and say so first. Automation and telemetry are merged in.",
+   "replace": "- Built PowerPoint Recording Studio features (C++) with the team: camera modes, live background blur, video export and Cameo, a camera object placed on the slide. Monthly recording sessions grew from 1.5M to 4.2M over those releases (Cameo: ~1.2M). Led v1 test automation and Recording/Export telemetry.",
+   "diff": "whole"
+  },
+  {
+   "find": "- Built the Stream 2.0 video insertion",
+   "comment": "[LOW] Cut for the EDA version (see the note on the Microsoft header).",
+   "delete": true
+  },
+  {
+   "find": "- Delivered OneDrive Catalog SKU filtering",
+   "comment": "[MED] Good problem statement, buried decision, and a second project jammed onto the end. 'Whitelisting' should be 'allowlist'. You said the 2-3 weeks figure may not be exact; as a range it's fine. Don't round it up in an interview.",
+   "replace": "- New commerce SKUs kept breaking OneDrive's upgrade path as sev-2s that took 2-3 weeks to fix in production; designed catalog filtering with an allowlist (C#) so unsupported SKUs never reached the upgrade API. Also worked on the purchase-events microservice (C#, Docker, Azure Event Hubs).",
+   "diff": "whole"
+  },
+  {
+   "find": "- Led automation for v1 of PowerPoint Explainer Videos",
+   "comment": "[LOW] Merged into the Recording Studio bullet.",
+   "delete": true
+  },
+  {
+   "find": "SDE 2 / Member of Technical Staff  |  Adobe",
+   "comment": "[MED] Title decision: 'Member of Technical Staff 2', your HR title, so it matches previous-employer background verification; 'SDE 2' isn't an Adobe title. Change LinkedIn's 'SDE 2' to match. 'Keep with next' is now set on all three role headers as a tracked format change, so a header can never sit alone at the bottom of a page.",
+   "sub": [
+    [
+     "SDE 2 / Member of Technical Staff",
+     "Member of Technical Staff 2"
+    ]
+   ],
+   "keep_next": true
+  },
+  {
+   "find": "- Migrated Photoshop Elements and Premiere Elements",
+   "comment": "[LOW] Solid. The Spot Award is folded in so the Awards section can go. 'RIBS' is Adobe-internal.",
+   "replace": "- Migrated Photoshop Elements and Premiere Elements from the legacy build system to Hyperdrive, parallelizing independent bundles in the CI/CD pipeline; install time down ~50% on average. Spot Award.",
+   "diff": "words"
+  },
+  {
+   "find": "- Designed and implemented lazy loading",
+   "replace": "- Designed lazy loading for large files in the AEM web editor; load time down ~60% on the files customers had reported as freezing.",
+   "diff": "words"
+  },
+  {
+   "find": "- Implemented PSE / PRE licensing deactivation",
+   "comment": "[LOW] Three unrelated items with internal acronyms. Compress to one 'also' line. Keep the licensing item: it gives you a 10-year licensing thread (Adobe to Synopsys), which Cadence/Siemens licensing teams will notice.",
+   "replace": "- Also: licensing deactivation on uninstall (Photoshop / Premiere Elements), MathML rendering in the AEM web editor, ColorPop in Photoshop Elements 2020. (C++, Java, React, TypeScript)",
+   "diff": "whole"
+  },
+  {
+   "find": "AWARDS",
+   "comment": "[MED] At Staff level an Awards section is mostly filler, and here it's actively weak. The Adobe award moved into its bullet.",
+   "delete": true
+  },
+  {
+   "find": "- Spot Award, Synopsys (VP-nominated)",
+   "comment": "[HIGH] Remove. It's a prize for the closest guess in an estimation exercise. On a Staff resume it reads as trivia.",
+   "delete": true
+  },
+  {
+   "find": "- Team Recognition, Synopsys",
+   "comment": "[LOW] A team award is weak individual signal. Remove.",
+   "delete": true
+  },
+  {
+   "find": "- Spot Award, Adobe",
+   "delete": true
+  }
+ ]
+}

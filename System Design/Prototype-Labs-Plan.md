@@ -23,6 +23,8 @@ Hours are estimates for a Go beginner pairing with Claude. **Tier 0 is the must-
 
 ### Tier 0: before IV2 (Platform round), about 14 h
 
+> **Update 17 Oct:** IV2 is Wed 21 Oct, 08:00. With so little time, Tier 0 is **replaced by [Micro-Labs-Plan.md](Micro-Labs-Plan.md)**: Python standard-library micro-labs that build only the mechanism being learned, with everything else as dummies. Tier 0 resumes after IV2.
+
 | P | Cohort exercise | Agoda twist (what to actually build) | Why it ranks here | Est. |
 |---|---|---|---|---|
 | **0** | Setup | Repo, Go/uv/Docker, `deploy/compose.yml` (Postgres, MySQL, Redis, Toxiproxy, Prometheus, Grafana, Jaeger), Makefile, CI | Everything else needs it | 1.5 h |

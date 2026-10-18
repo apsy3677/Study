@@ -1,29 +1,46 @@
 # IV2 Platform Round: Progress
 
+**IV2: Wed 21 Oct 2026, 08:00.** Micro-labs (System Design/Micro-Labs-Plan.md) were paused on 18 Oct; prep is now drills with Claude (attempt first → feedback → retry).
+
+## Plan to the round (updated Sun 18 Oct, 16:00)
+| When | Do | Why |
+|---|---|---|
+| **Sun evening** (after a real break) | **Scenario S1** run by Claude as the interviewer (45 min) → **CR-2** supplier fan-out (20 min) | The narrative is most of the hour and hasn't been practised yet; CR-2 reuses connectivity §4–§7 |
+| **Mon evening** (~1.5 h) | **QA**: 03 §1, §7, §8 → the 06 section C questions in batches of 4 (45 min) · **CR-3** retry helper (15 min) | QA is a graded attribute, still untouched |
+| **Tue morning** | **Scenario S2** (hotel booking + payment; reuses today's saga) · 06 sections B and E rapid-fire in batches | The second most likely narrative |
+| **Tue afternoon** | **Mock 1**, full 60 min, then a debrief | Never cut this |
+| **Tue evening** | 08-Recall-Day-Of.md, the booking "sandwich" picture, the traffic-light code-review method. Sleep early | |
+| **Wed 06:30** | 10 min: draw the sandwich + the review tiers; read the recall sheet | |
+
+If time slips, cut in this order: CR-3 → 06 section E → S2 (talk through its key instead). Never cut S1 or Mock 1.
+
 ## Checklist
 | Item | Day | Done |
 |---|---|---|
-| Intel + prep video notes (00 §6) | 1 | |
-| Narrative Playbook | 1 | |
-| Connectivity §1–19 | 1 | |
+| Intel + prep video notes (00 §6) | 1 | ✔ read 17 Oct (video notes not filled) |
+| Narrative Playbook | 1 | ✔ read 17 Oct |
+| Connectivity §1–19 | 1 | ~ §1–§7 drilled aloud; 02a See-it pages for §1, §3–§7; §8–§19 skimmed |
 | QA §1–12 | 1 | |
 | Scenarios S1, S2 aloud | 1 | |
-| Generic A + B (28 Qs) | 1 | |
-| Code review CR-1…CR-12 | 2 | |
-| Scenarios S3–S6 aloud | 2 | |
+| Generic A + B (28 Qs) | 1 | ? self-practised on the night of 17 Oct (results not reported) |
+| Code review CR-1…CR-12 | 2 | ~ §1–§2 method + CR-1 twice (7 → 16 of 22) |
+| Booking flow: concurrency, idempotency, saga | 2 | ✔ 18 Oct (see the session log) |
+| Scenarios S3–S6 aloud | 2 | skip unless time |
 | Generic C + D + E (22 Qs) | 2 | |
-| Mock 1 | 2 | |
-| Mock 2 | 2 | |
-| WSL P1: booking, no double booking + idempotency (W2#1) | 3+ | |
-| WSL P2–P3: bounded pool → supplier gateway capstone | 3+ | |
-| WSL P4: cursor pagination (W8#2) | 3+ | |
-| WSL P5–P7: webhooks · auth · outbox queue | 3+ | |
-| Mock 3 (eve) | eve | |
+| Mock 1 | Tue | |
+| Mock 2 | — | skip |
+| WSL micro-labs 1–4 | — | paused 18 Oct (didn't fit the time left) |
+| Mock 3 (eve) | — | skip |
 
 ## Mock scores (1–4)
 | Mock | Date | Design | Connectivity | QA | Code review | Comms | Top 3 fixes |
 |---|---|---|---|---|---|---|---|
 | | | | | | | | |
+
+## What works for learning (from the 17–18 Oct sessions)
+- Follow **one concrete example through real table rows** (inventory, bookings and idempotency_keys changing phase by phase); pictures of two users side by side; then short pseudocode. This is what made the booking flow click.
+- Attempt first, then feedback, then retry: CR-1 went from 7 to 16 of 22 on the retake.
+- Ask questions in **small batches**, not one per message, in long sessions.
 
 ## Weak spots (one line each)
 - Length swings both ways: §4 was only the Say-it line (about 20 s). The Say-it line is the Kya beat, not the whole answer.
@@ -32,10 +49,13 @@
 - Recites the table attribute-by-attribute and runs past 60 s. Speak protocol-by-protocol (what, best at, catch) and finish on the trade-off.
 - Skips the Keemat beat: no trade-off, metric or "what I'd standardise" at the end (Connectivity §1, §2). Also skips the Kahan beat (no Agoda example) in §2.
 - Lists patterns instead of answering the question asked: §2 asked "when sync vs async" and never came back to it after the first sentence.
+- Answers around a direct question: asked "does a transaction alone stop it? supplier call inside?", the first reply gave a business flow and said neither yes nor no. Start with "No, because …".
 - Fillers: "uh" and "like" in most sentences; the closing line trails off. Pause silently instead, and end on a full sentence with "because".
 - Says "matrices" for "metrics" (5+ times across §3 and its follow-up). Drill: MET-riks.
 - Debugging questions: answers with guesses before data. Lead with "first I'd break the number down by …", then the ranked suspects, then prevention.
-- Precision slips: L7 = application layer (not presentation); REST resources are nouns, HTTP methods are the verbs.
+- Code review: reads the flow line by line but doesn't interrogate each line. Ask five questions per line: who controls this input, what if it fails or is null, what if two run at once, what if it's slow, what does it print or store.
+- Code review: ends without a ranked summary. Finish with "about N issues, these 4 block the merge, the rest are follow-ups".
+- Precision slips: L7 = application layer (not presentation); REST resources are nouns, HTTP methods are the verbs; a 5–8 Dec stay is 3 nights, not 4.
 
 ## Session log
 | Date | What | Notes |
@@ -48,3 +68,12 @@
 | 2026-10-17 | Connectivity §3 aloud (Supplier integration) | ✔ Content (best so far, has the trade-off and metrics) but about 3 min. Coalescing is to save supplier calls, not the DB; missed channel-manager push (ARI), delta/ETag, token-bucket budget; "resilient" left vague |
 | 2026-10-17 | §3 follow-up (supplier spend doubled, flat traffic) | Partial. Right instincts (cache hits, duplicate calls) but unstructured; missed attributing calls by caller, retry storms, deploy correlation, and the prevention line (budget alert) |
 | 2026-10-17 | Connectivity §4 aloud (Timeouts) | Partial. Correct anchor + cascade, but about 20 s: no connect/read split, no min(own, remaining − margin), no Agoda example, no product-decision line. §3 60-s redo still pending |
+| 2026-10-17 | 02a See-it pages; learning diagnosis | Pseudocode + C++ analogies for §1, §3–§7. Diagnosis: a mechanism gap (never built timeouts/pools/breakers) plus a recall gap (rereading); English isn't the main issue. Little's Law explained (threads = rate × time held) |
+| 2026-10-18 | Code review §1 order recalled | Partial. Missed the Performance lens entirely (per-call client, N+1, no pagination, sequential loop); concurrency placed too late; skipped §2 comment labels |
+| 2026-10-18 | CR-1 (booking service) | About 7/22. Found: SQL injection (unsure how), API key, per-call DB conn + HttpClient, check-then-act race, if/else → strategy + DI. **Major misses:** card number logged, IDOR on getBookings ("looks okay"), no pagination, no timeouts. No intent line, no labels, no prioritised opening |
+| 2026-10-18 | Interview method for code review | Traffic-light tags typed on each line (RED money/data/security, YELLOW production, BLUE team); the five-finger questions per line; about 13 min: intent → tag pass → ranked summary → fix the top 2–3 → follow-ups. Say "I'm a C++ engineer; I'll sketch in Java-like pseudocode". Four fix shapes: PreparedStatement, conditional UPDATE, strategy interface + map, injected pool/client with timeouts |
+| 2026-10-18 | CR-1 retake (interview form) | About 16/22, all 4 major misses fixed, and found the supplier-before-save orphan with a PENDING-status fix. Still missing: the prioritised summary at the end (it trailed off with "that's pretty much it"), idempotency key, price tampering, the shared cache list, rs.next() ("it is okay"). Said the card is "shown to the user"; it's printed to logs |
+| 2026-10-18 | CR-1 ranked summary | ✔ The order was right (blockers → reliability → design). Add the count up front and "I'd block the merge on the first four" at the end |
+| 2026-10-18 | Follow-up: does a transaction stop double booking? supplier call inside? | Partial on the first try (described a business flow instead of answering). Then taught: a plain SELECT doesn't lock → conditional UPDATE + row count; never hold a DB transaction across remote calls; the saga "sandwich" (T1 → payment + supplier → T2, compensate on failure, a reconciler for PENDING); Case A (supplier owns inventory) vs Case B (we own it); one inventory row per night; FOR UPDATE SKIP LOCKED for per-unit rows |
+| 2026-10-18 | Booking flow traced through real tables | Idempotency-key claim via PRIMARY KEY / UNIQUE; the booking row vs the inventory rows; supplier_ref; "key = DONE + stored response" for replays; failure-by-phase table. Check questions: Q1 ✔, Q2 ✘ (3 nights, not 4), Q3 ✔ (add a 202 reply, and don't compensate before the outcome is known) |
+| 2026-10-18 | Quiz Q1–Q2 (transactions, unique constraint) | Q1 ✔ (add "a plain SELECT doesn't lock" + the row-count check). Q2 ✔ (add: without a constraint, the second insert does NOT fail; you'd get two rows). Asked a good production question: who owns the rollback, code or DB |

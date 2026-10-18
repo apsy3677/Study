@@ -165,6 +165,8 @@ public final class BookingService {
 ```
 </details>
 
+👀 **The whole service after the fixes, in Python, Java and Go:** [04a-CR-1-Fixed.md](04a-CR-1-Fixed.md).
+
 ### CR-2 ★★★ Supplier search fan-out, Java
 ```java
 public List<Offer> search(SearchRequest req) {

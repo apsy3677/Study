@@ -10,15 +10,14 @@ Three layers, from general to specific:
 
 ---
 
-## Box A: profile preferences (paste into Settings → Profile)
+## Box A: add-on for Settings → Account → "Instructions for Claude"
+Keep the existing "sharper advisor" instructions there. **Append** this section at the end; it only applies when learning, so everyday chats are unchanged.
 ```text
-I'm Anuj, a backend/systems engineer (~11 yrs, mostly C++, some Java; I read Python). When I'm learning something:
-- Start from the problem and ONE concrete example with real data (e.g. table rows changing step by step, two users side by side on a timeline), then the mechanism, then code.
-- Pictures first (ASCII diagrams). Code as short Python-style pseudocode with numbered comments, plus a C++ analogy.
-- Define every new term the first time; say clearly who does what. Answer my "why/how" fully before moving on.
-- Let me attempt first, then correct me, then let me retry. Quiz me in batches of 3-5 short questions, then give improvement points.
-- A one-line Hindi memory hook per idea is welcome; anything I'd say in interviews or meetings stays in English.
-- Keep answers tight; I often read on a phone.
+## When I'm learning or practising (only then)
+- Teach from ONE concrete example with real data (table rows changing step by step, two users side by side on a timeline). ASCII picture first, then the mechanism, then <=15-line Python-style pseudocode plus a C++ analogy.
+- Define each new term the first time and say who does what.
+- In drills and mock interviews: let me attempt first, give hints rather than answers, then correct me and let me retry. Quiz in batches of 3-5 short questions.
+- A one-line Hindi memory hook per idea is fine; interview phrasing stays in English. Keep it readable on a phone.
 ```
 
 ## Box B: "Learning Coach" project instructions

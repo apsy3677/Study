@@ -35,7 +35,7 @@ If time slips, cut in this order: CR-3 → 06 section E → S2 (talk through its
 ## Mock scores (1–4)
 | Mock | Date | Design | Connectivity | QA | Code review | Comms | Top 3 fixes |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| S1 scenario (practice) | 2026-10-18 | 2 | 2 | 2 | — | 2 | (1) do the cost maths aloud after clarifying (3,000 searches/s × 2 suppliers = 6,000 paid calls/s); (2) answer the asked question in the first sentence; (3) walk boxes → arrows → API field by field |
 
 ## What works for learning (from the 17–18 Oct sessions)
 - Follow **one concrete example through real table rows** (inventory, bookings and idempotency_keys changing phase by phase); pictures of two users side by side; then short pseudocode. This is what made the booking flow click.
@@ -55,6 +55,8 @@ If time slips, cut in this order: CR-3 → 06 section E → S2 (talk through its
 - Debugging questions: answers with guesses before data. Lead with "first I'd break the number down by …", then the ranked suspects, then prevention.
 - Code review: reads the flow line by line but doesn't interrogate each line. Ask five questions per line: who controls this input, what if it fails or is null, what if two run at once, what if it's slow, what does it print or store.
 - Code review: ends without a ranked summary. Finish with "about N issues, these 4 block the merge, the rest are follow-ups".
+- Scenarios: no numbers turned into cost. After clarifying, say the maths aloud (QPS × suppliers × cost per call, look-to-book) and let it drive the cache and refresh design.
+- Scenarios: jumps between topics; no signposting. Say the plan ("boxes, then arrows, then the APIs, then testing") and close each part with a one-line summary.
 - Precision slips: L7 = application layer (not presentation); REST resources are nouns, HTTP methods are the verbs; a 5–8 Dec stay is 3 nights, not 4.
 
 ## Session log
@@ -76,4 +78,5 @@ If time slips, cut in this order: CR-3 → 06 section E → S2 (talk through its
 | 2026-10-18 | CR-1 ranked summary | ✔ The order was right (blockers → reliability → design). Add the count up front and "I'd block the merge on the first four" at the end |
 | 2026-10-18 | Follow-up: does a transaction stop double booking? supplier call inside? | Partial on the first try (described a business flow instead of answering). Then taught: a plain SELECT doesn't lock → conditional UPDATE + row count; never hold a DB transaction across remote calls; the saga "sandwich" (T1 → payment + supplier → T2, compensate on failure, a reconciler for PENDING); Case A (supplier owns inventory) vs Case B (we own it); one inventory row per night; FOR UPDATE SKIP LOCKED for per-unit rows |
 | 2026-10-18 | Booking flow traced through real tables | Idempotency-key claim via PRIMARY KEY / UNIQUE; the booking row vs the inventory rows; supplier_ref; "key = DONE + stored response" for replays; failure-by-phase table. Check questions: Q1 ✔, Q2 ✘ (3 nights, not 4), Q3 ✔ (add a 202 reply, and don't compensate before the outcome is known) |
+| 2026-10-18 | Scenario S1 (flight aggregator), interviewer-run, ~35 min | 2/2/2/–/2. Good: split search/booking, SPOF, cache keyed by route+date with TTL + background refresh + lazy fill + telemetry to tune TTLs, partial results, timeouts, pagination, no card in the API, store the supplier ref, PENDING status, fake slow suppliers for tests. Missed: cost maths, sync fan-out per search, dedupe key/cheapest, breaker/bulkhead/budget, inbound rate limiting (bots), stampede, price + raw card from the client, "OK" → 201 + bookingId, auth, async/outbox, observability. **Concept gap: thought the server can generate the idempotency key; it must come from the client (one per checkout attempt, resent on retry).** Skipped the cache question until asked twice |
 | 2026-10-18 | Quiz Q1–Q2 (transactions, unique constraint) | Q1 ✔ (add "a plain SELECT doesn't lock" + the row-count check). Q2 ✔ (add: without a constraint, the second insert does NOT fail; you'd get two rows). Asked a good production question: who owns the rollback, code or DB |

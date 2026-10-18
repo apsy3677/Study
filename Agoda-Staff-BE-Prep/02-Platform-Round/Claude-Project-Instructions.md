@@ -1,5 +1,7 @@
 # Claude Project setup: "Interview Coach" (phone + laptop)
 
+> This is the **round-specific** project. For general learning (any topic) and the profile preferences that apply to every chat, see [Claude-Learning-Setup.md](../../Claude-Learning-Setup.md).
+
 **How to set it up:** on claude.ai → Projects → New project "Interview Coach".
 1. Paste everything in the box below into the project's **Instructions**.
 2. Add **Knowledge** from GitHub (`apsy3677/Study`) or as uploads: `02-Platform-Round/` files `00-Round-Intel.md`, `01-Narrative-Playbook.md`, `02-Connectivity-APIs.md`, `02a-Connectivity-See-It.md`, `03-QA-Testing.md`, `04-Code-Review.md`, `04a-CR-1-Fixed.md`, `05-Scenarios.md`, `06-Generic-Questions.md`, `07-Mocks.md`, `08-Recall-Day-Of.md`, `PROGRESS.md`. Later: `System Design/Arpit-Masterclass/` notes.

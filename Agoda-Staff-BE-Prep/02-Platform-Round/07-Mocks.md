@@ -60,6 +60,88 @@ public List<Car> cars(String loc, String time) {
 Expected: sequential fan-out → parallel with a deadline + partial results; **B is slow** → its own bulkhead + timeout, or async/progressive results, plus a cache; **A's 5 req/s limit** → a shared token bucket across instances (one key = global limit), caching, maybe more keys by contract; **C webhooks** → verify the signature, timestamp, dedupe, ordering (version), ack fast + queue, a reconciliation poll; the webhook code has **SQL injection**, no auth/signature, an `ObjectMapper` per call, no validation (null `available`), no error handling, synchronous DB write (fine if fast, but enqueue at scale); `/cars` has no pagination, no dedupe, no timeouts, sequential calls, verbs are fine but no versioning; car availability for a *time range* (a model issue); booking: hold → confirm with the supplier, idempotency. Tests: Toxiproxy on B, limiter test for A, webhook replay/order tests, contract fixtures for SOAP.
 </details>
 
+<details><summary>Improved design: before (faults on the arrows) → after (fixes on the arrows)</summary>
+
+**Ask first:** searches/s (say 300 at peak)? Look-to-book (100:1 → about 3 bookings/s)? How many API keys for A? Does each supplier support an idempotency key or a lookup by our reference? Are C's webhooks signed, and can they repeat or arrive out of order?
+
+#### The numbers (do them aloud, right after clarifying; method in [02c](02c-Numbers-Load-Backpressure.md))
+```
+A's limit vs search:  5 /s ÷ 300 /s = 1 in 60 may miss → 98% hit needed
+                      → unrealistic for location + time → A comes OFF the search path
+A's daily budget:     5 /s × 10⁵ s = 500k calls/day → hot keys + misses + booking re-checks
+Slow B (Little):      300 /s × 4 s (p99) = 1,200 threads stuck → bulkhead of 100 slots
+                      100 ÷ 1.2 s ≈ 80 /s served; the rest skip B → partial results
+Bookings:             300 /s ÷ 100 = 3 bookings/s
+```
+
+#### Before
+```mermaid
+flowchart LR
+    W["Web/App<br/>300 searches/s"] -->|"GET /cars?loc&time<br/>❌ no pagination, no versioning"| CS["Car service<br/>(search + booking + webhooks in one)"]
+    CS -->|"❌ called per search: needs 98 in 100 to hit, vs 5/s<br/>❌ no shared limiter → 429s / ban"| A["Supplier A REST<br/>5 req/s per key"]
+    CS -->|"❌ called AFTER A (sequential)<br/>❌ no timeout, no bulkhead → 1,200 threads at p99"| B["Supplier B SOAP<br/>p99 4 s"]
+    CS -->|"❌ results merged with no dedupe"| Cc["Supplier C REST"]
+    Cc -.->|"POST /hook<br/>❌ no auth / signature: anyone can set available=0<br/>❌ SQL injection, no dedupe, no ordering"| CS
+    CS --> DB[("Postgres")]
+```
+
+#### After
+```mermaid
+flowchart LR
+    W["Web/App"] -->|"GET /v1/cars?loc&from&to&cursor"| GW["API gateway<br/>auth, rate limit, bots"]
+    GW --> SS["Search service<br/>reads ONLY our store"]
+    SS -->|"cache + SWR"| R[("Redis")]
+    R --- AV[("Availability store")]
+    PULL["Background pull<br/>hot / warm / cold tiers"] -->|"✅ shared token bucket 4 of 5 /s<br/>(1 reserved for booking re-checks)"| A["Supplier A"]
+    SS -->|"✅ parallel, deadline 1.5 s<br/>✅ bulkhead 100 slots + timeout + breaker<br/>✅ too slow → partial results"| B["Supplier B SOAP"]
+    PULL --> AV
+    Cc["Supplier C"] -.->|"POST /v1/hooks/c<br/>✅ HMAC signature + timestamp<br/>✅ ack 2xx fast, then queue"| WH["Webhook receiver"]
+    WH -->|"✅ dedupe by eventId<br/>✅ UPDATE … WHERE version < new"| AV
+    W -->|"POST /v1/bookings + Idempotency-Key"| BS["Booking service<br/>(saga orchestrator)"]
+    BS -->|"hold → confirm (clientRef = bookingId)<br/>✅ timeout → PENDING + 202, look up by ref<br/>(B has NO idempotency: never retry blind)"| B
+    REC["Reconciler"] -.->|"PENDING → look up by our ref"| B
+```
+
+#### The fixed code (Java sketch)
+```java
+@PostMapping("/v1/hooks/c")
+public ResponseEntity<Void> hook(@RequestHeader("X-Signature") String sig,
+                                 @RequestHeader("X-Timestamp") long ts, @RequestBody String body) {
+    if (!signer.valid(sig, ts + "." + body) || clock.secondsSince(ts) > 300)    // 1. Leak: HMAC + replay window
+        return ResponseEntity.status(401).build();
+    queue.publish(body);                                                         // 2. ack fast, process async
+    return ResponseEntity.accepted().build();
+}
+// consumer: one transaction per event
+void apply(AvailabilityEvent e) {                                                // mapper injected, schema validated
+    if (!processed.insertIfAbsent(e.eventId())) return;                         // 3. dedupe (Do Baar)
+    jdbc.update("UPDATE cars SET available = ?, version = ? WHERE id = ? AND version < ?",
+                e.available(), e.version(), e.carId(), e.version());             // 4. params + newer only
+}
+
+@GetMapping("/v1/cars")
+public Page<Car> cars(@Valid CarQuery q, @RequestParam(required = false) String cursor) {
+    Deadline d = Deadline.after(Duration.ofMillis(1500));                        // 5. one deadline for all
+    List<CompletableFuture<Result>> calls = sources.stream()                     //    (A and C read from our store)
+        .map(s -> s.searchAsync(q, d).exceptionally(Result::failed)).toList();  // 6. parallel; failure → partial
+    List<Car> cars = dedupe(join(calls, d));                                     // 7. one car per canonical key
+    return Page.of(sortByPrice(cars), cursor, 50);                               // 8. capped page + cursor
+}
+```
+
+#### Test map
+| Failure | Level | Assert |
+|---|---|---|
+| We exceed A's 5/s | unit (fake clock) | never > 5 calls in any 1-s window, across instances |
+| C sends the same event twice / v6 then v5 | integration, real DB | one change; v6 stays |
+| Forged or replayed webhook | integration | 401; the row is unchanged |
+| B slow under load | load + fault injection (proxy adds 4 s) | threads bounded by the bulkhead; searches return partial results within 1.5 s |
+| B's SOAP format changes | contract fixtures + nightly sandbox | our parser still maps B's real replies |
+| Booking times out at B | integration | PENDING + 202; the reconciler finds it by our ref; no second booking |
+
+🔑 *Pehle hisaab: 5 ÷ 300 = 98% hit? Toh A search se bahar.* (Maths first: 5 ÷ 300 = 98% hits? Then A is off the search path.)
+</details>
+
 ---
 
 ## Mock 2: Multi-currency price display service
@@ -98,8 +180,8 @@ Expected: **an external call per conversion** (every search result price!) → a
 ```mermaid
 flowchart LR
     CO[Checkout] -->|POST /pay| R[Payment router]
-    R -->|70%| P1[PSP-1]
-    R -->|30%| P2[PSP-2]
+    R -->|"70 in 100"| P1[PSP-1]
+    R -->|"30 in 100"| P2[PSP-2]
     P1 -.->|webhook result| R
     P2 -.->|webhook result| R
     R --> DB[(payments)]

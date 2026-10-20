@@ -379,7 +379,7 @@ flowchart LR
 flowchart LR
     SCH["Scheduler<br/>(k8s CronJob, retries)"] --> W["3 sync workers<br/>(one DB connection each)"]
     CP[("sync_checkpoint<br/>job · last_cursor · status")] -.->|"✅ resume from the cursor"| W
-    W -->|"✅ take a token first"| TB{{"Shared token bucket<br/>8/s (20% headroom)"}}
+    W -->|"✅ take a token first"| TB{{"Shared token bucket<br/>8/s (20 percent headroom)"}}
     TB -->|"GET ?updatedSince=…&after=cursor<br/>✅ delta + cursor pages<br/>✅ timeout, status check, key from secrets<br/>✅ 429 → wait Retry-After"| S["Supplier API"]
     W -->|"✅ ONE transaction per page:<br/>100-row UPSERT (params) + save cursor"| DB[("Content DB")]
     DB --- CP
@@ -435,6 +435,66 @@ flowchart LR
 - Personalised prices (member deals) → don't cache per user; cache the base and apply discounts at read time.
 - Metrics: hit ratio per key class, refresh rate, pricing QPS, price-mismatch rate at checkout (business metric).
 - Tests: a concurrency test (1,000 concurrent misses → 1 pricing call), a TTL-jitter distribution test, a load test replaying campaign traffic.
+</details>
+
+<details><summary>Improved design: before (faults on the arrows) → after (fixes on the arrows)</summary>
+
+**Ask first:** searches/s for the hot key (say 5,000/s in a campaign, 20 search instances)? Cost of one miss (price 4,000 hotels ≈ 800 ms)? Pricing capacity (≈ 50 full-city pricings/s)? How stale may search prices be (≈ 2 min)? Is checkout exact?
+
+#### The "every few minutes" clue, as a timeline
+```
+t = 0 … 299 s   key "bangkok" in Redis → 5,000 searches/s all hit → pricing idle
+t = 300 s       TTL expires → EVERY search in that second misses
+                5,000 misses → 5,000 full-city pricing jobs   vs capacity 50/s   = 100× overload
+                pricing CPU 100% → 800 ms becomes 10 s → searches time out → users retry → more misses
+t = 310 s       someone finally sets the key → calm for 300 s → repeat at t = 600 s
+```
+"Spikes every few minutes" = **every TTL**: a **cache stampede** (thundering herd).
+
+#### Before
+```mermaid
+flowchart LR
+    U["Users<br/>5,000 searches/s for Bangkok"] --> SS["Search service × 20"]
+    SS -->|"get key = city<br/>❌ key ignores dates, guests, currency<br/>→ users see another date's prices<br/>❌ one hot key on ONE Redis shard"| R[("Redis")]
+    SS -->|"on a miss<br/>❌ every request misses at the same second (stampede)<br/>❌ no single-flight, no stale fallback<br/>❌ Redis down → ALL traffic goes here"| PS["Pricing service<br/>(50 city pricings/s)"]
+    PS --> DB[("Rates DB")]
+    SS -->|"set TTL = 300 s<br/>❌ same TTL for every key → they expire together<br/>❌ prices only change when the TTL runs out"| R
+```
+
+#### After
+```mermaid
+flowchart LR
+    U["Users"] --> SS["Search service × 20<br/>✅ local in-process cache (≈ 5 s)<br/>for the hottest keys"]
+    SS -->|"get v1:BKK:2026-12-04:2026-12-06:2A:THB<br/>✅ key = city + dates + guests + currency<br/>✅ value has soft_expiry (fresh) + hard TTL (stale limit)"| R[("Redis")]
+    SS -->|"past soft expiry: serve STALE now (≤ 2 min)<br/>+ ONE async refresh per key (lock / single-flight)<br/>✅ TTL jitter (300 s ± 30 s)<br/>✅ breaker: Redis down → shed load, don't flood pricing"| PS["Pricing service"]
+    PS --> DB[("Rates DB")]
+    ARI["Rate changes<br/>(S3 pipeline)"] -->|"✅ event → refresh the hot keys for that hotel"| R
+    HOT["Hot-key refresher<br/>(top N searches)"] -->|"✅ refresh BEFORE expiry"| R
+    CO["Checkout"] -->|"✅ re-price authoritatively from pricing<br/>→ 'price changed' screen if different"| PS
+```
+**The business metric:** price-mismatch rate at checkout (search price ≠ checkout price), plus hit ratio and pricing calls/s per key class.
+
+#### The fixed read path (Python sketch)
+```python
+def search(q):
+    key = f"v1:{q.city}:{q.checkin}:{q.checkout}:{q.guests}:{q.currency}"   # 1. full key
+    if v := local.get(key): return v.results                               # 2. in-process, ~5 s
+    v = redis.get(key)                                                     # 3. {results, soft_expiry}
+    if v and now() < v.soft_expiry: return v.results                       # 4. fresh
+    if v:                                                                  # 5. stale but allowed
+        if redis.set(f"lock:{key}", 1, nx=True, ex=10):                    # 6. only ONE refresher in the fleet
+            pool.submit(refresh, key, q)
+        return v.results                                                   #    everyone else serves stale now
+    return single_flight(key, lambda: refresh(key, q))                     # 7. cold miss: one call per instance
+
+def refresh(key, q):
+    res = pricing.price_city(q, timeout=2.0)
+    redis.set(key, {"results": res, "soft_expiry": now() + 300 + random.uniform(-30, 30)},
+              ex=420)                                                      # 8. jitter + hard limit (soft + 2 min)
+    return res
+```
+
+🔑 *TTL sab ka ek saath khatam = sab ek saath pricing pe. Purana dikhao, ek hi refresh karo, TTL hilao.* (Every TTL ends together = everyone hits pricing together. Serve the old one, refresh once, jitter the TTL.)
 </details>
 
 ---

@@ -97,9 +97,13 @@ flowchart LR
     PULL --> AV
     Cc["Supplier C"] -.->|"POST /v1/hooks/c<br/>✅ HMAC signature + timestamp<br/>✅ ack 2xx fast, then queue"| WH["Webhook receiver"]
     WH -->|"✅ dedupe by eventId<br/>✅ UPDATE … WHERE version < new"| AV
-    W -->|"POST /v1/bookings + Idempotency-Key"| BS["Booking service<br/>(saga orchestrator)"]
-    BS -->|"hold → confirm (clientRef = bookingId)<br/>✅ timeout → PENDING + 202, look up by ref<br/>(B has NO idempotency: never retry blind)"| B
-    REC["Reconciler"] -.->|"PENDING → look up by our ref"| B
+    GW -->|"POST /v1/bookings + Idempotency-Key"| BS["Booking service<br/>(saga orchestrator)"]
+    BS -->|"T1 (ms): claim key + booking PENDING<br/>T2 (ms): CONFIRMED + supplier_ref + outbox row<br/>(each ONE transaction)"| BDB[("Bookings DB<br/>bookings · idempotency_keys · outbox")]
+    BS -->|"authorise (hold money) → capture after confirm<br/>✅ idemKey = bookingId · undo = void"| PSP["PSP"]
+    BS -->|"hold → confirm (clientRef = bookingId), same for A and C<br/>✅ timeout → PENDING + 202, look up by ref<br/>(B has NO idempotency: never retry blind)"| B
+    BDB -->|"outbox relay"| K[["Kafka"]] --> EM["Email / partner events<br/>✅ dedupe by eventId"]
+    REC["Reconciler"] -.->|"reads PENDING rows"| BDB
+    REC -.->|"look up by our ref"| B
 ```
 
 #### The fixed code (Java sketch)

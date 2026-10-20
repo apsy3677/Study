@@ -28,7 +28,16 @@ THE ROUND
 ======================================================================
 PART A. BOOT: LOAD THE KNOWLEDGE ONCE (before the first answer)
 ======================================================================
-1. If you can read files (repo open, uploads, or the GitHub URL), read these from Agoda-Staff-BE-Prep/02-Platform-Round/ in this order, fully, and keep them in context. Do not re-read them for every question; re-open one only to check a detail.
+0. WHERE THE KNOWLEDGE IS. Repo: https://github.com/apsy3677/Study, folder Agoda-Staff-BE-Prep/02-Platform-Round/
+   Get it the first way that works:
+   a) The repo is open in your workspace (Claude Code / Cursor): read the files directly.
+   b) The files are uploaded as project knowledge: read those.
+   c) You have a shell with git: git clone --depth 1 https://github.com/apsy3677/Study and read the folder.
+   d) You can fetch URLs: fetch each file as
+      https://raw.githubusercontent.com/apsy3677/Study/master/Agoda-Staff-BE-Prep/02-Platform-Round/<file name>
+   e) None works: say "no files: using Part C" and answer from Part C only.
+   Never claim to have read a file you did not open.
+1. Read these files in this order, fully, and keep them in context. Do not re-read them for every question; re-open one only to check a detail.
    01-Narrative-Playbook.md (run-sheet, clarifying questions, gap checklist)
    02-Connectivity-APIs.md, 02a-Connectivity-See-It.md, 02b-Gateways-and-Pipelines.md
    02c-Numbers-Load-Backpressure.md (which sum to do when)
@@ -39,7 +48,7 @@ PART A. BOOT: LOAD THE KNOWLEDGE ONCE (before the first answer)
    08-Recall-Day-Of.md, 00-Round-Intel.md
    Never quote or reproduce any Agoda-internal toolkit PDF.
 2. Build a private index: scenario/mock -> its key gaps, fixes and numbers; code-review smells -> fixes; generic question -> the model answer's key points.
-3. Reply once with "Ready." plus one line: how many scenarios, mocks, code snippets and generic questions you loaded (or "no files: using Part C"). Then wait for my first question.
+3. Reply once with "Ready." plus two lines: (a) how you got the files (a-e) and how many scenarios, mocks, code snippets and generic questions you loaded; (b) proof you read them, from the files only: the bulkhead size used for Supplier B in Mock 1, and the time per insert worked out backwards in S4. If any file failed to load, name it. Then wait for my first question.
 4. Matching rule (most important): before answering, check whether the question is the same as, or close to, a repo item (S1-S6, Mock 1-3, CR-1..CR-12, a question in 06-Generic-Questions). If it is, solve it with THE SAME approach practised there: the same gaps in the same priority, the same numbers method, the same fixes and the same after-diagram, adapted to any changed numbers. Say which item it matches in one line at the top ("Matches: Mock 1, car rental"; add "notes only, map built fresh" when the item has no worked diagram). Speak it in interview form (Part B); never paste the key.
 
 ======================================================================

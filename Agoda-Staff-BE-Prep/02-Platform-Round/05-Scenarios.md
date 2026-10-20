@@ -146,6 +146,80 @@ public BookingResponse book(BookingRequest r) {
 9. Emails generated from an event that doesn't carry the data → the consumer has to call back; the consumer isn't idempotent (duplicate emails).
 </details>
 
+<details><summary>Improved design: before (faults on the arrows) → after (fixes on the arrows)</summary>
+
+**Ask first:** bookings/s at peak (say 50)? Does the PSP take an idempotency key? Can the supplier be **looked up by our reference**? How long does an authorisation hold last (often ~7 days)?
+**The numbers:** 50 bookings/s × 1% supplier timeouts ≈ 30 PENDING bookings a minute for the reconciler to resolve, well inside the hold window.
+
+#### Before
+```mermaid
+flowchart LR
+    App -->|"POST /book<br/>❌ no Idempotency-Key → a retry or double click books again<br/>❌ raw card in the body (PCI scope)"| BS["Booking service<br/>❌ no state saved until the end"]
+    BS -->|"1 charge<br/>❌ CAPTURES money before the room is secured<br/>❌ no PSP idempotency key, no timeout"| PSP["Payment provider"]
+    BS -->|"2 confirm<br/>❌ throws → money kept, no refund → user retries → charged twice<br/>❌ timeout → outcome unknown, still continues<br/>❌ no client ref to look it up later"| SUP["Supplier API"]
+    BS -->|"3 insert<br/>❌ crash before this → money + room taken, no record"| DB[("MySQL")]
+    BS -->|"4 publish<br/>❌ dual write: not atomic with the insert<br/>❌ publishes on partial success → email for a booking the supplier never got"| K[["Kafka"]] --> EM["Email service<br/>❌ no dedupe → duplicate emails"]
+```
+
+#### After
+```mermaid
+flowchart LR
+    App -->|"POST /v1/bookings<br/>✅ Idempotency-Key (client-made, one per checkout)<br/>✅ PSP token, never a raw card"| BS["Booking service<br/>(orchestrator)"]
+    BS -->|"T1 (ms): claim key + booking PENDING"| DB[("Bookings DB<br/>bookings · idempotency_keys · outbox")]
+    BS -->|"authorise (hold) ✅ idemKey = bookingId<br/>✅ timeout · undo = void (free)"| PSP["PSP"]
+    BS -->|"confirm ✅ clientRef = bookingId, 800 ms timeout<br/>= the PIVOT (point of no return)<br/>✅ timeout → stay PENDING, look up by ref, never void blindly"| SUP["Supplier"]
+    BS -->|"capture (after the pivot only)"| PSP
+    BS -->|"T2 (ms): CONFIRMED + outbox row + stored reply<br/>(ONE transaction)"| DB
+    DB -->|"relay / CDC (at-least-once)"| K[["Kafka"]] --> EM["Email service<br/>✅ dedupe by eventId"]
+    BS -->|"201 CONFIRMED · 202 PENDING + GET /bookings/{id} · 409 sold out"| App
+    REC["Reconciler (every 30 s)<br/>PENDING > N s → look up PSP + supplier by bookingId<br/>→ finish or compensate"] -.-> DB
+```
+
+#### The ambiguous timeout, step by step
+```
+confirm(ref=bk-123) ──► supplier ... ✂ 800 ms, no reply
+booking stays PENDING, auth KEPT, reply 202 "confirming"
+reconciler: GET /reservations?client_ref=bk-123
+   found S-77      → CONFIRMED, capture, email
+   not found       → retry confirm with the SAME ref (safe)
+   unknown for N min → FAILED, void, apology email
+```
+
+#### The saga steps
+| Step | Undo | Kind |
+|---|---|---|
+| T1: key + PENDING | mark FAILED | compensatable |
+| Authorise | void | compensatable |
+| **Supplier confirm** | (cancel, if allowed) | **pivot** |
+| Capture | (refund: avoid) | retryable |
+| T2: CONFIRMED + outbox | none | retryable |
+| Email | none | retryable |
+
+Undo-able steps before the pivot; must-finish steps after. Not 2PC: the PSP and the supplier are other companies' HTTP APIs that won't hold **locks** or speak one commit protocol.
+
+#### The fixed code (Java sketch; the full version in three languages is in [04a](04a-CR-1-Fixed.md))
+```java
+public BookingResponse book(UserId user, BookingRequest r, String idemKey) {
+    Optional<BookingResponse> prior = idem.claimOrReplay(idemKey, r.hash());   // 1. duplicate → stored reply
+    if (prior.isPresent()) return prior.get();
+    Booking b = tx(() -> repo.insertPending(user, r));                         // 2. T1: PENDING first
+    Auth auth = psp.authorise(r.paymentToken(), b.price(), b.id());            // 3. hold, idemKey = booking id
+    try {
+        String ref = supplier.confirm(r.offerId(), b.id(), Duration.ofMillis(800));   // 4. the pivot
+        psp.capture(auth);
+        return tx(() -> repo.confirm(b.id(), ref, outbox.event("BookingConfirmed", b.id())));  // 5. T2 + outbox
+    } catch (SupplierTimeout e) {
+        return BookingResponse.pending(b.id());                                // 6. 202: reconciler decides
+    } catch (SupplierSoldOut e) {
+        psp.voidAuth(auth);                                                     // 7. compensate
+        return tx(() -> repo.fail(b.id(), "SOLD_OUT", outbox.event("BookingFailed", b.id())));
+    }
+}
+```
+
+🔑 *Pata nahi? Toh na paisa lo, na lautao. Pehle poocho: "bk-123 mila?"* (Don't know? Then neither take the money nor return it. First ask: "did you get bk-123?")
+</details>
+
 <details><summary>Improved design: orchestrated saga + outbox</summary>
 
 ```mermaid

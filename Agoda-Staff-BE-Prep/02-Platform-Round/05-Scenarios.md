@@ -217,6 +217,36 @@ POST /updateRates  Basic auth (one shared account)  body: [ ...up to 10,000 upda
 - Tests: an ordering property test (shuffled updates → final state = the highest version), load at 2× peak, a partner contract suite published as a public conformance kit (Staff touch: **certification sandbox for partners**).
 </details>
 
+<details><summary>Improved design: before (faults on the arrows) → after (fixes on the arrows)</summary>
+
+**The numbers:** 20k updates/s ÷ 10,000 per request = only **2 requests/s**, each taking about 30 s to write. A few huge, slow requests are the bug.
+
+#### Before
+```mermaid
+flowchart LR
+    CM["Channel managers<br/>(about 2 requests/s,<br/>10,000 updates each<br/>= 20k updates/s at peak)"]
+    CM -->|"POST /updateRates<br/>❌ one shared Basic-auth account<br/>❌ no rate limit, no batch cap<br/>❌ 200 only after ALL rows written<br/>→ 30 s client timeout → whole-batch retry"| API["Rates API"]
+    API -->|"❌ 10,000 writes in the request<br/>❌ rows in parallel: v5 can land after v6"| SQL[("Rates SQL")]
+    API -->|"❌ invalidate per row"| C[("Search cache")]
+```
+
+#### After
+```mermaid
+flowchart LR
+    CM["Channel managers"] -->|"POST /v1/ari/batches<br/>✅ per-partner credentials (OAuth2 / HMAC)<br/>✅ authZ: may partner X update hotel 42?<br/>✅ quota + 429 Retry-After, cap 1,000 per batch<br/>✅ batch_id = idempotency key"| GW["API gateway"]
+    GW --> API["Ingest API<br/>validate envelope + sanity<br/>(price 0 or 100× → quarantine)"]
+    API -->|"✅ 202 + batch_id (milliseconds)"| CM
+    API -->|"append"| K[["Kafka<br/>partition key = hotel + room + date<br/>→ same key, same order"]]
+    K --> W["Writers"]
+    W -->|"✅ UPDATE … WHERE version < new<br/>(the partner's version, not arrival time)"| SQL[("Rates SQL")]
+    W -->|"✅ coalesce: one invalidation<br/>per hotel per ~1 s"| C[("Search cache")]
+    CM -.->|"GET /v1/ari/batches/{id}<br/>per-item errors"| API
+```
+**The SLO to measure:** received → visible on the site, p99 < 60 s (turns "20 minutes" into a number).
+
+🔑 *Jo baad mein bheja, woh jeete; jo baad mein pahuncha, woh nahi.* (What was *sent* later wins, not what *arrived* later.)
+</details>
+
 ---
 
 ## S4 ★★ Nightly content sync from a rate-limited supplier
@@ -249,6 +279,61 @@ def sync():
 - Data quality: schema validation, quarantine bad records, a diff report ("12k hotels changed, 300 removed": alert if removals > 1%, which guards against a supplier bug wiping content).
 - Observability: pages/s, 429 count, progress %, ETA, last successful sync timestamp (alert if > 36 h).
 - Tests: stub supplier with pagination + random 429/500 + a crash mid-way → resume test; an upsert idempotency test; a rate-limiter test (never > 10/s over any 1 s window).
+</details>
+
+<details><summary>Improved design: before (faults on the arrows) → after (fixes on the arrows)</summary>
+
+#### The numbers (work backwards from the symptom)
+```
+Supplier floor:   2,000,000 ÷ 100 per page = 20,000 requests ÷ 10/s = 2,000 s ≈ 33 min
+Observed:         9 h = 32,400 s ÷ 2,000,000 inserts ≈ 16 ms per insert   ← one round trip + one commit EACH
+Batch per page:   20,000 transactions × ~30–50 ms ≈ 10–17 min
+Delta (2%/night): 40,000 hotels = 400 requests ≈ 1 min
+Workers needed:   Little's Law: 8 req/s × 0.3 s per call ≈ 3 in flight → 3 workers, not 20
+```
+
+#### Before
+```mermaid
+flowchart LR
+    J["sync() on ONE VM<br/>❌ restarts from page 0 after a crash<br/>❌ full 2M every night"]
+    J -->|"GET ?page=N&size=100<br/>❌ offset pages shift → skip / duplicate<br/>❌ no timeout, no status check<br/>❌ key hardcoded<br/>❌ no limiter → banned"| S["Supplier API<br/>10 req/s"]
+    J -->|"❌ 2M single INSERTs (≈ 16 ms each = 9 h)<br/>❌ f-string SQL with supplier data (injection)<br/>❌ plain INSERT → duplicates on rerun"| DB[("Content DB")]
+```
+
+#### After
+```mermaid
+flowchart LR
+    SCH["Scheduler<br/>(k8s CronJob, retries)"] --> W["3 sync workers<br/>(one DB connection each)"]
+    CP[("sync_checkpoint<br/>job · last_cursor · status")] -.->|"✅ resume from the cursor"| W
+    W -->|"✅ take a token first"| TB{{"Shared token bucket<br/>8/s (20% headroom)"}}
+    TB -->|"GET ?updatedSince=…&after=cursor<br/>✅ delta + cursor pages<br/>✅ timeout, status check, key from secrets<br/>✅ 429 → wait Retry-After"| S["Supplier API"]
+    W -->|"✅ ONE transaction per page:<br/>100-row UPSERT (params) + save cursor"| DB[("Content DB")]
+    DB --- CP
+    W -->|"photo URLs"| Q[["Photo queue"]] --> PW["Photo workers"] --> OS[("Object store + CDN")]
+```
+**Why the checkpoint is in the same transaction:** a crash can't leave "page saved, cursor not moved"; replaying a page is harmless anyway because of the upsert.
+
+#### The fixed code
+```python
+def sync(job_id, since):
+    cursor = checkpoints.load(job_id)                       # 1. resume, don't restart
+    while True:
+        bucket.acquire()                                    # 2. shared limit, 8/s
+        r = session.get(f"{BASE}/hotels", params={"after": cursor, "updatedSince": since, "size": 100},
+                        headers={"key": secrets.get("supplier_key")}, timeout=(0.3, 5))  # 3. pooled, timeout
+        if r.status_code == 429: time.sleep(float(r.headers.get("Retry-After", 1))); continue
+        r.raise_for_status()                                # 4. check the status
+        hotels = r.json()["hotels"]
+        if not hotels: break
+        with db.transaction() as tx:                        # 5. one batch per page
+            tx.executemany("INSERT INTO hotels(id, name, …) VALUES (%s, %s, …) "
+                           "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, …",   # 6. params + upsert
+                           [(h["id"], h["name"], …) for h in hotels])
+            cursor = hotels[-1]["id"]
+            checkpoints.save(tx, job_id, cursor)            # 7. same transaction as the data
+```
+
+🔑 *Pehle hisaab: 20 hazaar request, 33 minute. 9 ghante? Toh galti hamari.* (Maths first: 20,000 requests, 33 minutes. 9 hours? Then the fault is ours.)
 </details>
 
 ---

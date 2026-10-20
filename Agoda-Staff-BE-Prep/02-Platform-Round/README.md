@@ -23,6 +23,7 @@ Built for **Anuj** ([BE] Staff Software Engineer, Back End, Gurugram, [SHP] trac
 | [06-Generic-Questions.md](06-Generic-Questions.md) | **50 generic questions** with 30–60 s model answers | Days 1–2 |
 | [07-Mocks.md](07-Mocks.md) | 3 full 60-min mocks (new narratives) + the 5-attribute rubric | Day 2 + eve |
 | [08-Recall-Day-Of.md](08-Recall-Day-Of.md) | One-page recall + day-of checklist | Eve + morning |
+| [Candidate-Mode-Prompt.md](Candidate-Mode-Prompt.md) | The reverse of coach mode: paste into any AI, you play the interviewer, it answers as a Staff candidate (model answers to compare against) | Practice, any tool |
 | [CLAUDE.md](CLAUDE.md) · [PROGRESS.md](PROGRESS.md) | Coach mode for Claude (interviewer persona) · tracker | Throughout |
 | `Agoda_Technology_BE_IV2_Interview_Toolkit_2026.pdf` | Agoda's toolkit (local only, **git-ignored**: it's marked Internal and this repo is public) | Reference |
 

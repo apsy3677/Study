@@ -1,0 +1,36 @@
+pattern,topic,list_problems,easy,medium,hard,first_try_rate,fails_per_problem,cold_revisits,cold_first_try_rate,note
+"Arrays, Hashing & Sorting",Arrays & Strings,13,6,6,1,0.54,0.69,9,0.78,
+Two Pointers,Arrays & Strings,13,3,8,2,0.62,1.00,16,0.75,
+Sliding Window,Arrays & Strings,7,0,6,1,0.71,0.71,11,0.64,
+Prefix Sum & Difference Array,Arrays & Strings,4,0,4,0,0.50,0.50,8,0.62,thin coverage
+Binary Search,Searching,17,5,10,2,0.76,0.53,31,0.81,
+Binary Search on Answer,Searching,5,1,3,1,0.60,1.20,5,0.60,
+Stack,Stacks & Queues,7,1,4,2,0.86,0.29,15,0.67,
+Monotonic Stack / Deque,Stacks & Queues,7,0,4,3,0.71,0.43,6,0.83,
+Linked List,Linked List,12,2,9,1,0.83,0.33,7,0.86,
+Binary Tree (DFS & Recursion),Trees,22,7,12,3,0.91,0.23,12,0.75,
+Binary Tree (BFS / Level Order),Trees,3,0,2,1,0.67,0.67,6,0.83,thin coverage
+Binary Search Tree,Trees,2,2,0,0,0.50,3.00,13,0.69,thin coverage
+Heap / Top-K,Heaps & Intervals,6,1,2,3,0.50,0.83,21,0.62,
+Intervals & Sweep Line,Heaps & Intervals,14,2,9,3,0.64,0.71,18,0.89,
+Greedy,Greedy,3,0,3,0,1.00,0.00,3,1.00,thin coverage; cold sample < 4
+Backtracking,Recursion & Backtracking,16,0,10,6,0.69,0.56,23,0.74,
+Graph: Grid BFS/DFS,Graphs,13,1,12,0,0.92,0.08,13,0.77,
+Graph: General BFS/DFS,Graphs,14,0,6,8,0.79,0.29,5,0.60,
+Graph: Topological Sort,Graphs,6,0,4,2,1.00,0.00,8,0.38,
+Graph: Union-Find,Graphs,9,0,7,2,0.67,0.33,2,0.50,cold sample < 4
+Graph: Shortest Path,Graphs,7,0,5,2,0.57,0.86,6,0.67,
+DP: 1D / Linear,Dynamic Programming,6,2,4,0,0.50,0.67,8,0.75,
+DP: Grid / 2D,Dynamic Programming,11,0,7,4,0.45,0.82,8,0.62,
+DP: Knapsack / Subset,Dynamic Programming,5,0,5,0,1.00,0.00,0,,cold sample < 4
+"DP: Strings (LCS, Edit, Matching)",Dynamic Programming,10,0,3,7,0.40,1.00,3,0.33,cold sample < 4
+DP: LIS Family,Dynamic Programming,5,0,4,1,0.60,0.80,2,1.00,cold sample < 4
+DP: Partition / Interval (MCM),Dynamic Programming,7,0,2,5,0.71,0.57,2,1.00,cold sample < 4
+DP: Buy & Sell Stock,Dynamic Programming,6,1,3,2,1.00,0.00,4,0.50,
+DP: On Trees,Dynamic Programming,2,0,1,1,1.00,0.00,3,0.33,thin coverage; cold sample < 4
+DP: Bitmask,Dynamic Programming,1,0,0,1,0.00,1.00,4,0.50,thin coverage
+Trie,Trees,4,0,3,1,0.75,0.25,4,0.00,thin coverage
+Design,Design,11,3,7,1,0.73,0.36,11,1.00,
+Segment Tree / BIT / Ordered Set,Advanced Data Structures,2,0,0,2,0.50,0.50,0,,thin coverage; cold sample < 4
+Math & Bit Manipulation,Arrays & Strings,3,1,1,1,0.67,1.00,5,0.40,thin coverage
+Strings & Simulation,Arrays & Strings,4,2,1,1,0.75,0.25,10,0.70,thin coverage

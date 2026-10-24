@@ -1,0 +1,90 @@
+priority,lc_id,slug,difficulty,pattern,why,in_my_list,url
+1,398,random-pick-index,Medium,Math & Bit Manipulation,never accepted; 6 fails before first AC,unconfirmed,https://leetcode.com/problems/random-pick-index/
+2,76,minimum-window-substring,Hard,Sliding Window,failed 4 of 6 cold revisits; 3 fails before first AC,yes,https://leetcode.com/problems/minimum-window-substring/
+3,2365,task-scheduler-ii,Medium,"Arrays, Hashing & Sorting",never accepted,unconfirmed,https://leetcode.com/problems/task-scheduler-ii/
+4,381,insert-delete-getrandom-o1-duplicates-allowed,Hard,Design,never accepted,yes,https://leetcode.com/problems/insert-delete-getrandom-o1-duplicates-allowed/
+5,692,top-k-frequent-words,Medium,Heap / Top-K,never accepted,unconfirmed,https://leetcode.com/problems/top-k-frequent-words/
+6,304,range-sum-query-2d-immutable,Medium,Prefix Sum & Difference Array,never accepted,unconfirmed,https://leetcode.com/problems/range-sum-query-2d-immutable/
+7,212,word-search-ii,Hard,Trie,failed 4 of 4 cold revisits,yes,https://leetcode.com/problems/word-search-ii/
+8,270,closest-binary-search-tree-value,Easy,Binary Search Tree,failed 2 of 4 cold revisits; 6 fails before first AC,yes,https://leetcode.com/problems/closest-binary-search-tree-value/
+9,814,binary-tree-pruning,Medium,Binary Tree (DFS & Recursion),10 fails before first AC,unconfirmed,https://leetcode.com/problems/binary-tree-pruning/
+10,1494,parallel-courses-ii,Hard,DP: Bitmask,never accepted,yes,https://leetcode.com/problems/parallel-courses-ii/
+11,689,maximum-sum-of-3-non-overlapping-subarrays,Hard,Prefix Sum & Difference Array,never accepted,unconfirmed,https://leetcode.com/problems/maximum-sum-of-3-non-overlapping-subarrays/
+12,217,contains-duplicate,Easy,"Arrays, Hashing & Sorting",never accepted,unconfirmed,https://leetcode.com/problems/contains-duplicate/
+13,79,word-search,Medium,Backtracking,failed 2 of 3 cold revisits; 3 fails before first AC,yes,https://leetcode.com/problems/word-search/
+14,1891,cutting-ribbons,Medium,Binary Search on Answer,failed 1 of 1 cold revisits; 6 fails before first AC,unconfirmed,https://leetcode.com/problems/cutting-ribbons/
+15,691,stickers-to-spell-word,Hard,DP: Bitmask,failed 2 of 4 cold revisits; 4 fails before first AC,unconfirmed,https://leetcode.com/problems/stickers-to-spell-word/
+16,1216,valid-palindrome-iii,Hard,"DP: Strings (LCS, Edit, Matching)",failed 1 of 1 cold revisits; 7 fails before first AC,unconfirmed,https://leetcode.com/problems/valid-palindrome-iii/
+17,827,making-a-large-island,Hard,Graph: Grid BFS/DFS,failed 2 of 3 cold revisits; 3 fails before first AC,unconfirmed,https://leetcode.com/problems/making-a-large-island/
+18,269,alien-dictionary,Hard,Graph: Topological Sort,failed 3 of 4 cold revisits,yes,https://leetcode.com/problems/alien-dictionary/
+19,953,verifying-an-alien-dictionary,Easy,"Arrays, Hashing & Sorting",9 fails before first AC,unconfirmed,https://leetcode.com/problems/verifying-an-alien-dictionary/
+20,426,convert-binary-search-tree-to-sorted-doubly-linked-list,Medium,Binary Search Tree,failed 2 of 3 cold revisits,unconfirmed,https://leetcode.com/problems/convert-binary-search-tree-to-sorted-doubly-linked-list/
+21,215,kth-largest-element-in-an-array,Medium,Heap / Top-K,failed 2 of 3 cold revisits,unconfirmed,https://leetcode.com/problems/kth-largest-element-in-an-array/
+22,253,meeting-rooms-ii,Medium,Intervals & Sweep Line,failed 1 of 5 cold revisits; 4 fails before first AC,yes,https://leetcode.com/problems/meeting-rooms-ii/
+23,658,find-k-closest-elements,Medium,Binary Search,failed 2 of 4 cold revisits,yes,https://leetcode.com/problems/find-k-closest-elements/
+24,236,lowest-common-ancestor-of-a-binary-tree,Medium,Binary Tree (DFS & Recursion),failed 2 of 3 cold revisits,yes,https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/
+25,437,path-sum-iii,Medium,Binary Tree (DFS & Recursion),failed 1 of 1 cold revisits; 3 fails before first AC,yes,https://leetcode.com/problems/path-sum-iii/
+26,126,word-ladder-ii,Hard,Graph: General BFS/DFS,failed 2 of 2 cold revisits,yes,https://leetcode.com/problems/word-ladder-ii/
+27,207,course-schedule,Medium,Graph: Topological Sort,failed 2 of 4 cold revisits,yes,https://leetcode.com/problems/course-schedule/
+28,973,k-closest-points-to-origin,Medium,Heap / Top-K,failed 2 of 5 cold revisits,yes,https://leetcode.com/problems/k-closest-points-to-origin/
+29,2402,meeting-rooms-iii,Hard,Heap / Top-K,failed 2 of 2 cold revisits,yes,https://leetcode.com/problems/meeting-rooms-iii/
+30,296,best-meeting-point,Hard,Math & Bit Manipulation,failed 2 of 3 cold revisits,unconfirmed,https://leetcode.com/problems/best-meeting-point/
+31,523,continuous-subarray-sum,Medium,Prefix Sum & Difference Array,failed 2 of 2 cold revisits,unconfirmed,https://leetcode.com/problems/continuous-subarray-sum/
+32,227,basic-calculator-ii,Medium,Stack,failed 2 of 3 cold revisits,yes,https://leetcode.com/problems/basic-calculator-ii/
+33,81,search-in-rotated-sorted-array-ii,Medium,Binary Search,5 fails before first AC,yes,https://leetcode.com/problems/search-in-rotated-sorted-array-ii/
+34,2187,minimum-time-to-complete-trips,Medium,Binary Search on Answer,5 fails before first AC,yes,https://leetcode.com/problems/minimum-time-to-complete-trips/
+35,124,binary-tree-maximum-path-sum,Hard,DP: On Trees,failed 2 of 2 cold revisits,yes,https://leetcode.com/problems/binary-tree-maximum-path-sum/
+36,778,swim-in-rising-water,Hard,Graph: Shortest Path,failed 1 of 1 cold revisits; 3 fails before first AC,unconfirmed,https://leetcode.com/problems/swim-in-rising-water/
+37,1631,path-with-minimum-effort,Medium,Graph: Shortest Path,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/path-with-minimum-effort/
+38,23,merge-k-sorted-lists,Hard,Heap / Top-K,failed 2 of 7 cold revisits,yes,https://leetcode.com/problems/merge-k-sorted-lists/
+39,65,valid-number,Hard,Strings & Simulation,failed 2 of 4 cold revisits,unconfirmed,https://leetcode.com/problems/valid-number/
+40,273,integer-to-english-words,Hard,Strings & Simulation,6 fails before first AC,unconfirmed,https://leetcode.com/problems/integer-to-english-words/
+41,16,3sum-closest,Medium,Two Pointers,5 fails before first AC,yes,https://leetcode.com/problems/3sum-closest/
+42,443,string-compression,Medium,Two Pointers,5 fails before first AC,unconfirmed,https://leetcode.com/problems/string-compression/
+43,647,palindromic-substrings,Medium,Two Pointers,failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/palindromic-substrings/
+44,1657,determine-if-two-strings-are-close,Medium,"Arrays, Hashing & Sorting",failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/determine-if-two-strings-are-close/
+45,40,combination-sum-ii,Medium,Backtracking,failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/combination-sum-ii/
+46,314,binary-tree-vertical-order-traversal,Medium,Binary Tree (BFS / Level Order),failed 1 of 1 cold revisits,unconfirmed,https://leetcode.com/problems/binary-tree-vertical-order-traversal/
+47,1186,maximum-subarray-sum-with-one-deletion,Medium,DP: 1D / Linear,failed 1 of 2 cold revisits,unconfirmed,https://leetcode.com/problems/maximum-subarray-sum-with-one-deletion/
+48,741,cherry-pickup,Hard,DP: Grid / 2D,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/cherry-pickup/
+49,44,wildcard-matching,Hard,"DP: Strings (LCS, Edit, Matching)",failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/wildcard-matching/
+50,695,max-area-of-island,Medium,Graph: Grid BFS/DFS,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/max-area-of-island/
+51,721,accounts-merge,Medium,Graph: Union-Find,failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/accounts-merge/
+52,347,top-k-frequent-elements,Medium,Heap / Top-K,4 fails before first AC,unconfirmed,https://leetcode.com/problems/top-k-frequent-elements/
+53,708,insert-into-a-sorted-circular-linked-list,Medium,Linked List,failed 1 of 2 cold revisits,unconfirmed,https://leetcode.com/problems/insert-into-a-sorted-circular-linked-list/
+54,239,sliding-window-maximum,Hard,Monotonic Stack / Deque,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/sliding-window-maximum/
+55,528,random-pick-with-weight,Medium,Prefix Sum & Difference Array,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/random-pick-with-weight/
+56,5,longest-palindromic-substring,Medium,Two Pointers,failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/longest-palindromic-substring/
+57,31,next-permutation,Medium,Two Pointers,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/next-permutation/
+58,163,missing-ranges,Easy,"Arrays, Hashing & Sorting",failed 1 of 1 cold revisits,unconfirmed,https://leetcode.com/problems/missing-ranges/
+59,33,search-in-rotated-sorted-array,Medium,Binary Search,failed 1 of 4 cold revisits,yes,https://leetcode.com/problems/search-in-rotated-sorted-array/
+60,162,find-peak-element,Medium,Binary Search,failed 1 of 4 cold revisits,yes,https://leetcode.com/problems/find-peak-element/
+61,1095,find-in-mountain-array,Hard,Binary Search,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/find-in-mountain-array/
+62,875,koko-eating-bananas,Medium,Binary Search on Answer,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/koko-eating-bananas/
+63,139,word-break,Medium,DP: 1D / Linear,failed 1 of 5 cold revisits,yes,https://leetcode.com/problems/word-break/
+64,122,best-time-to-buy-and-sell-stock-ii,Medium,DP: Buy & Sell Stock,failed 1 of 1 cold revisits,yes,https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/
+65,329,longest-increasing-path-in-a-matrix,Hard,DP: Grid / 2D,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/longest-increasing-path-in-a-matrix/
+66,361,bomb-enemy,Medium,DP: Grid / 2D,3 fails before first AC,yes,https://leetcode.com/problems/bomb-enemy/
+67,670,maximum-swap,Medium,Greedy,3 fails before first AC,unconfirmed,https://leetcode.com/problems/maximum-swap/
+68,56,merge-intervals,Medium,Intervals & Sweep Line,failed 1 of 6 cold revisits,yes,https://leetcode.com/problems/merge-intervals/
+69,61,rotate-list,Medium,Linked List,3 fails before first AC,yes,https://leetcode.com/problems/rotate-list/
+70,50,powx-n,Medium,Math & Bit Manipulation,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/powx-n/
+71,1249,minimum-remove-to-make-valid-parentheses,Medium,Stack,failed 1 of 3 cold revisits,unconfirmed,https://leetcode.com/problems/minimum-remove-to-make-valid-parentheses/
+72,15,3sum,Medium,Two Pointers,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/3sum/
+73,161,one-edit-distance,Medium,Two Pointers,3 fails before first AC,unconfirmed,https://leetcode.com/problems/one-edit-distance/
+74,41,first-missing-positive,Hard,"Arrays, Hashing & Sorting",3 fails before first AC,yes,https://leetcode.com/problems/first-missing-positive/
+75,140,word-break-ii,Hard,Backtracking,failed 1 of 4 cold revisits,yes,https://leetcode.com/problems/word-break-ii/
+76,282,expression-add-operators,Hard,Backtracking,failed 1 of 1 cold revisits,unconfirmed,https://leetcode.com/problems/expression-add-operators/
+77,301,remove-invalid-parentheses,Hard,Backtracking,3 fails before first AC,yes,https://leetcode.com/problems/remove-invalid-parentheses/
+78,996,number-of-squareful-arrays,Hard,Backtracking,failed 1 of 1 cold revisits,unconfirmed,https://leetcode.com/problems/number-of-squareful-arrays/
+79,1463,cherry-pickup-ii,Hard,DP: Grid / 2D,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/cherry-pickup-ii/
+80,354,russian-doll-envelopes,Hard,DP: LIS Family,3 fails before first AC,yes,https://leetcode.com/problems/russian-doll-envelopes/
+81,2463,minimum-total-distance-traveled,Hard,DP: Partition / Interval (MCM),3 fails before first AC,yes,https://leetcode.com/problems/minimum-total-distance-traveled/
+82,1606,find-servers-that-handled-most-number-of-requests,Hard,Heap / Top-K,3 fails before first AC,yes,https://leetcode.com/problems/find-servers-that-handled-most-number-of-requests/
+83,60,permutation-sequence,Hard,Math & Bit Manipulation,3 fails before first AC,yes,https://leetcode.com/problems/permutation-sequence/
+84,224,basic-calculator,Hard,Stack,failed 1 of 2 cold revisits,unconfirmed,https://leetcode.com/problems/basic-calculator/
+85,772,basic-calculator-iii,Hard,Stack,failed 1 of 2 cold revisits,yes,https://leetcode.com/problems/basic-calculator-iii/
+86,680,valid-palindrome-ii,Easy,Two Pointers,4 fails before first AC,yes,https://leetcode.com/problems/valid-palindrome-ii/
+87,1539,kth-missing-positive-number,Easy,Binary Search,failed 1 of 4 cold revisits,unconfirmed,https://leetcode.com/problems/kth-missing-positive-number/
+88,121,best-time-to-buy-and-sell-stock,Easy,DP: Buy & Sell Stock,failed 1 of 3 cold revisits,yes,https://leetcode.com/problems/best-time-to-buy-and-sell-stock/
+89,415,add-strings,Easy,Strings & Simulation,failed 1 of 2 cold revisits,unconfirmed,https://leetcode.com/problems/add-strings/

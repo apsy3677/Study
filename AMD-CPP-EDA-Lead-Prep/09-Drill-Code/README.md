@@ -21,6 +21,8 @@ line). These are the reference answers that `../../Candidate-Mode-Prompt.md` (st
 | File | Problem(s) | Key line to remember |
 |---|---|---|
 | `lru_cache.cpp` | LC 146 LRU | `dll.splice(dll.begin(), dll, it)`: where, from, which; the node keeps its key for eviction |
+| `lfu_cache.cpp` | LC 460 LFU (+ 200k random ops vs O(n) brute: 0 mismatches) | count → list bucket + `minFreq`; `to.splice(to.begin(), from, it)` moves a node between buckets; a new key resets `minFreq = 1` |
+| `zombie_demo.cpp` | zombie / wait / orphan (`./x zombie\|wait\|orphan`, then `ps -o pid,ppid,stat,cmd`) | the row stays until the parent `waitpid`s |
 | `splice_demo.cpp` | how `splice` moves a node (same address) vs erase + insert | |
 | `sliding_window.cpp` | LC 3, LC 76 (missing + formed versions) | longest: shrink while bad, then record · shortest: record while good, then shrink |
 | `spiral.cpp` | LC 54 | check `top <= bot` / `l <= r` before going back |
